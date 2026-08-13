@@ -1,4 +1,5 @@
 'use client'
+import Loading from '@/components/ui/Loading';
 import { fetchMe, selectMeSlice } from '@/store/slices/authSlice';
 import { AppDispatch } from '@/store/store';
 import { Loader2 } from 'lucide-react';
@@ -19,9 +20,7 @@ function MeProvider({
 
     if (!initialized) {
         return (
-            <div className="flex min-h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
+            <Loading />
         );
     }
 

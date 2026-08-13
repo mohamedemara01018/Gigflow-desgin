@@ -1,5 +1,6 @@
 import { jwtVerify, JWTPayload } from "jose";
 import { NextRequest, NextResponse } from "next/server";
+import { UserRole } from "./utils/enums.utils";
 
 const secret = new TextEncoder().encode(
     process.env.JWT_TOKEN_SECRET_KEY
@@ -18,7 +19,7 @@ const clientRoutes = [
 
 const freelancerRoutes = [
     "/freelancer",
-    '/jobs'
+    "/jobs",
 ];
 
 const sharedProtectedRoutes = [
@@ -30,6 +31,7 @@ const authRoutes = [
     "/login",
     "/register",
     "/verify-email",
+    "/verify-identity",
     "/forgot-password",
     "/reset-password",
 ];
@@ -37,8 +39,6 @@ const authRoutes = [
 export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const token = request.cookies.get("token")?.value;
-
-    console.log('token', token)
 
     const isAuthRoute = authRoutes.some((route) =>
         pathname.startsWith(route)
@@ -61,14 +61,34 @@ export async function proxy(request: NextRequest) {
         isFreelancerRoute ||
         isSharedProtectedRoute;
 
-    // Protected page without token
-    if (!token && isProtectedRoute) {
-        return NextResponse.redirect(new URL("/login", request.url));
-    }
+    // --------------------------------
+    // No token
+    // --------------------------------
 
     if (!token) {
+        // Verification pages require authentication
+        if (
+            pathname === "/verify-email" ||
+            pathname === "/verify-identity"
+        ) {
+            return NextResponse.redirect(
+                new URL("/login", request.url)
+            );
+        }
+
+        // Protected routes require authentication
+        if (isProtectedRoute) {
+            return NextResponse.redirect(
+                new URL("/login", request.url)
+            );
+        }
+
         return NextResponse.next();
     }
+
+    // --------------------------------
+    // Verify JWT
+    // --------------------------------
 
     try {
         const { payload } = await jwtVerify(
@@ -78,70 +98,90 @@ export async function proxy(request: NextRequest) {
 
         const user = payload as TokenPayload;
 
-        // Logged-in user shouldn't access auth pages
-        if (
-            isAuthRoute &&
-            pathname !== "/verify-email"
-        ) {
-            return NextResponse.redirect(new URL("/", request.url));
+        // --------------------------------
+        // 1. EMAIL VERIFICATION
+        // --------------------------------
+
+        if (!user.isEmailVerified) {
+            if (pathname !== "/verify-email") {
+                return NextResponse.redirect(
+                    new URL("/verify-email", request.url)
+                );
+            }
+
+            // Allow verify-email page
+            return NextResponse.next();
         }
 
-        // Email verification
-        if (
-            !user.isEmailVerified &&
-            pathname !== "/verify-email"
-        ) {
-            return NextResponse.redirect(
-                new URL("/verify-email", request.url)
-            );
+        // --------------------------------
+        // 2. IDENTITY VERIFICATION
+        // --------------------------------
+
+        if (!user.isIdentityVerified) {
+            if (pathname !== "/verify-identity") {
+                return NextResponse.redirect(
+                    new URL("/verify-identity", request.url)
+                );
+            }
+
+            // Allow verify-identity page
+            return NextResponse.next();
         }
 
-        // Prevent verified users from revisiting verify page
-        if (
-            user.isEmailVerified &&
-            pathname === "/verify-email"
-        ) {
-            return NextResponse.redirect(new URL("/", request.url));
-        }
+        // --------------------------------
+        // 3. BOTH VERIFIED
+        // --------------------------------
 
-
+        // Verified users cannot access
+        // verification pages anymore.
         if (
-            !user.isIdentityVerified &&
-            pathname !== "/verify-identity"
-        ) {
-            return NextResponse.redirect(
-                new URL("/verify-identity", request.url)
-            );
-        }
-
-        // Prevent verified users from revisiting verify page
-        if (
-            user.isIdentityVerified &&
+            pathname === "/verify-email" ||
             pathname === "/verify-identity"
         ) {
-            return NextResponse.redirect(new URL("/", request.url));
+            return NextResponse.redirect(
+                new URL("/", request.url)
+            );
         }
 
+        // --------------------------------
+        // 4. AUTH PAGES
+        // --------------------------------
 
+        if (isAuthRoute) {
+            return NextResponse.redirect(
+                new URL("/", request.url)
+            );
+        }
+
+        // --------------------------------
+        // 5. ROLE PROTECTION
+        // --------------------------------
 
         // Client cannot access freelancer routes
         if (
-            user.role === "client" &&
+            user.role == UserRole.CLIENT &&
             isFreelancerRoute
         ) {
-            return NextResponse.redirect(new URL("/", request.url));
+            return NextResponse.redirect(
+                new URL("/", request.url)
+            );
         }
 
         // Freelancer cannot access client routes
         if (
-            user.role === "freelancer" &&
+            user.role == UserRole.FREELANCER &&
             isClientRoute
         ) {
-            return NextResponse.redirect(new URL("/", request.url));
+            return NextResponse.redirect(
+                new URL("/", request.url)
+            );
         }
 
         return NextResponse.next();
-    } catch {
+
+    } catch (error) {
+        console.error("JWT verification failed:", error);
+
         const response = NextResponse.redirect(
             new URL("/login", request.url)
         );

@@ -4,7 +4,6 @@ import {
 } from 'lucide-react';
 import RegisterForm from '@/components/features/register/RegisterForm';
 import Link from 'next/link';
-import { GoogleIcon } from '@/utils/icons.utils';
 
 
 
@@ -13,11 +12,11 @@ export default function SignupPage() {
 
 
   return (
-    <div className="bg-background min-h-screen flex items-center justify-center p-[24px] font-sans text-[16px] leading-[24px] text-on-surface selection:bg-primary-fixed-dim selection:text-on-primary-fixed">
-      <main className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-[24px] items-center z-10">
+    <div className="bg-background min-h-screen flex items-center justify-center p-6 font-sans text-[16px] leading-6 text-on-surface selection:bg-primary-fixed-dim selection:text-on-primary-fixed">
+      <main className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-center z-10">
 
         {/* Left Column: Branding & Atmosphere */}
-        <section className="hidden lg:flex lg:col-span-5 flex-col justify-center gap-[32px] h-full pr-[32px]">
+        <section className="hidden lg:flex lg:col-span-5 flex-col justify-center gap-8 h-full pr-8">
           <div>
             <h1 className="text-[24px] leading-[32px] font-semibold text-primary mb-[8px]">GigFlow</h1>
             <h2 className="text-[48px] leading-[56px] font-bold tracking-[-0.02em] text-on-surface">
@@ -64,7 +63,7 @@ export default function SignupPage() {
 
 
 
-            <Link href={'/login'} className="block text-center text-[14px] leading-[20px] text-on-surface-variant mt-[32px]">
+            <Link href={'/login'} className="block text-center text-[14px] leading-5 text-on-surface-variant mt-8">
               Already have an account?{' '}
               <a href="#" className="text-primary font-bold hover:underline">Sign in to GigFlow</a>
             </Link>

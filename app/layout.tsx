@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import StoreProvider from "@/provider/StoreProvider";
 import MeProvider from "@/provider/MeProvider";
+import ToastificationProvider from "@/provider/ToastificationProvider";
 
 export const metadata: Metadata = {
   title: "GigFlow – Scale Your Freelance Career With Precision",
@@ -28,9 +29,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col  transition-colors duration-200 antialiased">
         <StoreProvider>
-          <MeProvider>
-            {children}
-          </MeProvider>
+          <ToastificationProvider>
+            <MeProvider>
+              {children}
+            </MeProvider>
+          </ToastificationProvider>
         </StoreProvider>
       </body>
     </html>

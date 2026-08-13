@@ -15,3 +15,12 @@ export enum DocumentType {
     PASSPORT = "passport",
     DRIVING_LICENSE = "driving_license",
 }
+
+
+export enum VerificationStatus {
+    PENDING = "pending",
+    IN_REVIEW = "in_review",
+    APPROVED = "approved",
+    REJECTED = "rejected",
+    CANCELLED = "cancelled",
+}

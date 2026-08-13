@@ -22,7 +22,6 @@ function LandingPage() {
             <Stats />
             <Testimonial />
             <CtaBanner />
-
             <PublicFooter />
         </div>
     )

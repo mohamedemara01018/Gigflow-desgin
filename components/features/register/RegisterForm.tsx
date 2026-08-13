@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import FormError from '@/components/ui/FormError';
 import { GoogleIcon } from '@/utils/icons.utils';
 import { BASE_URL } from '@/utils/constant.utils';
-import { Sign } from '@/utils/enums.utils';
+import { Sign, UserRole } from '@/utils/enums.utils';
 
 
 function RegisterForm() {
@@ -32,6 +32,7 @@ function RegisterForm() {
     const router = useRouter();
 
     const role = searchParams.get('role');
+    console.log()
 
     const handleChange = (e: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
         const { name, value } = e.target
@@ -84,9 +85,12 @@ function RegisterForm() {
         setStatus('loading');
 
         try {
-            if (!role) {
-                setError('please select your role')
+
+            if (role == UserRole.ADMIN) {
+
             }
+
+
             const data = await authService.register({ ...formData, role })
             console.log(data)
             setStatus('success')
