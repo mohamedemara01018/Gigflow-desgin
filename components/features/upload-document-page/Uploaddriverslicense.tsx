@@ -1,4 +1,5 @@
 import Dropzone from "@/components/ui/Dropzone";
+import { FileSlots } from "@/views/UploadDocumentPage";
 import { ShieldCheck, CheckCircle2, Lock } from "lucide-react";
 
 
@@ -22,10 +23,13 @@ const REQUIREMENTS = [
     },
 ];
 
+interface IUploadDriversLicensePage {
+    files: FileSlots,
+    setFiles: React.Dispatch<React.SetStateAction<FileSlots>>;
+}
 
 
-
-export default function UploadDriversLicensePage() {
+export default function UploadDriversLicensePage({ files, setFiles }: IUploadDriversLicensePage) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 mt-8">
             <div className="card h-fit">
@@ -38,8 +42,8 @@ export default function UploadDriversLicensePage() {
                 </p>
 
                 <div className="grid sm:grid-cols-2 gap-6 mt-8">
-                    <Dropzone label="Front of License" hint="JPG, PNG (Max 5MB)" />
-                    <Dropzone label="Back of License" hint="JPG, PNG (Max 5MB)" />
+                    <Dropzone label="Front of License" hint="JPG, PNG (Max 5MB)" files={files} setFiles={setFiles} index={0} />
+                    <Dropzone label="Back of License" hint="JPG, PNG (Max 5MB)" files={files} setFiles={setFiles} index={1} />
                 </div>
             </div>
 

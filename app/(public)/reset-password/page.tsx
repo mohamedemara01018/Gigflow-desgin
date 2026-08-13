@@ -7,6 +7,10 @@ import { Eye, EyeOff, ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from "lucid
 import FormError from "@/components/ui/FormError";
 import { authService } from "@/services/auth.service";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AppDispatch } from "@/store/store";
+import { useDispatch } from "react-redux";
+import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
+import { DURATION } from "@/utils/constant.utils";
 
 
 
@@ -19,10 +23,14 @@ export default function ResetPasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [notMatchMessage, setNotMatchMessage] = useState('');
-  const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+
+  const dispatch: AppDispatch = useDispatch();
+  const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
+    dispatch(toastify({ message, type, duration }))
+  }
 
   useEffect(() => {
     let score = 0;
@@ -52,7 +60,6 @@ export default function ResetPasswordPage() {
       setNotMatchMessage("Passwords do not match!");
       return;
     }
-
     setIsSubmitting(true);
     try {
       const res = await authService.resetPassword({
@@ -62,8 +69,10 @@ export default function ResetPasswordPage() {
       console.log(res)
       router.replace('/login')
       setIsSuccess(true);
+      handleAddToastification(String(res.message), "error", DURATION);
+
     } catch (error: any) {
-      setError(error.message)
+      handleAddToastification(String(error.message), "error", DURATION);
     } finally {
       setIsSubmitting(false)
     }
@@ -101,7 +110,6 @@ export default function ResetPasswordPage() {
             style={{ boxShadow: 'var(--shadow-level-2)' }}
           >
             <FormError error={notMatchMessage} />
-            <FormError error={error} />
             {/* Heading Group */}
             <div className="text-center space-y-2">
               <h1 className="font-['Geist'] text-[32px] leading-10 font-semibold tracking-[-0.01em] text-on-surface">

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import FormError from "@/components/ui/FormError";
-import FormSuccess from "@/components/ui/FormSuccess";
 import { authService } from "@/services/auth.service";
 import { fetchMe, selectMeSlice } from "@/store/slices/authSlice";
+import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
 import { AppDispatch } from "@/store/store";
+import { DURATION } from "@/utils/constant.utils";
 import { ArrowLeft, Loader2, LoaderCircle, MailOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, FormEvent, KeyboardEvent, ChangeEvent } from "react";
@@ -16,14 +16,15 @@ export default function VerifyEmailPage() {
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(59);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [resendLoading, setResendLoading] = useState(false)
-  const [resendError, setResendError] = useState('')
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
-  const dispatch: AppDispatch = useDispatch();
   const { me } = useSelector(selectMeSlice)
+
+  const dispatch: AppDispatch = useDispatch();
+  const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
+    dispatch(toastify({ message, type, duration }))
+  }
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -67,11 +68,11 @@ export default function VerifyEmailPage() {
         code: otp.join('').trim()
       })
       console.log(res)
-      setSuccess(res.message || 'verifyed successfully')
+      handleAddToastification(String(res.message), "success", DURATION);
       router.replace('/')
       setOtp(["", "", "", "", "", ""])
     } catch (error: any) {
-      setError(error.message)
+      handleAddToastification(String(error.message), "error", DURATION);
     } finally {
       setLoading(false)
     }
@@ -89,9 +90,9 @@ export default function VerifyEmailPage() {
         "email": me?.email
       })
       console.log(res)
-
+      handleAddToastification(String(res.message), "success", DURATION);
     } catch (error: any) {
-      setResendError(error.message)
+      handleAddToastification(String(error.message), "error", DURATION);
     } finally {
       setResendLoading(false)
     }
@@ -112,9 +113,6 @@ export default function VerifyEmailPage() {
             style={{ boxShadow: 'var(--shadow-level-2)' }}>
             <div className="flex flex-col items-center text-center">
               <div className="w-full py-4">
-                <FormError error={error} />
-                <FormError error={resendError} />
-                <FormSuccess success={success} />
               </div>
               {/* Icon/Visual */}
               <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-inverse-on-surface">
@@ -149,7 +147,7 @@ export default function VerifyEmailPage() {
 
                 <button
                   type="submit"
-                  disabled={loading || !!error}
+                  disabled={loading}
                   className={`w-full flex items-center justify-center gap-2 py-4 rounded-lg font-sans text-sm leading-5 tracking-[0.01em] font-medium text-white uppercase transition-all duration-200 ${loading
                     ? 'bg-[#006b2c]'
                     : 'bg-linear-to-br from-[#00873a] to-[#006b2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] hover:opacity-95 hover:-translate-y-px active:scale-95 disabled:opacity-70 disabled:hover:translate-y-0 disabled:active:scale-100'

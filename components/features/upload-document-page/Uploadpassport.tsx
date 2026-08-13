@@ -1,3 +1,5 @@
+import Dropzone from "@/components/ui/Dropzone";
+import { FileSlots } from "@/views/UploadDocumentPage";
 import {
     ImagePlus,
     CheckCircle2,
@@ -31,8 +33,12 @@ const REQUIREMENTS = [
     },
 ];
 
+interface IUploadPassport {
+    files: FileSlots,
+    setFiles: React.Dispatch<React.SetStateAction<FileSlots>>;
+}
 
-export default function UploadPassport() {
+export default function UploadPassport({ files, setFiles }: IUploadPassport) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 ">
             <div className="card flex flex-col gap-6 h-fit">
@@ -46,25 +52,7 @@ export default function UploadPassport() {
                         ecosystem.
                     </p>
                 </div>
-                <label className="relative flex flex-col items-center justify-center gap-3 border-2 border-dashed border-outline-variant rounded-lg bg-surface-container-low hover:bg-surface-container-highest py-20 cursor-pointer hover:border-primary transition-colors overflow-hidden">
-                    <input type="file" accept="image/*,.pdf" className="hidden" />
-                    <span className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
-                        <ImagePlus size={26} />
-                    </span>
-                    <span className="text-headline-md text-[20px]! leading-7! text-on-surface">
-                        Drag &amp; drop your passport photo
-                    </span>
-                    <span className="text-body-md text-on-surface-variant">
-                        or{" "}
-                        <span className="text-primary font-medium">
-                            browse files
-                        </span>{" "}
-                        to upload
-                    </span>
-                    <span className="text-label-sm uppercase tracking-wide text-on-surface-variant mt-2">
-                        Supports JPG, PNG, PDF (Max 10MB)
-                    </span>
-                </label>
+                <Dropzone label="Drag & drop your passport photo" hint="JPG, PNG (Max 5MB)" files={files} setFiles={setFiles} index={0} />
             </div>
 
             <aside className="flex flex-col gap-6">

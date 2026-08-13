@@ -1,4 +1,5 @@
 import Dropzone from "@/components/ui/Dropzone";
+import { FileSlots } from "@/views/UploadDocumentPage";
 import {
     ShieldCheck,
     Lock,
@@ -20,8 +21,12 @@ const TIPS = [
     { icon: AlignLeft, label: "Text is readable" },
 ];
 
+interface IUploadnationalid {
+    files: FileSlots,
+    setFiles: React.Dispatch<React.SetStateAction<FileSlots>>;
+}
 
-function Uploadnationalid() {
+function Uploadnationalid({ files, setFiles }: IUploadnationalid) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 ">
             <div className="card flex flex-col gap-6">
@@ -35,8 +40,8 @@ function Uploadnationalid() {
                     </p>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-6">
-                    <Dropzone label="Front of ID" hint="JPG, PNG (Max 5MB)" />
-                    <Dropzone label="Back of ID" hint="JPG, PNG (Max 5MB)" />
+                    <Dropzone label="Front of ID" hint="JPG, PNG (Max 5MB)" files={files} setFiles={setFiles} index={0} />
+                    <Dropzone label="Back of ID" hint="JPG, PNG (Max 5MB)" files={files} setFiles={setFiles} index={1} />
                 </div>
 
                 <section className="bg-surface-container-low rounded-lg p-6">

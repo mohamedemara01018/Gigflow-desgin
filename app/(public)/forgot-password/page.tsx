@@ -5,15 +5,20 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { KeyRound, Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { authService } from "@/services/auth.service";
-import FormError from "@/components/ui/FormError";
-import FormSuccess from "@/components/ui/FormSuccess";
+import { AppDispatch } from "@/store/store";
+import { useDispatch } from "react-redux";
+import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
+import { DURATION } from "@/utils/constant.utils";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [isSent, setIsSent] = useState(false);
+
+  const dispatch: AppDispatch = useDispatch();
+  const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
+    dispatch(toastify({ message, type, duration }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,12 +27,11 @@ export default function ForgotPassword() {
       if (email && !isLoading && !isSent) {
         setIsLoading(true);
         setIsSent(true)
-        const a = await authService.forgetPassword({ email });
-        setSuccess(a.message)
-        console.log(a)
+        const res = await authService.forgetPassword({ email });
+        handleAddToastification(String(res.message), "success", DURATION);
       }
     } catch (error: any) {
-      setError(error.message)
+      handleAddToastification(String(error), "error", DURATION);
       setIsSent(false)
     } finally {
       setIsLoading(false)
@@ -51,8 +55,6 @@ export default function ForgotPassword() {
             className="rounded-xl border border-outline-variant p-8 flex flex-col items-center text-center"
             style={{ boxShadow: 'var(--shadow-level-2)' }}
           >
-            <FormError error={error} />
-            <FormSuccess success={success} />
             {/* Icon/Avatar Section */}
             <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-4">
               <KeyRound className="text-primary" size={36} />

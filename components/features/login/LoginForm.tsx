@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import FormError from '@/components/ui/FormError';
 import { authService } from '@/services/auth.service';
-import { BASE_URL } from '@/utils/constant.utils';
+import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
+import { AppDispatch } from '@/store/store';
+import { BASE_URL, DURATION } from '@/utils/constant.utils';
 import { Sign } from '@/utils/enums.utils';
 import { GoogleIcon } from '@/utils/icons.utils';
 import { ArrowRight, EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react'
+import { useDispatch } from 'react-redux';
 
 function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
@@ -16,10 +18,14 @@ function LoginForm() {
     const [rememberMe, setRememberMe] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false)
-    const [error, setError] = useState('');
     const [emailFocused, setEmailFocused] = useState(false);
     const [passwordFocused, setPasswordFocused] = useState(false);
-    const router = useRouter()
+    const router = useRouter();
+
+    const dispatch: AppDispatch = useDispatch();
+    const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
+        dispatch(toastify({ message, type, duration }))
+    }
 
     const validate = () => {
         if (!email.trim()) return "Email is required";
@@ -32,7 +38,7 @@ function LoginForm() {
 
         const vaildateError = validate();
         if (vaildateError) {
-            setError(vaildateError);
+            handleAddToastification(vaildateError, "warning", DURATION);
             return
         }
         setIsLoading(true);
@@ -42,15 +48,14 @@ function LoginForm() {
                 "email": email,
                 "password": password
             })
-            console.log(res)
+            handleAddToastification(String(res.message), "success", DURATION);
 
             router.replace('/')
             setEmail('');
             setPassword('');
-            setError('');
 
         } catch (error: any) {
-            setError(error.message)
+            handleAddToastification(error.message, "error", DURATION);
         } finally {
             setIsLoading(false)
         }
@@ -59,16 +64,14 @@ function LoginForm() {
     const handleGoogleLogin = () => {
 
         try {
-            setError('');
             setGoogleLoading(true)
             window.location.href = BASE_URL + `/api/auth/google/login?sign=${Sign.LOGIN}`
         } catch (error: any) {
-            setError(error.message)
+            handleAddToastification(error.message, "error", DURATION);
         }
     }
     return (
         <form className="flex flex-col gap-4" onSubmit={handleLogin}>
-            <FormError error={error} />
             {/* Email Field */}
             <div className="flex flex-col gap-1">
                 <label className={`text-sm font-medium ml-1 transition-colors ${emailFocused ? 'text-primary' : 'text-on-surface-variant'}`} htmlFor="email">

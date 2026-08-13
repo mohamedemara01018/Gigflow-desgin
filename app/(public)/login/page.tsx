@@ -1,7 +1,6 @@
 "use client";
 
 import LoginForm from "@/components/features/login/LoginForm";
-import { GoogleIcon } from "@/utils/icons.utils";
 import Link from "next/link";
 
 // Inline SVGs for icons

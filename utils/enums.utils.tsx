@@ -16,6 +16,15 @@ export enum DocumentType {
     DRIVING_LICENSE = "driving_license",
 }
 
+export enum AttachmentEntityType {
+    JOB = "job",
+    PROPOSAL = "proposal",
+    MESSAGE = "message",
+    MILESTONE = "milestone",
+    PORTFOLIO = "portfolio",
+    VERIFICATION = "verification",
+}
+
 
 export enum VerificationStatus {
     PENDING = "pending",

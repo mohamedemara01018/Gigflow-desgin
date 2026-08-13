@@ -11,14 +11,16 @@ import { authService } from '@/services/auth.service';
 import { useRouter, useSearchParams } from 'next/navigation';
 import FormError from '@/components/ui/FormError';
 import { GoogleIcon } from '@/utils/icons.utils';
-import { BASE_URL } from '@/utils/constant.utils';
+import { BASE_URL, DURATION } from '@/utils/constant.utils';
 import { Sign, UserRole } from '@/utils/enums.utils';
+import { AppDispatch } from '@/store/store';
+import { useDispatch } from 'react-redux';
+import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
 
 
 function RegisterForm() {
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
     const searchParams = useSearchParams();
-    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -30,9 +32,12 @@ function RegisterForm() {
     const [googleLoading, setGoogleLoading] = useState(false)
     const [confirmPasswordError, setConfirmPasswordError] = useState('')
     const router = useRouter();
-
     const role = searchParams.get('role');
-    console.log()
+
+    const dispatch: AppDispatch = useDispatch();
+    const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
+        dispatch(toastify({ message, type, duration }))
+    }
 
     const handleChange = (e: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
         const { name, value } = e.target
@@ -77,11 +82,9 @@ function RegisterForm() {
 
         const vaildateError = validate();
         if (vaildateError) {
-            setError(vaildateError);
+            handleAddToastification(String(vaildateError), "error", DURATION);
             return
         }
-
-        setError("");
         setStatus('loading');
 
         try {
@@ -92,8 +95,7 @@ function RegisterForm() {
 
 
             const data = await authService.register({ ...formData, role })
-            console.log(data)
-            setStatus('success')
+            handleAddToastification(String(data.message), "success", DURATION);
 
             router.push('/verify-email')
             setFormData({
@@ -105,26 +107,23 @@ function RegisterForm() {
             setConfirmPassword('')
 
         } catch (error: any) {
-            setError(error.message)
+            handleAddToastification(String(error.message), "error", DURATION);
         } finally {
             setStatus('idle')
-
         }
     };
 
     const handleGoogleRegister = () => {
         try {
-            setError('');
             setGoogleLoading(true)
             window.location.href = BASE_URL + `/api/auth/google/login?sign=${Sign.REGISTER}&role=${role}`
         } catch (error: any) {
-            setError(error.message)
+            handleAddToastification(String(error.message), "error", DURATION);
         }
     }
 
     return (
         <form className="space-y-4" onSubmit={handleSubmit}>
-            <FormError error={error} />
             {/* Names Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col items-start gap-1.5 w-full">

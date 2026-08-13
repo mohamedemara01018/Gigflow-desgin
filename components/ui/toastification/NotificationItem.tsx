@@ -73,7 +73,7 @@ export default function ToastificationItem({
         const timer = setTimeout(() => {
             dispatch(
                 removeToastify({
-                    id: toastification.id,
+                    id: toastification.id!,
                 })
             );
         }, toastification.duration);
@@ -141,7 +141,7 @@ export default function ToastificationItem({
             <button
                 type="button"
                 onClick={() =>
-                    onRemove(toastification.id)
+                    onRemove(toastification.id!)
                 }
                 aria-label="Close notification"
                 className="

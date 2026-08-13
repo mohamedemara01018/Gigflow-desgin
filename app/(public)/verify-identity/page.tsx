@@ -27,6 +27,7 @@ function page() {
                 return;
             }
             const verification = await verificationService.getVerificationByUserId(me?._id as string);
+            console.log('verification', verification)
             setVerification(verification)
             router.replace('/')
         } catch (error: any) {
@@ -48,7 +49,9 @@ function page() {
     return <div>
         <FormError error={error} />
         {
-            verification?.status == VerificationStatus.PENDING ? <VerificationInProgressPage verification={verification!} /> : <VerifyIdentityPage />
+            verification?.status == VerificationStatus.PENDING
+                ? <VerificationInProgressPage verification={verification!} />
+                : <VerifyIdentityPage />
         }
     </div>
 
