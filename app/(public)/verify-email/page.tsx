@@ -69,7 +69,7 @@ export default function VerifyEmailPage() {
       })
       console.log(res)
       handleAddToastification(String(res.message), "success", DURATION);
-      router.replace('/')
+      window.location.reload();
       setOtp(["", "", "", "", "", ""])
     } catch (error: any) {
       handleAddToastification(String(error.message), "error", DURATION);

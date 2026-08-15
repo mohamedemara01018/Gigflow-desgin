@@ -1,9 +1,9 @@
 import { Briefcase, ImageOff } from "lucide-react";
-import { ChangeEvent } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 
 interface IdentityDocumentCardProps {
     documentType: string;
-    imgs: string[]
+    files: File[]
     notes: string,
     notesError: boolean,
     setNotesError: (notesError: boolean) => void,
@@ -35,12 +35,26 @@ function DocumentThumb({ src, label }: { src?: string; label: string }) {
 
 function ReviewDocumentPage({
     documentType,
-    imgs,
+    files,
     notes,
     notesError,
     setNotesError,
     setNotes
 }: IdentityDocumentCardProps) {
+    const [imgs, setImgs] = useState<string[]>([]);
+
+    useEffect(() => {
+        const imgList = [];
+        for (const file of files) {
+            if (!file) {
+                return;
+            }
+            const objectUrl = URL.createObjectURL(file);
+            imgList.push(objectUrl)
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setImgs(imgList);
+        }
+    }, [files])
 
     const handleTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setNotes(e.target.value);

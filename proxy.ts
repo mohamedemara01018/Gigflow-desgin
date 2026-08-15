@@ -22,6 +22,10 @@ const freelancerRoutes = [
     "/jobs",
 ];
 
+const adminRoutes = [
+    "/admin",
+];
+
 const sharedProtectedRoutes = [
     "/profile",
     "/settings",
@@ -52,6 +56,12 @@ export async function proxy(request: NextRequest) {
         pathname.startsWith(route)
     );
 
+    const isAdminRoute = adminRoutes.some((route) =>
+        pathname.startsWith(route)
+    );
+
+
+
     const isSharedProtectedRoute = sharedProtectedRoutes.some((route) =>
         pathname.startsWith(route)
     );
@@ -59,6 +69,7 @@ export async function proxy(request: NextRequest) {
     const isProtectedRoute =
         isClientRoute ||
         isFreelancerRoute ||
+        isAdminRoute ||
         isSharedProtectedRoute;
 
     // --------------------------------

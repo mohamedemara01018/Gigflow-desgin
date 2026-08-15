@@ -1,7 +1,5 @@
 import Dropzone from "@/components/ui/Dropzone";
-import { FileSlots } from "@/views/UploadDocumentPage";
 import {
-    ImagePlus,
     CheckCircle2,
     Crop,
     Sun,
@@ -34,8 +32,8 @@ const REQUIREMENTS = [
 ];
 
 interface IUploadPassport {
-    files: FileSlots,
-    setFiles: React.Dispatch<React.SetStateAction<FileSlots>>;
+    files: File[],
+    setFiles: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
 export default function UploadPassport({ files, setFiles }: IUploadPassport) {

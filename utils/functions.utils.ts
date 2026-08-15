@@ -9,3 +9,10 @@ export const formatDateTime = (date: string | Date) => {
         }),
     };
 };
+
+
+export function getInitials(firstName: string, lastName: string) {
+    const first = firstName?.charAt(0) ?? "";
+    const last = lastName?.charAt(0) ?? "";
+    return (first + last).toUpperCase() || "?";
+}

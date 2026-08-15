@@ -1,26 +1,82 @@
 import { BASE_URL } from "@/utils/constant.utils";
 import { AttachmentEntityType } from "@/utils/enums.utils";
-import { FileSlots } from "@/views/UploadDocumentPage";
 
-interface ICreateAttachment {
-    files: FileSlots;
+
+// 1. User details embedded in the attachment
+export interface IAttachmentUser {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    avatar: string | null;
+}
+
+// 2. Individual Attachment item
+export interface IAttachmentItem {
+    _id: string;
+    uploadedBy: IAttachmentUser;
+    entityType: AttachmentEntityType
+    entityId: string;
+    originalName: string;
+    fileName: string;
+    url: string;
+    publicId: string;
+    mimeType: string;
+    size: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+// 3. Data payload containing attachments list and pagination metadata
+export interface IAttachmentsData {
+    totalAttachments: number;
+    currentPage: number;
+    totalPages: number;
+    attachments: IAttachmentItem[];
+}
+
+// 4. API Response Wrapper
+export interface IGetAttachmentsApiResponse {
+    status: string;
+    message: string;
+    data: IAttachmentsData;
+}
+
+interface ICreateAttachmentParams {
+    files: File[];
     entityId: string;
     entityType: AttachmentEntityType;
     uploadedBy: string;
 }
 
-interface ICreateAttachmentResponse {
-    message: string;
-    [key: string]: unknown;
-}
+
 
 export const attachmentService = {
+
+    getEntityAttachments: async ({ entity, entityId }: { entity: AttachmentEntityType, entityId: string }) => {
+        const response = await fetch(
+            `${BASE_URL}/api/attachment/entity/${entity}/${entityId}`,
+            {
+                credentials: "include",
+            }
+        );
+
+        const data: IGetAttachmentsApiResponse = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || "Something went wrong when fetching attachments "
+            );
+        }
+
+        return data;
+    },
     createAttachment: async ({
         files,
         entityId,
         entityType,
         uploadedBy,
-    }: ICreateAttachment): Promise<ICreateAttachmentResponse> => {
+    }: ICreateAttachmentParams) => {
         const formData = new FormData();
 
         // Only real, uploaded files — empty slots (unselected front/back)

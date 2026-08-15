@@ -2,15 +2,21 @@ import DocumentOption from '@/components/features/document-type/DocumentOption'
 import SecuritySidebar from '@/components/features/document-type/SecuritySidebar'
 import { DocumentType } from '@/utils/enums.utils'
 import { BookOpen, Car, IdCard } from 'lucide-react'
+import { SetStateAction, useEffect } from 'react'
 
 
 
 interface DocumentTypePageProbs {
     selected: string,
     setSelected: (selected: string) => void
+    setFiles: React.Dispatch<SetStateAction<File[]>>
 }
 
-function DocumentTypePage({ selected, setSelected }: DocumentTypePageProbs) {
+function DocumentTypePage({ selected, setSelected, setFiles }: DocumentTypePageProbs) {
+    useEffect(() => {
+        setFiles([])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 wrapper mx-auto mt-10">
             <section className="card">

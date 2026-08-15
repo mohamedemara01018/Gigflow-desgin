@@ -6,11 +6,10 @@ import {
     Loader2,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import DocumentTypePage from "@/views/DocumentTypePage";
+import DocumentTypePage from "@/views/public/DocumentTypePage";
 import StepIndicator from "@/components/features/verify-identity/StepIndicator";
-import UploadDocumentPage, { FileSlots } from "@/views/UploadDocumentPage";
 import { AttachmentEntityType, DocumentType } from "@/utils/enums.utils";
-import ReviewDocumentPage from "@/views/ReviewDocumentPage";
+import ReviewDocumentPage from "@/views/public/ReviewDocumentPage";
 import { verificationService } from "@/services/verification.service";
 import { useDispatch, useSelector } from "react-redux";
 import { selectMeSlice } from "@/store/slices/authSlice";
@@ -18,6 +17,7 @@ import FormError from "@/components/ui/FormError";
 import { AppDispatch } from "@/store/store";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
 import { attachmentService } from "@/services/attachment.service";
+import UploadDocumentPage from "./UploadDocumentPage";
 
 export default function VerifyIdentityPage() {
     const searchParams = useSearchParams();
@@ -33,7 +33,7 @@ export default function VerifyIdentityPage() {
     const [error, setError] = useState('');
     const [notesError, setNotesError] = useState(false);
 
-    const [files, setFiles] = useState<FileSlots>([]);
+    const [files, setFiles] = useState<File[]>([]);
 
     const dispatch: AppDispatch = useDispatch();
     const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
@@ -134,7 +134,7 @@ export default function VerifyIdentityPage() {
                 <FormError error={error} />
             </div>
 
-            {step === 1 && <DocumentTypePage selected={selected} setSelected={setSelected} />}
+            {step === 1 && <DocumentTypePage selected={selected} setSelected={setSelected} setFiles={setFiles} />}
 
             {step === 2 && <UploadDocumentPage selected={selected} files={files} setFiles={setFiles} />}
 
@@ -145,7 +145,7 @@ export default function VerifyIdentityPage() {
                     setNotes={setNotes}
                     notesError={notesError}
                     setNotesError={setNotesError}
-                    imgs={['https://images.pexels.com/photos/7108126/pexels-photo-7108126.jpeg', 'https://images.pexels.com/photos/7108126/pexels-photo-7108126.jpeg']}
+                    files={files}
                 />
             )}
 

@@ -4,6 +4,13 @@ export enum UserRole {
     ADMIN = "admin",
 }
 
+export enum UserStatus {
+    ACTIVE = "active",
+    INACTIVE = "inactive",
+    SUSPENDED = "suspended",
+    BANNED = "banned",
+}
+
 export enum Sign {
     REGISTER = "register",
     LOGIN = "login",

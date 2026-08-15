@@ -5,13 +5,12 @@ import { DocumentType } from "@/utils/enums.utils";
 
 import React from 'react'
 
-export type FileSlots = (File | undefined)[];
 
 interface IUploadDocumentPage {
     selected: string,
-    files: FileSlots,
+    files: File[],
     setFiles: React.Dispatch<
-        React.SetStateAction<FileSlots>
+        React.SetStateAction<File[]>
     >;
 
 }

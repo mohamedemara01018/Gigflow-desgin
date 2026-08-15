@@ -4,11 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ToggleTheme from '@/components/ui/ToggleTheme';
 import Logo from '@/components/ui/Logo';
+import { useSelector } from 'react-redux';
+import { selectMeSlice } from '@/store/slices/authSlice';
+import { authService } from '@/services/auth.service';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
+  const { me } = useSelector(selectMeSlice)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -16,7 +19,10 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-
+  const handleLogout = async () => {
+    await authService.logout();
+    window.location.reload();
+  }
 
   return (
     <header
@@ -50,19 +56,30 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           {/* Theme Toggle */}
           <ToggleTheme />
+          {
+            me ?
 
-          <Link
-            href="/login"
-            className="px-4 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors duration-200"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/role"
-            className="btn-primary px-5 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-on-surface"
-          >
-            Join Now
-          </Link>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors duration-200">
+                Logout
+              </button>
+              : <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/role"
+                  className="btn-primary px-5 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-on-surface"
+                >
+                  Join Now
+                </Link>
+              </>
+          }
+
         </div>
 
         {/* Mobile hamburger */}
@@ -101,12 +118,24 @@ export default function Navbar() {
             </a>
           ))}
           <div className="flex items-center gap-3 pt-2 border-t border-outline-variant">
-            <Link href="/login" className="flex-1 text-center py-2 text-sm font-semibold text-on-surface-variant border border-outline-variant rounded-xl">
-              Sign In
-            </Link>
-            <Link href="/role" className="flex-1 text-center py-2 text-sm font-semibold text-on-surface-variant border border-outline-variant rounded-xl">
-              Join Now
-            </Link>
+
+            {
+              me ?
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors duration-200">
+                  Logout
+                </button>
+                : <>
+                  <Link href="/login" className="flex-1 text-center py-2 text-sm font-semibold text-on-surface-variant border border-outline-variant rounded-xl">
+                    Sign In
+                  </Link>
+                  <Link href="/role" className="flex-1 text-center py-2 text-sm font-semibold text-on-surface-variant border border-outline-variant rounded-xl">
+                    Join Now
+                  </Link>
+                </>
+            }
+
             <ToggleTheme />
           </div>
         </div>

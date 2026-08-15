@@ -1,5 +1,5 @@
 
-import HomePage from "@/views/HomePage";
+import HomePage from "@/views/public/HomePage";
 
 
 

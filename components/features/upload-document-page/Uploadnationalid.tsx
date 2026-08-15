@@ -1,5 +1,4 @@
 import Dropzone from "@/components/ui/Dropzone";
-import { FileSlots } from "@/views/UploadDocumentPage";
 import {
     ShieldCheck,
     Lock,
@@ -22,8 +21,8 @@ const TIPS = [
 ];
 
 interface IUploadnationalid {
-    files: FileSlots,
-    setFiles: React.Dispatch<React.SetStateAction<FileSlots>>;
+    files: File[],
+    setFiles: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
 function Uploadnationalid({ files, setFiles }: IUploadnationalid) {

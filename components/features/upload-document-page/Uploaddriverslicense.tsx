@@ -1,5 +1,4 @@
 import Dropzone from "@/components/ui/Dropzone";
-import { FileSlots } from "@/views/UploadDocumentPage";
 import { ShieldCheck, CheckCircle2, Lock } from "lucide-react";
 
 
@@ -24,8 +23,8 @@ const REQUIREMENTS = [
 ];
 
 interface IUploadDriversLicensePage {
-    files: FileSlots,
-    setFiles: React.Dispatch<React.SetStateAction<FileSlots>>;
+    files: File[],
+    setFiles: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
 
