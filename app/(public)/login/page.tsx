@@ -1,6 +1,6 @@
 "use client";
 
-import LoginForm from "@/components/features/login/LoginForm";
+import LoginForm from "@/components/features/public/login/LoginForm";
 import Link from "next/link";
 
 // Inline SVGs for icons

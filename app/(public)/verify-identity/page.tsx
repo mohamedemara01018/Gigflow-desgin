@@ -3,7 +3,7 @@
 'use client'
 import FormError from '@/components/ui/FormError'
 import Loading from '@/components/ui/Loading'
-import { IverificationServiceData, verificationService } from '@/services/verification.service'
+import { IVerificationRequest, verificationService } from '@/services/verification.service'
 import { selectMeSlice } from '@/store/slices/authSlice'
 import { VerificationStatus } from '@/utils/enums.utils'
 import VerificationInProgressPage from '@/views/public/verificationInProgress'
@@ -14,7 +14,7 @@ import { useSelector } from 'react-redux'
 
 function page() {
 
-    const [verification, setVerification] = useState<IverificationServiceData | null>(null);
+    const [verification, setVerification] = useState<IVerificationRequest | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const me = useSelector(selectMeSlice).me;

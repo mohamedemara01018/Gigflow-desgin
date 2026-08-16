@@ -1,5 +1,5 @@
 import Logo from '@/components/ui/Logo';
-import { ArrowRight, BoltIcon } from '../../../features/landing/Icons';
+import { ArrowRight, BoltIcon } from '../../../features/public/landing/Icons';
 
 const connectLinks = ['About Us', 'Careers', 'Help Center'];
 const legalLinks = ['Privacy Policy', 'Terms of Service', 'Cookie Policy'];

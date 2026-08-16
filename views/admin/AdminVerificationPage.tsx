@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import VerificationDetailsSidebar from "@/components/features/admin-verification-page/VerificationDetailsSidebar";
-import VerificationTable from "@/components/features/admin-verification-page/VerificationTable";
-import VerificationTabs, { TABS } from "@/components/features/admin-verification-page/VerificationTabs";
+import VerificationDetailsSidebar from "@/components/features/admin/admin-verification-page/VerificationDetailsSidebar";
+import VerificationTable from "@/components/features/admin/admin-verification-page/VerificationTable";
+import VerificationTabs, { TABS } from "@/components/features/admin/admin-verification-page/VerificationTabs";
 import EmptyState from "@/components/ui/Emptystate";
 import SmallLoading from "@/components/ui/SmallLoading";
 import { attachmentService, IGetAttachmentsApiResponse } from "@/services/attachment.service";
@@ -43,7 +43,8 @@ export default function AdminVerificationsPage() {
         page: 1,
         limit: 10,
     });
-    const router = useRouter();
+
+    const [rerender, setRerender] = useState(false);
 
     const dispatch: AppDispatch = useDispatch();
     const { me } = useSelector(selectMeSlice)
@@ -76,7 +77,7 @@ export default function AdminVerificationsPage() {
         };
         getVerifications();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters]);
+    }, [filters, rerender]);
 
     useEffect(() => {
         const getEntityAttachments = async () => {
@@ -134,12 +135,10 @@ export default function AdminVerificationsPage() {
 
             // 1. Clear modal or selected state if applicable
             setSelectedVerification(null);
-            setFilters({ ...filters, status })
-            setActiveTab(status)
             setNotes("");
 
             // 2. Trigger Next.js App Router server data refresh
-            router.refresh();
+            setRerender(!rerender)
         } catch (error: any) {
             handleAddToastification(
                 error?.response?.data?.message || error.message || "An error occurred",
@@ -171,7 +170,7 @@ export default function AdminVerificationsPage() {
             setSelectedVerification(null);
 
             // 2. Trigger Next.js App Router server data refresh
-            router.refresh();
+            setRerender(!rerender)
         } catch (error: any) {
             handleAddToastification(
                 error?.response?.data?.message || error.message || "An error occurred",

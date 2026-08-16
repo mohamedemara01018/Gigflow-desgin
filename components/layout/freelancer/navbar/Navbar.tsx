@@ -1,15 +1,40 @@
-/* eslint-disable @next/next/no-img-element */
 
 'use client'
 import Logo from '@/components/ui/Logo'
 import ToggleTheme from '@/components/ui/ToggleTheme'
+import UserMenu from '@/components/ui/UserMenu';
+import { authService } from '@/services/auth.service';
+import { selectMeSlice } from '@/store/slices/authSlice';
+import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
+import { AppDispatch } from '@/store/store';
+import { DURATION } from '@/utils/constant.utils';
 import { Bell, Search, Settings, TextAlignJustify, X } from 'lucide-react'
 import Link from 'next/link';
 import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const { me } = useSelector(selectMeSlice);
+    const [loading, setLoading] = useState(false)
 
+    const dispatch: AppDispatch = useDispatch();
+    const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
+        dispatch(toastify({ message, type, duration }))
+    }
+    const handleLogout = async () => {
+        try {
+            setLoading(true)
+            await authService.logout();
+            window.location.reload();
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+            handleAddToastification(error.message, 'error', DURATION)
+        } finally {
+            setLoading(false)
+        }
+    }
     return (
         <>
             <nav className="bg-surface border-b border-outline-variant shadow-sm docked w-full top-0 sticky z-50">
@@ -43,9 +68,15 @@ function Navbar() {
                         <ToggleTheme />
                         <button className="text-on-surface-variant hover:text-primary transition-colors"><Bell size={22} /></button>
                         <button className="text-on-surface-variant hover:text-primary transition-colors"><Settings size={22} /></button>
-                        <div className="h-8 w-8 rounded-full bg-outline-variant overflow-hidden border border-outline cursor-pointer hover:opacity-80 transition-opacity">
-                            <img className="w-full h-full object-cover" alt="Alex Rivera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNAxXMzDLRgfdELYk1mXwnoY4DSq5Axa07KRgsc1ozexKMe2SCixe4Y43dhn2FJmiCP7_xDbj_iYDvTRWV-GZvMsVT8cy550EBwTHfELQxU_DpgP0TdxjVZGLeDwPourJT5n7b7qVV9kkUy6fVmCq4toT_o_cj1kFRdv4xPuM0Cd48m4ubbtXgxU523BodPGp-L39cZXKesr6WZtyyBaekpsVaR0Qi8P_EinbAWYlkSRRafKOs55TCMWxyKxY8KUvmfcRxVaxImq4" />
-                        </div>
+                        <UserMenu
+                            firstName={String(me?.firstName)}
+                            lastName={String(me?.lastName)}
+                            role={String(me?.role)}
+                            id={String(me?._id)}
+                            avatarUrl={String(me?.avatar)}
+                            onLogout={handleLogout}
+                            loading={loading}
+                        />
                     </div>
                 </div>
             </nav>

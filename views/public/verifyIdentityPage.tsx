@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DocumentTypePage from "@/views/public/DocumentTypePage";
-import StepIndicator from "@/components/features/verify-identity/StepIndicator";
+import StepIndicator from "@/components/features/public/verify-identity/StepIndicator";
 import { AttachmentEntityType, DocumentType } from "@/utils/enums.utils";
 import ReviewDocumentPage from "@/views/public/ReviewDocumentPage";
 import { verificationService } from "@/services/verification.service";

@@ -1,5 +1,5 @@
-import DocumentOption from '@/components/features/document-type/DocumentOption'
-import SecuritySidebar from '@/components/features/document-type/SecuritySidebar'
+import DocumentOption from '@/components/features/public/document-type/DocumentOption'
+import SecuritySidebar from '@/components/features/public/document-type/SecuritySidebar'
 import { DocumentType } from '@/utils/enums.utils'
 import { BookOpen, Car, IdCard } from 'lucide-react'
 import { SetStateAction, useEffect } from 'react'

@@ -1,6 +1,6 @@
-import UploadDriversLicensePage from "@/components/features/upload-document-page/Uploaddriverslicense";
-import Uploadnationalid from "@/components/features/upload-document-page/Uploadnationalid";
-import UploadPassportPage from "@/components/features/upload-document-page/Uploadpassport";
+import UploadDriversLicensePage from "@/components/features/public/upload-document-page/Uploaddriverslicense";
+import Uploadnationalid from "@/components/features/public/upload-document-page/Uploadnationalid";
+import UploadPassportPage from "@/components/features/public/upload-document-page/Uploadpassport";
 import { DocumentType } from "@/utils/enums.utils";
 
 import React from 'react'

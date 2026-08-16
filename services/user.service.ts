@@ -52,6 +52,13 @@ export interface IGetUsersApiResponse {
 }
 
 
+export interface IGetUserByIdApiResponse {
+    message: string;
+    data: {
+        user: IUserListItem
+    };
+}
+
 export interface GetAllUserParams {
     search: string;
     role: string;
@@ -117,5 +124,17 @@ export const userService = {
 
         return data;
     },
+    getUserById: async (id: string) => {
+        const response = await fetch(`${BASE_URL}/api/user/${id}`, {
+            credentials: 'include',
+        })
+        const data: IGetUserByIdApiResponse = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'something went wrong when get user')
+        }
+
+        return data
+    }
 
 }

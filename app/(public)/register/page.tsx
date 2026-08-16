@@ -2,7 +2,7 @@ import {
   Zap,
   Wallet,
 } from 'lucide-react';
-import RegisterForm from '@/components/features/register/RegisterForm';
+import RegisterForm from '@/components/features/public/register/RegisterForm';
 import Link from 'next/link';
 
 

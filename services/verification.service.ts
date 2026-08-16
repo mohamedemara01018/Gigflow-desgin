@@ -123,7 +123,7 @@ export const verificationService = {
         if (!response.ok) {
             throw new Error(data.message || 'something went wrong ')
         }
-        return data.data.requests
+        return data.data.verification
     },
 
     reviewVerificationRequest: async ({ verificationId, status, reviewedBy, rejectionReason, notes, }: IReviewVerificationRequestParams) => {

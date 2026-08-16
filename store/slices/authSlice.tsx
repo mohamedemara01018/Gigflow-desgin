@@ -1,19 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { userService } from "@/services/user.service";
+import { IUserListItem, userService } from "@/services/user.service";
 import { RootState } from "../store";
 
-export interface IUser {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-    avatar?: string;
-}
+
 
 interface AuthState {
-    me: IUser | null;
+    me: IUserListItem | null;
     isLoading: boolean;
     initialized: boolean;
     error: string | null;
@@ -27,7 +20,7 @@ const initialState: AuthState = {
 };
 
 export const fetchMe = createAsyncThunk<
-    { user: IUser },
+    { user: IUserListItem },
     void,
     { rejectValue: string }
 >(

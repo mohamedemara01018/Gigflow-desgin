@@ -2,16 +2,16 @@
 import {
     CircleEllipsis,
 } from "lucide-react";
-import VerificationTimeline from "@/components/features/verification-in-progress/VerificationTimeline";
-import SubmissionDetails from "@/components/features/verification-in-progress/SubmissionDetails";
+import VerificationTimeline from "@/components/features/public/verification-in-progress/VerificationTimeline";
+import SubmissionDetails from "@/components/features/public/verification-in-progress/SubmissionDetails";
 import FaqAccordion from "./FaqAccordion";
-import { IverificationServiceData } from "@/services/verification.service";
 import { VerificationStatus } from "@/utils/enums.utils";
+import { IVerificationRequest } from "@/services/verification.service";
 
 
 
 
-export default function VerificationInProgressPage({ verification }: { verification: IverificationServiceData }) {
+export default function VerificationInProgressPage({ verification }: { verification: IVerificationRequest }) {
     return (
         <main className="bg-surface min-h-screen">
             <div className="bg-surface-container-low py-16">

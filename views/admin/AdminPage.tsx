@@ -1,9 +1,9 @@
 "use client";
 
-import JobFunnel from "@/components/features/admin-page/Jobfunnel";
-import RecentActivity from "@/components/features/admin-page/Recentactivity";
-import RevenueChart from "@/components/features/admin-page/Revenuechart";
-import StatCard from "@/components/features/admin-page/Statcard";
+import JobFunnel from "@/components/features/admin/admin-page/Jobfunnel";
+import RecentActivity from "@/components/features/admin/admin-page/Recentactivity";
+import RevenueChart from "@/components/features/admin/admin-page/Revenuechart";
+import StatCard from "@/components/features/admin/admin-page/Statcard";
 import {
     Users,
     Briefcase,

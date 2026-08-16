@@ -1,12 +1,12 @@
 
 
-import Hero from "@/components/features/landing/Hero";
-import PartnersBar from "@/components/features/landing/Partnersbar";
-import Features from "@/components/features/landing/Features";
-import Workflow from "@/components/features/landing/Workflow";
-import Stats from "@/components/features/landing/Stats";
-import Testimonial from "@/components/features/landing/Testimonial";
-import CtaBanner from "@/components/features/landing/Ctabanner";
+import Hero from "@/components/features/public/landing/Hero";
+import PartnersBar from "@/components/features/public/landing/Partnersbar";
+import Features from "@/components/features/public/landing/Features";
+import Workflow from "@/components/features/public/landing/Workflow";
+import Stats from "@/components/features/public/landing/Stats";
+import Testimonial from "@/components/features/public/landing/Testimonial";
+import CtaBanner from "@/components/features/public/landing/Ctabanner";
 
 import PublicNavbar from "@/components/layout/public/navbar/Navbar";
 import PublicFooter from "@/components/layout/public/footer/Footer";

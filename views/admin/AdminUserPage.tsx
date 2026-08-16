@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import AdminUserFilters, { UserFilterState } from "@/components/features/admin-user-page/AdminUserFilters";
-import AdminUserTable from "@/components/features/admin-user-page/AdminUserTable";
+import AdminUserFilters, { UserFilterState } from "@/components/features/admin/admin-user-page/AdminUserFilters";
+import AdminUserTable from "@/components/features/admin/admin-user-page/AdminUserTable";
 import { IUserListItem, userService } from "@/services/user.service";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
 import { AppDispatch } from "@/store/store";
