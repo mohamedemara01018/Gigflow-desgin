@@ -13,7 +13,7 @@ import {
     IVerificationRequestsApiResponse,
     verificationService,
 } from "@/services/verification.service";
-import { selectMeSlice } from "@/store/slices/authSlice";
+import { selectMeSlice } from "@/store/slices/auth/authSlice";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
 import { AppDispatch } from "@/store/store";
 import { DURATION } from "@/utils/constant.utils";

@@ -2,12 +2,14 @@
 "use client";
 
 import BlurredDocumentCard from "@/components/features/admin/admin-verification-page/BlurredDocumentCard";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SmallLoading from "@/components/ui/SmallLoading";
 import { IGetAttachmentsApiResponse } from "@/services/attachment.service";
 import { IVerificationRequest } from "@/services/verification.service";
 import { VerificationStatus } from "@/utils/enums.utils";
 import { formatDateTime, getInitials } from "@/utils/functions.utils";
 import { Loader2, ScanEye, ShieldCheck, XCircle, LucideIcon, AlertTriangle, AlertCircle } from "lucide-react";
+import { useState } from "react";
 
 // Common rejection reasons predefined for admin convenience
 export const REJECTION_REASONS = [
@@ -35,6 +37,11 @@ interface VerificationDetailsSidebarProps {
     attachmentLoading: boolean;
     attachmentResponse?: IGetAttachmentsApiResponse;
     onApprove?: () => void;
+    // NOTE: this now fires only after the confirm dialog is accepted —
+    // it should be the actual rejection submission (e.g. your former
+    // handleReview(REJECTED, ...) call), not something that opens its
+    // own dialog or does its own validation. That responsibility moved
+    // into this component.
     onReject?: () => void;
     onReview?: () => void;
     approveLoading: boolean;
@@ -47,10 +54,11 @@ interface ActionButtonProps {
     icon: LucideIcon;
     onClick?: () => void;
     isLoading: boolean;
+    disabled?: boolean;
     variant: "primary" | "tertiary" | "error";
 }
 
-function ActionButton({ label, icon: Icon, onClick, isLoading, variant }: ActionButtonProps) {
+function ActionButton({ label, icon: Icon, onClick, isLoading, disabled, variant }: ActionButtonProps) {
     const variantClasses = {
         primary: "bg-primary text-on-primary",
         tertiary: "bg-tertiary text-on-tertiary",
@@ -59,7 +67,7 @@ function ActionButton({ label, icon: Icon, onClick, isLoading, variant }: Action
 
     return (
         <button
-            disabled={isLoading}
+            disabled={isLoading || disabled}
             onClick={onClick}
             className={`flex-1 flex items-center justify-center gap-2 text-label-md rounded-md py-3 transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]}`}
         >
@@ -95,6 +103,35 @@ export default function VerificationDetailsSidebar({
     const { user, createdAt, status, rejectionReason: RS } = selectedVerification;
     const fullName = `${user.firstName} ${user.lastName}`.trim();
 
+    const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+    const [reasonError, setReasonError] = useState(false);
+
+    // Reject appears for every status except REJECTED (see renderActionButtons
+    // below) — the reason picker's visibility must match that, not the
+    // opposite of it.
+    const canReject = status !== VerificationStatus.REJECTED;
+
+    const isReasonValid =
+        rejectionReason !== "" &&
+        (rejectionReason !== "Other" || customRejectionReason.trim() !== "");
+
+    const finalReason =
+        rejectionReason === "Other" ? customRejectionReason.trim() : rejectionReason;
+
+    const handleRejectClick = () => {
+        if (!isReasonValid) {
+            setReasonError(true);
+            return;
+        }
+        setReasonError(false);
+        setRejectDialogOpen(true);
+    };
+
+    const handleConfirmReject = () => {
+        setRejectDialogOpen(false);
+        onReject?.();
+    };
+
     const renderActionButtons = () => {
         const reviewBtn = (
             <ActionButton
@@ -112,7 +149,7 @@ export default function VerificationDetailsSidebar({
                 key="reject"
                 label="Reject"
                 icon={XCircle}
-                onClick={onReject}
+                onClick={handleRejectClick}
                 isLoading={rejectedLoading}
                 variant="error"
             />
@@ -203,8 +240,10 @@ export default function VerificationDetailsSidebar({
                 </div>
             </section>
 
-            {/* Rejection Reason Selector */}
-            <section className={`card ${status == VerificationStatus.APPROVED ? 'block' : 'hidden'}`}>
+            {/* Rejection Reason Selector — shown whenever Reject is a valid
+                action for the current status (i.e. everything except
+                REJECTED), not the inverse. */}
+            <section className={`card ${canReject ? 'block' : 'hidden'}`}>
                 <div className="flex items-center gap-2 mb-3">
                     <AlertTriangle size={16} className="text-error" />
                     <span className="text-label-sm uppercase tracking-wide text-on-surface-variant">
@@ -214,8 +253,12 @@ export default function VerificationDetailsSidebar({
 
                 <select
                     value={rejectionReason}
-                    onChange={(e) => onRejectionReasonChange(e.target.value)}
-                    className="w-full bg-surface-container-low rounded-md p-3 text-body-sm text-on-surface border border-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    onChange={(e) => {
+                        onRejectionReasonChange(e.target.value);
+                        setReasonError(false);
+                    }}
+                    className={`w-full bg-surface-container-low rounded-md p-3 text-body-sm text-on-surface border focus:outline-none focus:ring-2 focus:ring-primary/30 ${reasonError ? "border-error" : "border-outline-variant"
+                        }`}
                 >
                     <option value="" disabled>
                         Select a reason...
@@ -232,10 +275,20 @@ export default function VerificationDetailsSidebar({
                     <input
                         type="text"
                         value={customRejectionReason}
-                        onChange={(e) => onCustomRejectionReasonChange(e.target.value)}
+                        onChange={(e) => {
+                            onCustomRejectionReasonChange(e.target.value);
+                            setReasonError(false);
+                        }}
                         placeholder="Specify custom rejection reason..."
-                        className="w-full mt-3 bg-surface-container-low rounded-md p-3 text-body-sm text-on-surface placeholder:text-on-surface-variant outline-none focus:ring-2 focus:ring-primary/30"
+                        className={`w-full mt-3 bg-surface-container-low rounded-md p-3 text-body-sm text-on-surface placeholder:text-on-surface-variant outline-none focus:ring-2 focus:ring-primary/30 ${reasonError ? "border border-error" : ""
+                            }`}
                     />
+                )}
+
+                {reasonError && (
+                    <p className="text-body-sm text-error mt-2">
+                        Select a reason (and specify one if &quot;Other&quot;) before rejecting.
+                    </p>
                 )}
             </section>
 
@@ -255,6 +308,17 @@ export default function VerificationDetailsSidebar({
 
             {/* Action Buttons */}
             <div className="flex items-center gap-3">{renderActionButtons()}</div>
+
+            <ConfirmDialog
+                open={rejectDialogOpen}
+                title="Reject this verification?"
+                description={`The applicant will be notified with the reason you provided: "${finalReason}"`}
+                confirmLabel="Reject Request"
+                tone="danger"
+                isLoading={rejectedLoading}
+                onConfirm={handleConfirmReject}
+                onCancel={() => setRejectDialogOpen(false)}
+            />
         </aside >
     );
 }

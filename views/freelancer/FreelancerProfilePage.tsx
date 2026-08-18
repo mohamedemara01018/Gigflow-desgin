@@ -10,29 +10,29 @@ import StatisticsSection from '@/components/features/public/profile/StatisticsSe
 import SidebarSection from '@/components/features/public/profile/SidebarSection';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { IProfile, profileService } from '@/services/profile.service';
 import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
 import { AppDispatch } from '@/store/store';
 import { DURATION } from '@/utils/constant.utils';
 import Loading from '@/components/ui/Loading';
 import { IUserListItem, userService } from '@/services/user.service';
-import { selectMeSlice } from '@/store/slices/authSlice';
+import { selectMeSlice } from '@/store/slices/auth/authSlice';
 import { employmentHistoryService, IEmploymentHistory } from '@/services/employmentHistory.service';
 import { educationService, IEducation } from '@/services/education.service';
 import { profileSkillService, IProfileSkill } from '@/services/profileSkill.service';
 import { ILanguage, languageService } from '@/services/language.service';
 import { portfolioItemService, IPortfolioItem } from '@/services/portfolioItem.service';
+import { fetchUserProfileById, selectUserProfileSlice } from '@/store/slices/profile/getUserProfileSlice';
+import { IProfile } from '@/services/profile.service';
 
 export default function FreelancerProfilePage({ id }: { id: string }) {
-    const [loading, setLoading] = useState(true);
     const dispatch: AppDispatch = useDispatch();
     const { me } = useSelector(selectMeSlice);
 
-    const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
-        dispatch(toastify({ message, type, duration }));
-    };
+    // Select profile state from Redux
+    const { profile, isLoading: userProfileLoading } = useSelector(selectUserProfileSlice) as { profile: IProfile, isLoading: boolean };
 
-    const [profile, setProfile] = useState<IProfile | null>(null);
+
+    const [subResourcesLoading, setSubResourcesLoading] = useState(true);
     const [freelancer, setFreelancer] = useState<IUserListItem | null>(null);
     const [employmentHistories, setEmploymentHistories] = useState<IEmploymentHistory[]>([]);
     const [educations, setEducations] = useState<IEducation[]>([]);
@@ -40,24 +40,31 @@ export default function FreelancerProfilePage({ id }: { id: string }) {
     const [languages, setLanguages] = useState<ILanguage[]>([]);
     const [portfolioItems, setPortfolioItems] = useState<IPortfolioItem[]>([]);
 
+    const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
+        dispatch(toastify({ message, type, duration }));
+    };
+
     useEffect(() => {
         if (!id) return;
 
         const fetchData = async () => {
             try {
-                setLoading(true);
+                setSubResourcesLoading(true);
 
-                // 1. Fetch profile and user details concurrently
-                const [profileRes, userRes] = await Promise.all([
-                    profileService.getUserProfileById(String(id)),
+                // 1. Dispatch Redux thunk for user profile & fetch user details concurrently
+                const [profileAction, userRes] = await Promise.all([
+                    dispatch(fetchUserProfileById(String(id))),
                     userService.getUserById(String(id)),
                 ]);
 
-                const fetchedProfile = profileRes.data.profile;
-                setProfile(fetchedProfile);
+                // Extract profile from unwrap payload
+                const fetchedProfile = fetchUserProfileById.fulfilled.match(profileAction)
+                    ? profileAction.payload
+                    : null;
+
                 setFreelancer(userRes.data.user);
 
-                // 2. Fetch related details concurrently using profile ID & freelancer user ID
+                // 2. Fetch related details concurrently using profile ID
                 if (fetchedProfile?._id) {
                     const [
                         employmentRes,
@@ -82,15 +89,17 @@ export default function FreelancerProfilePage({ id }: { id: string }) {
             } catch (error: any) {
                 handleAddToastification(error?.message || 'Failed to fetch profile data', 'error', DURATION);
             } finally {
-                setLoading(false);
+                setSubResourcesLoading(false);
             }
         };
 
         fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, dispatch]);
 
-    if (loading || !profile || !freelancer) {
+    const isLoading = userProfileLoading || subResourcesLoading;
+
+    if (isLoading || !profile || !freelancer) {
         return <Loading />;
     }
 
@@ -100,7 +109,7 @@ export default function FreelancerProfilePage({ id }: { id: string }) {
             <StatsSection profile={profile} />
             <div className="flex flex-col lg:flex-row gap-6">
                 <div className="flex-1 space-y-8">
-                    <OverviewSection profile={profile}/>
+                    <OverviewSection profile={profile} me={me!} />
                     <PortfolioSection items={portfolioItems} />
                     <EmploymentEducationSection employmentHistories={employmentHistories} educations={educations} />
                     <StatisticsSection />

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import UserImage from "./UserImage";
 
 interface UserMenuProps {
     firstName: string
@@ -25,7 +26,7 @@ interface UserMenuProps {
 const MENU_ITEMS = (id: string) => [
     { href: `/profile/${id}`, label: "My Profile", icon: User },
     // { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/settings/profile", label: "Settings", icon: Settings },
+    { href: "/settings/personal-info", label: "Settings", icon: Settings },
     { href: "/contact-supportF", label: "Help & Support", icon: HelpCircle },
 ];
 
@@ -40,14 +41,7 @@ function UserMenu({ firstName, lastName, role, id, avatarUrl, onLogout, loading 
                 aria-expanded={open}
                 className="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-transparent hover:ring-primary/30 transition-all"
             >
-                {avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={avatarUrl} alt={firstName} className="w-full h-full object-cover" />
-                ) : (
-                    <span className="w-full h-full bg-primary text-on-primary flex items-center justify-center text-label-sm font-semibold">
-                        {getInitials(firstName, lastName)}
-                    </span>
-                )}
+                <UserImage avatarUrl={String(avatarUrl)} firstName={firstName} lastName={lastName} className="w-9 h-9" />
             </button>
 
             {open && (

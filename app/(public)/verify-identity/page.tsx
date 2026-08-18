@@ -4,7 +4,7 @@
 import FormError from '@/components/ui/FormError'
 import Loading from '@/components/ui/Loading'
 import { IVerificationRequest, verificationService } from '@/services/verification.service'
-import { selectMeSlice } from '@/store/slices/authSlice'
+import { selectMeSlice } from '@/store/slices/auth/authSlice'
 import { VerificationStatus } from '@/utils/enums.utils'
 import VerificationInProgressPage from '@/views/public/verificationInProgress'
 import VerifyIdentityPage from '@/views/public/verifyIdentityPage'

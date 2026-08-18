@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BASE_URL } from "@/utils/constant.utils";
 import { UserRole, UserStatus } from "@/utils/enums.utils";
 
@@ -135,6 +136,70 @@ export const userService = {
         }
 
         return data
+    },
+    updateUser: async (formData: any) => {
+        const response = await fetch(`${BASE_URL}/api/user/update`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(formData),
+        });
+        const data: IGetUserByIdApiResponse = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to update user profile");
+        }
+
+        return data;
+    },
+    changePassword: async (formData: any) => {
+        const response = await fetch(`${BASE_URL}/api/user/change-password`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(formData),
+        });
+        const data: { message: string } = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to change password");
+        }
+
+        return data;
+    },
+    changeAvatar: async (file: File) => {
+        const formData = new FormData();
+        formData.append("avatar", file);
+
+        const response = await fetch(`${BASE_URL}/api/user/image/change`, {
+            method: "PUT", // or "PATCH" depending on your route design
+            credentials: "include",
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to update profile image");
+        }
+
+        return data;
+    },
+    removeAvatar: async () => {
+        const response = await fetch(`${BASE_URL}/api/user/image/remove`, {
+            method: "DELETE",
+            credentials: "include", // Ensures auth token cookies are sent
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to remove avatar");
+        }
+
+        return data;
     }
 
 }

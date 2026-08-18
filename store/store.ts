@@ -1,12 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit'
 import toggleSidbarReducer from './slices/toggleSidebarSlice'
-import authReducer from './slices/authSlice'
+import authReducer from './slices/auth/authSlice'
 import toastificationReducer from './slices/toastificationSlice'
+
+import userProfileReducer from './slices/profile/getUserProfileSlice'
 export const store = configureStore({
     reducer: {
         toggleSidbarSlice: toggleSidbarReducer,
         authSlice: authReducer,
-        toastificationSlice: toastificationReducer
+        toastificationSlice: toastificationReducer,
+
+        //profile 
+
+        userProfileSlice: userProfileReducer
     },
 })
 

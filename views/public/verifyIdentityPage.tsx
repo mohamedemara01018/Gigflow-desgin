@@ -12,7 +12,7 @@ import { AttachmentEntityType, DocumentType } from "@/utils/enums.utils";
 import ReviewDocumentPage from "@/views/public/ReviewDocumentPage";
 import { verificationService } from "@/services/verification.service";
 import { useDispatch, useSelector } from "react-redux";
-import { selectMeSlice } from "@/store/slices/authSlice";
+import { selectMeSlice } from "@/store/slices/auth/authSlice";
 import FormError from "@/components/ui/FormError";
 import { AppDispatch } from "@/store/store";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";

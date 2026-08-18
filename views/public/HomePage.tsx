@@ -2,7 +2,7 @@
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { fetchMe, selectMeSlice } from "@/store/slices/authSlice";
+import { fetchMe, selectMeSlice } from "@/store/slices/auth/authSlice";
 import { UserRole } from "@/utils/enums.utils";
 
 import { AppDispatch } from "@/store/store";

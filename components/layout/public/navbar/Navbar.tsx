@@ -5,7 +5,7 @@ import Link from 'next/link';
 import ToggleTheme from '@/components/ui/ToggleTheme';
 import Logo from '@/components/ui/Logo';
 import { useSelector } from 'react-redux';
-import { selectMeSlice } from '@/store/slices/authSlice';
+import { selectMeSlice } from '@/store/slices/auth/authSlice';
 import { authService } from '@/services/auth.service';
 
 export default function Navbar() {

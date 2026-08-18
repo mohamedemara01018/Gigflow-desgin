@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { authService } from "@/services/auth.service";
-import { fetchMe, selectMeSlice } from "@/store/slices/authSlice";
+import { fetchMe, selectMeSlice } from "@/store/slices/auth/authSlice";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
 import { AppDispatch } from "@/store/store";
 import { DURATION } from "@/utils/constant.utils";

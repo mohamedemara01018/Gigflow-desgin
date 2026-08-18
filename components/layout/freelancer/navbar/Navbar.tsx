@@ -4,7 +4,7 @@ import Logo from '@/components/ui/Logo'
 import ToggleTheme from '@/components/ui/ToggleTheme'
 import UserMenu from '@/components/ui/UserMenu';
 import { authService } from '@/services/auth.service';
-import { selectMeSlice } from '@/store/slices/authSlice';
+import { selectMeSlice } from '@/store/slices/auth/authSlice';
 import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
 import { AppDispatch } from '@/store/store';
 import { DURATION } from '@/utils/constant.utils';

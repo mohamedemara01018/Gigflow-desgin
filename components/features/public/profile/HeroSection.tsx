@@ -4,9 +4,10 @@ import { IUserListItem } from "@/services/user.service";
 import { UserRole } from "@/utils/enums.utils";
 import { formatDateTime, getInitials } from "@/utils/functions.utils";
 import { BadgeCheck, Clock, MapPin } from "lucide-react"
+import { useRouter } from "next/navigation";
 
 function HeroSection({ profile, freelancer, me }: { profile: IProfile, freelancer: IUserListItem, me: IUserListItem }) {
-
+    const router = useRouter();
     return (
         <section className="relative">
             <div className="px-6 md:px-12 pt-8 flex flex-col md:flex-row items-end md:items-center gap-4 relative z-10">
@@ -51,6 +52,7 @@ function HeroSection({ profile, freelancer, me }: { profile: IProfile, freelance
                     {(me.role == UserRole.FREELANCER) &&
                         <>
                             <button
+                                onClick={() => router.push('/settings/personal-info')}
                                 className="flex-1 md:flex-none text-on-primary px-6 py-2.5 rounded-lg text-[14px] leading-5 font-['Geist'] font-medium transition-all hover:opacity-90 active:scale-95"
                                 style={{
                                     background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%)',
@@ -59,10 +61,7 @@ function HeroSection({ profile, freelancer, me }: { profile: IProfile, freelance
                             >
                                 Edit Profile
                             </button>
-                            <button
-                                className="flex-1 md:flex-none bg-surface border border-outline-variant text-on-surface px-6 py-2.5 rounded-lg text-[14px] leading-5 font-['Geist'] font-medium transition-all hover:bg-surface-container-low active:scale-95">
-                                Public View
-                            </button>
+
                         </>
                     }
                 </div>
