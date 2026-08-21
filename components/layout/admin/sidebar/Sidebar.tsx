@@ -17,10 +17,14 @@ import {
     IdCard,
     AlertTriangle,
     LayoutGrid,
+    Wrench,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { authService } from "@/services/auth.service";
+import { useSelector } from "react-redux";
+import { selectMeSlice } from "@/store/slices/auth/authSlice";
+import UserImage from "@/components/ui/UserImage";
 
 interface NavItem {
     href: string;
@@ -71,28 +75,22 @@ const NAV_SECTIONS: NavSection[] = [
         ],
     },
     {
-        label: null,
+        label: "Management",
         items: [
             { href: "/admin/verifications", label: "Verification Requests", icon: IdCard },
             { href: "/admin/reports", label: "Reports", icon: AlertTriangle },
             { href: "/admin/categories", label: "Categories", icon: LayoutGrid },
+            { href: "/admin/skills", label: "Skills", icon: Wrench }, // Skills management route
         ],
     },
 ];
 
-interface AdminProfile {
-    name: string;
-    email: string;
-}
-
 function Sidebar({
     HEADER_HIGH,
     SIDEBAR_WIDTH,
-    admin = { name: "Admin Central", email: "admin@gigflow.com" },
 }: {
     HEADER_HIGH: number;
     SIDEBAR_WIDTH: number;
-    admin?: AdminProfile;
 }) {
     const pathname = usePathname();
 
@@ -100,13 +98,7 @@ function Sidebar({
         await authService.logout();
         window.location.reload();
     };
-
-    const initials = admin.name
-        .split(" ")
-        .map((part) => part.charAt(0))
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
+    const { me } = useSelector(selectMeSlice);
 
     return (
         <aside
@@ -148,20 +140,20 @@ function Sidebar({
                 <div className="border-t border-outline-variant px-4 py-4 flex flex-col gap-1">
                     <div className="flex items-center gap-3 px-2 py-2">
                         <span className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-md font-semibold shrink-0">
-                            {initials}
+                            <UserImage avatarUrl={String(me?.avatar)} firstName={String(me?.firstName)} lastName={String(me?.lastName)} className="w-10 h-10"/>
                         </span>
                         <div className="min-w-0">
                             <p className="text-body-sm font-medium text-on-surface truncate">
-                                {admin.name}
+                                {me?.firstName + ' ' + me?.lastName}
                             </p>
                             <p className="text-label-sm text-on-surface-variant truncate">
-                                {admin.email}
+                                {me?.email}
                             </p>
                         </div>
                     </div>
 
                     <Link
-                        href="/admin/settings/profile"
+                        href="/admin/settings"
                         className="px-2 py-2 rounded-md text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
                     >
                         Profile Settings

@@ -1,10 +1,10 @@
 "use client";
 
-import CredentialsTabContent from "@/components/features/freelancer/freelancer-profile-settings/Credentialstabcontent";
+import CredentialsTabContent from "@/components/features/freelancer/freelancer-profile-settings/FreelancerCredentialstabcontent";
 import PortfolioTabContent from "@/components/features/freelancer/freelancer-profile-settings/Portfoliotabcontent";
 import ProfileSettingsTabContent from "@/components/features/freelancer/freelancer-profile-settings/FreelancerProfilesettingstabcontent";
 import ProfileTopNav, { ProfileTabId } from "@/components/features/freelancer/freelancer-profile-settings/ProfileTopNav";
-import SkillsExperienceTabContent from "@/components/features/freelancer/freelancer-profile-settings/Skillsexperiencetabcontent";
+import SkillsExperienceTabContent from "@/components/features/freelancer/freelancer-profile-settings/FreelancerSkillsexperiencetabcontent";
 import SettingLayout from "@/components/layout/public/SettingLayout";
 import Loading from "@/components/ui/Loading";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
@@ -13,7 +13,7 @@ import { AppDispatch } from "@/store/store";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-export default function ProfilePageContent() {
+export default function FreelancerProfileSettingsPage() {
     const [activeTab, setActiveTab] = useState<ProfileTabId>("settings");
 
     const dispatch: AppDispatch = useDispatch();
@@ -36,9 +36,9 @@ export default function ProfilePageContent() {
                 <ProfileTopNav activeTab={activeTab} onChange={setActiveTab} />
 
                 {activeTab === "settings" && <ProfileSettingsTabContent profile={profile} />}
-                {activeTab === "skills" && <SkillsExperienceTabContent />}
+                {activeTab === "skills" && <SkillsExperienceTabContent profileId={profile._id} />}
                 {activeTab === "portfolio" && <PortfolioTabContent />}
-                {activeTab === "credentials" && <CredentialsTabContent />}
+                {activeTab === "credentials" && <CredentialsTabContent profile={profile} me={me!} />}
             </div>
         </SettingLayout>
     );

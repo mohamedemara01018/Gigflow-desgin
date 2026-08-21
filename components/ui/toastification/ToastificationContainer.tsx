@@ -31,7 +31,9 @@ function ToastificationContainer() {
         >
             {
                 toastifications.map((toast) => {
-                    return <ToastificationItem key={toast.id} toastification={toast} onRemove={handleRemoveToastify} />
+                    return <div key={toast.id} >
+                        <ToastificationItem toastification={toast} onRemove={handleRemoveToastify} />
+                    </div>
                 })
             }
         </div>

@@ -1,4 +1,4 @@
-import Image from 'next/image';
+/* eslint-disable @next/next/no-img-element */
 import { IPortfolioItem } from '@/services/portfolioItem.service';
 import EmptyState from '@/components/ui/Emptystate';
 
@@ -24,13 +24,13 @@ export default function PortfolioSection({
             style={{ boxShadow: 'var(--shadow-level-2)' }}
         >
             <div className="flex justify-between items-center mb-6">
-                <h2 className="font-['Geist'] font-semibold text-[24px] leading-[32px] text-on-surface">
+                <h2 className="font-['Geist'] font-semibold text-[24px] leading-8 text-on-surface">
                     Portfolio
                 </h2>
                 {isOwner && (
                     <button
                         onClick={onAddProject}
-                        className="bg-primary/5 text-primary px-4 py-1.5 rounded-lg text-[14px] leading-[20px] font-['Geist'] font-medium hover:bg-primary/10 transition-colors"
+                        className="bg-primary/5 text-primary px-4 py-1.5 rounded-lg text-[14px] leading-5 font-['Geist'] font-medium hover:bg-primary/10 transition-colors"
                     >
                         Add Project
                     </button>
@@ -51,21 +51,20 @@ export default function PortfolioSection({
                                 className="group cursor-pointer flex flex-col h-full"
                             >
                                 <div className="aspect-video rounded-xl overflow-hidden mb-3 border border-outline-variant relative bg-surface-container-low">
-                                    <Image
+                                    <img
                                         src={imageUrl}
                                         alt={item.title}
-                                        fill
                                         sizes="(max-width: 768px) 100vw, 50vw"
                                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                        <span className="bg-surface text-on-surface px-4 py-2 rounded-lg text-[14px] leading-[20px] font-['Geist'] font-medium shadow-md">
+                                        <span className="bg-surface text-on-surface px-4 py-2 rounded-lg text-[14px] leading-5 font-['Geist'] font-medium shadow-md">
                                             View Details
                                         </span>
                                     </div>
                                 </div>
 
-                                <h4 className="font-bold text-[18px] leading-[28px] font-['Inter'] text-on-surface group-hover:text-primary transition-colors line-clamp-1">
+                                <h4 className="font-bold text-[18px] leading-7 font-['Inter'] text-on-surface group-hover:text-primary transition-colors line-clamp-1">
                                     {item.title}
                                 </h4>
 

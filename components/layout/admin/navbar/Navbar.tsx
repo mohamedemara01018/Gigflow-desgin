@@ -15,11 +15,11 @@ function Navbar({ HEADER_HIGH }: NavbarProps) {
 
                 {/* Logo */}
                 <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-tertiary text-on-tertiary">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-on-primary">
                         <ShieldCheck size={18} />
                     </span>
 
-                    <span className="text-[20px]! leading-7! text-tertiary">
+                    <span className="text-[20px]! leading-7! text-primary">
                         Admin Panel
                     </span>
                 </div>
@@ -35,7 +35,7 @@ function Navbar({ HEADER_HIGH }: NavbarProps) {
                     <button
                         type="button"
                         aria-label="Admin settings"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-tertiary text-on-tertiary transition-opacity hover:opacity-90"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-on-primary transition-opacity hover:opacity-90"
                     >
                         <ShieldCheck size={16} />
                     </button>

@@ -1,7 +1,7 @@
 "use client"
 
-
 import { EditorContent, useEditor } from "@tiptap/react"
+import { useEffect } from "react"
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
@@ -13,7 +13,6 @@ import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
 
-
 // --- Tiptap Node ---
 import { HorizontalRule } from "@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension"
 import "@/components/tiptap-node/blockquote-node/blockquote-node.scss"
@@ -23,19 +22,19 @@ import "@/components/tiptap-node/list-node/list-node.scss"
 import "@/components/tiptap-node/heading-node/heading-node.scss"
 import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 
-
-
-
-// --- Lib ---
-
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
+import { useMediaQuery } from "@/hooks/useMediaQuery"
 
-function ReadOnlyOverview({ content }: { content: string }) {
-
+function ReadOnlyOverview({ content, tabletWidth, width }: { content: string, tabletWidth: string, width: string }) {
     const editor = useEditor({
         immediatelyRender: false,
         editable: false,
+        editorProps: {
+            attributes: {
+                class: "simple-editor !max-w-none !w-full !min-h-full outline-none focus:outline-none",
+            },
+        },
         extensions: [
             StarterKit,
             HorizontalRule,
@@ -50,13 +49,24 @@ function ReadOnlyOverview({ content }: { content: string }) {
         ],
         content,
     })
+
+    useEffect(() => {
+        if (editor && content !== editor.getHTML()) {
+            editor.commands.setContent(content)
+        }
+    }, [content, editor])
+
+    const isTablet = useMediaQuery(`(max-width:1024px)`)
+
     return (
-        <EditorContent
-            editor={editor}
-            role="presentation"
-            className="p-4 bg-surface-container-highest border border-outline-variant rounded-md"
-        // className="simple-editor-content"
-        />
+        <div className="w-full h-full flex flex-col flex-1 min-w-0">
+            <EditorContent
+                editor={editor}
+                role="presentation"
+                className="w-full h-full flex-1 p-4 bg-surface-container-highest border border-outline-variant rounded-md"
+                style={{ maxWidth: isTablet ? tabletWidth : width }}
+            />
+        </div>
     )
 }
 

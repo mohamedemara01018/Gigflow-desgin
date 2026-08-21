@@ -2,7 +2,7 @@ import React from 'react';
 import { ProfileVisibility } from '@/utils/enums.utils';
 import { CheckCircle2, EyeOff, Globe, Users } from 'lucide-react';
 import SelectField from '@/components/ui/SelectFeild';
-import { Field } from './Field';
+import { Field } from '../Field';
 
 const VISIBILITY_OPTIONS: {
     id: ProfileVisibility;

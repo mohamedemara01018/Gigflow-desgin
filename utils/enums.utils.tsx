@@ -79,3 +79,12 @@ export enum PortfolioProjectStatus {
     DRAFT = "draft",
     PUBLISHED = "published",
 }
+
+
+export enum EmploymentType {
+    FULL_TIME = "full-time",
+    PART_TIME = "part-time",
+    FREELANCE = "freelance",
+    INTERNSHIP = "internship",
+    CONTRACT = "contract",
+}

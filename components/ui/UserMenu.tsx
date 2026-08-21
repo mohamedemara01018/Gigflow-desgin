@@ -1,6 +1,5 @@
 "use client";
 
-import { getInitials } from "@/utils/functions.utils";
 import {
     User,
     LayoutDashboard,
@@ -12,15 +11,16 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import UserImage from "./UserImage";
+import { usePathname } from "next/navigation";
 
 interface UserMenuProps {
-    firstName: string
-    lastName: string
+    firstName: string;
+    lastName: string;
     role: string;
-    id: string
+    id: string;
     avatarUrl?: string;
     onLogout: () => void;
-    loading: boolean
+    loading: boolean;
 }
 
 const MENU_ITEMS = (id: string) => [
@@ -32,6 +32,7 @@ const MENU_ITEMS = (id: string) => [
 
 function UserMenu({ firstName, lastName, role, id, avatarUrl, onLogout, loading }: UserMenuProps) {
     const [open, setOpen] = useState(false);
+    const pathname = usePathname();
 
     return (
         <div className="relative">
@@ -61,16 +62,18 @@ function UserMenu({ firstName, lastName, role, id, avatarUrl, onLogout, loading 
                         </div>
 
                         <div className="py-1.5">
-                            {MENU_ITEMS(id).map(({ href, label, icon: Icon }, i) => {
-                                const isActive = i === 0;
+                            {MENU_ITEMS(id).map(({ href, label, icon: Icon }) => {
+                                const baseSegment = href.split('/')[1];
+                                const isActive = pathname.startsWith(`/${baseSegment}`);
+
                                 return (
                                     <Link
                                         key={href}
                                         href={href}
                                         onClick={() => setOpen(false)}
                                         className={`flex items-center gap-3 px-4 py-2.5 text-body-sm transition-colors ${isActive
-                                            ? "bg-primary/10 text-primary font-medium"
-                                            : "text-on-surface hover:bg-surface-container-low"
+                                                ? "bg-primary/10 text-primary font-medium"
+                                                : "text-on-surface hover:bg-surface-container-low"
                                             }`}
                                     >
                                         <Icon size={16} />
@@ -82,19 +85,24 @@ function UserMenu({ firstName, lastName, role, id, avatarUrl, onLogout, loading 
 
                         <div className="border-t border-outline-variant py-1.5">
                             <button
+                                disabled={loading}
                                 onClick={() => {
                                     setOpen(false);
                                     onLogout();
                                 }}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-body-sm text-error hover:bg-error/10 transition-colors"
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-body-sm text-error hover:bg-error/10 transition-colors disabled:opacity-50"
                             >
-                                {
-                                    loading ? <Loader2 />
-                                        : <>
-                                            <LogOut size={16} />
-                                            Logout
-                                        </>
-                                }
+                                {loading ? (
+                                    <>
+                                        <Loader2 size={16} className="animate-spin" />
+                                        Logging out...
+                                    </>
+                                ) : (
+                                    <>
+                                        <LogOut size={16} />
+                                        Logout
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

@@ -59,7 +59,7 @@ export const employmentHistoryService = {
         }
 
         const queryString = searchParams.toString();
-        const url = `${BASE_URL}/api/employment-history${queryString ? `?${queryString}` : ""}`;
+        const url = `${BASE_URL}/api/employment-histroy${queryString ? `?${queryString}` : ""}`;
 
         const response = await fetch(url, {
             credentials: "include",
@@ -77,7 +77,7 @@ export const employmentHistoryService = {
     },
 
     createEmploymentHistory: async (payload: ICreateEmploymentDto) => {
-        const response = await fetch(`${BASE_URL}/api/employment-history`, {
+        const response = await fetch(`${BASE_URL}/api/employment-histroy`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -98,7 +98,7 @@ export const employmentHistoryService = {
     },
 
     editEmploymentHistory: async (id: string, payload: IUpdateEmploymentDto) => {
-        const response = await fetch(`${BASE_URL}/api/employment-history/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/employment-histroy/${id}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -119,7 +119,7 @@ export const employmentHistoryService = {
     },
 
     deleteEmploymentHistory: async (id: string) => {
-        const response = await fetch(`${BASE_URL}/api/employment-history/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/employment-histroy/${id}`, {
             method: "DELETE",
             credentials: "include",
         });

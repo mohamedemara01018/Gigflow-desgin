@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import HeroSection from '@/components/features/public/profile/HeroSection';
-import StatsSection from '@/components/features/public/profile/StatsSection';
-import OverviewSection from '@/components/features/public/profile/OverviewSection';
-import PortfolioSection from '@/components/features/public/profile/PortfolioSection';
-import EmploymentEducationSection from '@/components/features/public/profile/EmploymentEducationSection';
-import StatisticsSection from '@/components/features/public/profile/StatisticsSection';
-import SidebarSection from '@/components/features/public/profile/SidebarSection';
+import HeroSection from '@/components/features/freelancer/profile/HeroSection';
+import StatsSection from '@/components/features/freelancer/profile/StatsSection';
+import OverviewSection from '@/components/features/freelancer/profile/OverviewSection';
+import PortfolioSection from '@/components/features/freelancer/profile/PortfolioSection';
+import EmploymentEducationSection from '@/components/features/freelancer/profile/EmploymentEducationSection';
+import StatisticsSection from '@/components/features/freelancer/profile/StatisticsSection';
+import SidebarSection from '@/components/features/freelancer/profile/SidebarSection';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
@@ -23,6 +23,8 @@ import { ILanguage, languageService } from '@/services/language.service';
 import { portfolioItemService, IPortfolioItem } from '@/services/portfolioItem.service';
 import { fetchUserProfileById, selectUserProfileSlice } from '@/store/slices/profile/getUserProfileSlice';
 import { IProfile } from '@/services/profile.service';
+// 1. Import your certification service and interface
+import { certificationService, ICertification } from '@/services/certification.service';
 
 export default function FreelancerProfilePage({ id }: { id: string }) {
     const dispatch: AppDispatch = useDispatch();
@@ -31,7 +33,6 @@ export default function FreelancerProfilePage({ id }: { id: string }) {
     // Select profile state from Redux
     const { profile, isLoading: userProfileLoading } = useSelector(selectUserProfileSlice) as { profile: IProfile, isLoading: boolean };
 
-
     const [subResourcesLoading, setSubResourcesLoading] = useState(true);
     const [freelancer, setFreelancer] = useState<IUserListItem | null>(null);
     const [employmentHistories, setEmploymentHistories] = useState<IEmploymentHistory[]>([]);
@@ -39,6 +40,8 @@ export default function FreelancerProfilePage({ id }: { id: string }) {
     const [profileSkills, setProfileSkills] = useState<IProfileSkill[]>([]);
     const [languages, setLanguages] = useState<ILanguage[]>([]);
     const [portfolioItems, setPortfolioItems] = useState<IPortfolioItem[]>([]);
+    // 2. Define certification state
+    const [certifications, setCertifications] = useState<ICertification[]>([]);
 
     const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
         dispatch(toastify({ message, type, duration }));
@@ -71,13 +74,15 @@ export default function FreelancerProfilePage({ id }: { id: string }) {
                         educationRes,
                         profileSkillsRes,
                         languagesRes,
-                        portfolioRes
+                        portfolioRes,
+                        certificationsRes // 3. Catch response from concurrent call
                     ] = await Promise.all([
                         employmentHistoryService.getAllEmploymentHistories(fetchedProfile._id),
                         educationService.getAllEducations(fetchedProfile._id),
                         profileSkillService.getProfileSkills({ profileId: fetchedProfile._id }),
                         languageService.getAllLanguages(fetchedProfile._id),
                         portfolioItemService.getAllPortfolioItems({ freelancer: String(id) }),
+                        certificationService.getAllCertifications(fetchedProfile._id), // 4. Trigger certification API call
                     ]);
 
                     setEmploymentHistories(employmentRes.data.employmentHistories);
@@ -85,6 +90,7 @@ export default function FreelancerProfilePage({ id }: { id: string }) {
                     setProfileSkills(profileSkillsRes.data.profileSkills);
                     setLanguages(languagesRes.data.languages);
                     setPortfolioItems(portfolioRes.data.portfolioItems);
+                    setCertifications(certificationsRes.data.certifications); // 5. Update certifications state
                 }
             } catch (error: any) {
                 handleAddToastification(error?.message || 'Failed to fetch profile data', 'error', DURATION);
@@ -119,6 +125,7 @@ export default function FreelancerProfilePage({ id }: { id: string }) {
                     me={me!}
                     profileSkills={profileSkills}
                     languages={languages}
+                    certifications={certifications} // Pass to Sidebar or applicable section
                 />
             </div>
         </>

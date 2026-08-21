@@ -26,11 +26,11 @@ export interface IGetProfileSkillsParams {
 
 // 4. DTOs
 export interface ICreateProfileSkillDto {
-    profile: string;
-    skill: string;
-    level?: SkillLevel;
-    yearsOfExperience?: number;
-    isPrimary?: boolean;
+        profile: string;
+        skill: string;
+        level?: SkillLevel;
+        yearsOfExperience?: number;
+        isPrimary?: boolean;
 }
 
 export type IUpdateProfileSkillDto = Partial<Omit<ICreateProfileSkillDto, "profile" | "skill">>;

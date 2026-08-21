@@ -5,6 +5,8 @@ async function page({ params, }: {
 }) {
 
     const { id } = await params
+    console.log('id', id)
+
     return (
         <FreelancerProfilePage id={id} />
     )

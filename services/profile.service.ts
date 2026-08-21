@@ -47,6 +47,12 @@ export type UpdateProfilePayload = Partial<
     >
 >;
 
+export type UpdateSocialLinksProfilePayload = {
+    socialLinks: ISocialLinks;
+}
+
+
+
 export interface IProfilesApiResponse {
     message: string;
     data: {
@@ -88,7 +94,7 @@ export const profileService = {
 
         return data;
     },
-    updateProfile: async (payload: UpdateProfilePayload, id: string) => {
+    updateProfile: async (payload: UpdateProfilePayload | UpdateSocialLinksProfilePayload, id: string) => {
         const response = await fetch(`${BASE_URL}/api/profile/${id}`, {
             method: "PATCH", // Change to "PUT" if required by your backend
             headers: {

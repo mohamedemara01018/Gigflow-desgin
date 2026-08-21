@@ -1,7 +1,7 @@
 "use client";
 
 import { IdCard } from "lucide-react";
-import { Field } from "../freelancer-profile-settings/Field";
+import { Field } from "../Field";
 
 
 interface BasicInfoSectionProps {

@@ -2,7 +2,7 @@ import { BASE_URL } from "@/utils/constant.utils";
 import { PortfolioProjectStatus } from "@/utils/enums.utils";
 
 /* -------------------------------------------------------------------------- */
-/*                                Types & Interfaces                          */
+/*                            Types & Interfaces                              */
 /* -------------------------------------------------------------------------- */
 
 export interface ICloudinaryImage {
@@ -52,7 +52,7 @@ export interface IGetPortfolioItemsParams {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                           API Response Interfaces                          */
+/*                          API Response Interfaces                           */
 /* -------------------------------------------------------------------------- */
 
 export interface IPortfolioListApiResponse {
@@ -87,7 +87,7 @@ export interface IDeleteApiResponse {
 export const portfolioItemService = {
     /**
      * Fetch paginated list of portfolio items with optional filters
-     * GET /api/v1/portfolio
+     * GET /api/portfolio-item
      */
     getAllPortfolioItems: async (params?: IGetPortfolioItemsParams) => {
         const searchParams = new URLSearchParams();
@@ -101,7 +101,7 @@ export const portfolioItemService = {
         }
 
         const queryString = searchParams.toString();
-        const url = `${BASE_URL}/api/v1/portfolio${queryString ? `?${queryString}` : ""}`;
+        const url = `${BASE_URL}/api/portfolio-item${queryString ? `?${queryString}` : ""}`;
 
         const response = await fetch(url, {
             credentials: "include",
@@ -120,10 +120,10 @@ export const portfolioItemService = {
 
     /**
      * Create a new portfolio project
-     * POST /api/v1/portfolio
+     * POST /api/portfolio-item
      */
     createPortfolioItem: async (payload: FormData) => {
-        const response = await fetch(`${BASE_URL}/api/v1/portfolio`, {
+        const response = await fetch(`${BASE_URL}/api/portfolio-item`, {
             method: "POST",
             credentials: "include",
             body: payload,
@@ -142,10 +142,10 @@ export const portfolioItemService = {
 
     /**
      * Get project details (Auto-increments views counter)
-     * GET /api/v1/portfolio/:id
+     * GET /api/portfolio-item/:id
      */
     getPortfolioItemById: async (id: string) => {
-        const response = await fetch(`${BASE_URL}/api/v1/portfolio/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/portfolio-item/${id}`, {
             credentials: "include",
         });
 
@@ -162,10 +162,10 @@ export const portfolioItemService = {
 
     /**
      * Edit project details
-     * PATCH /api/v1/portfolio/:id
+     * PATCH /api/portfolio-item/:id
      */
-    editPortfolioItem: async (id: string, payload: Partial<IPortfolioItem>) => {
-        const response = await fetch(`${BASE_URL}/api/v1/portfolio/${id}`, {
+    editPortfolioItem: async (id: string, payload: Partial<IPortfolioItem> | FormData) => {
+        const response = await fetch(`${BASE_URL}/api/portfolio-item/${id}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -187,10 +187,10 @@ export const portfolioItemService = {
 
     /**
      * Remove portfolio item
-     * DELETE /api/v1/portfolio/:id
+     * DELETE /api/portfolio-item/:id
      */
     deletePortfolioItem: async (id: string) => {
-        const response = await fetch(`${BASE_URL}/api/v1/portfolio/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/portfolio-item/${id}`, {
             method: "DELETE",
             credentials: "include",
         });
@@ -212,10 +212,10 @@ export const portfolioItemService = {
 
     /**
      * Change existing thumbnail image
-     * POST /api/v1/portfolio/thumbnail/change/:id
+     * POST /api/portfolio-item/thumbnail/change/:id
      */
     changeThumbnail: async (id: string, payload: FormData) => {
-        const response = await fetch(`${BASE_URL}/api/v1/portfolio/thumbnail/change/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/portfolio-item/thumbnail/change/${id}`, {
             method: "POST",
             credentials: "include",
             body: payload,
@@ -234,10 +234,10 @@ export const portfolioItemService = {
 
     /**
      * Add new thumbnail image
-     * POST /api/v1/portfolio/thumbnail/add/:id
+     * POST /api/portfolio-item/thumbnail/add/:id
      */
     addThumbnail: async (id: string, payload: FormData) => {
-        const response = await fetch(`${BASE_URL}/api/v1/portfolio/thumbnail/add/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/portfolio-item/thumbnail/add/${id}`, {
             method: "POST",
             credentials: "include",
             body: payload,
@@ -256,10 +256,10 @@ export const portfolioItemService = {
 
     /**
      * Delete thumbnail image
-     * POST /api/v1/portfolio/thumbnail/delete/:id
+     * POST /api/portfolio-item/thumbnail/delete/:id
      */
     deleteThumbnail: async (id: string, publicId?: string) => {
-        const response = await fetch(`${BASE_URL}/api/v1/portfolio/thumbnail/delete/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/portfolio-item/thumbnail/delete/${id}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -280,15 +280,15 @@ export const portfolioItemService = {
     },
 
     /* ------------------------------------------------------------------------ */
-    /*                              Gallery Endpoints                           */
+    /*                               Gallery Endpoints                          */
     /* ------------------------------------------------------------------------ */
 
     /**
      * Add image(s) to portfolio gallery
-     * POST /api/v1/portfolio/images/add/:id
+     * POST /api/portfolio-item/images/add/:id
      */
     addImage: async (id: string, payload: FormData) => {
-        const response = await fetch(`${BASE_URL}/api/v1/portfolio/images/add/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/portfolio-item/images/add/${id}`, {
             method: "POST",
             credentials: "include",
             body: payload,
@@ -307,10 +307,10 @@ export const portfolioItemService = {
 
     /**
      * Delete single gallery image by publicId
-     * POST /api/v1/portfolio/images/delete/:id
+     * POST /api/portfolio-item/images/delete/:id
      */
     deleteImage: async (id: string, publicId: string) => {
-        const response = await fetch(`${BASE_URL}/api/v1/portfolio/images/delete/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/portfolio-item/images/delete/${id}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

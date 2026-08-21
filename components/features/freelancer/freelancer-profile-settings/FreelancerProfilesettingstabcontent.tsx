@@ -9,10 +9,10 @@ import { AppDispatch } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { DURATION } from "@/utils/constant.utils";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
-import { BasicInfoSection } from "../freelancer-profile-settings-tap-content/BasicInfoSection";
-import { RatesAndExperienceSection } from "../freelancer-profile-settings-tap-content/RatesAndExperienceSection";
-import { ProfileStrengthCard } from "../freelancer-profile-settings-tap-content/ProfileStrengthCard";
-import { VisibilityAndStatusCard } from "../freelancer-profile-settings-tap-content/VisibilityAndStatusCard";
+import { BasicInfoSection } from "./freelancer-profile-settings-tap-content/BasicInfoSection";
+import { RatesAndExperienceSection } from "./freelancer-profile-settings-tap-content/RatesAndExperienceSection";
+import { ProfileStrengthCard } from "./freelancer-profile-settings-tap-content/ProfileStrengthCard";
+import { VisibilityAndStatusCard } from "./freelancer-profile-settings-tap-content/VisibilityAndStatusCard";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { Editor } from "@tiptap/core";
 
