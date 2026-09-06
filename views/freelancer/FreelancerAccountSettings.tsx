@@ -1,24 +1,15 @@
 
 "use client";
 
-import SelectField from "@/components/ui/SelectFeild";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
 import {
-    User,
-    UserCog,
-    Briefcase,
-    Lock,
-    CreditCard,
-    Bell,
+   
     Contact,
     ShieldCheck,
     Globe,
-    ChevronDown,
-    PhoneCall,
     AlertTriangle,
     CheckCircle2,
 } from "lucide-react";
-import { useState } from "react";
 import { useSelector } from "react-redux";
 
 function VerifiedBadge() {

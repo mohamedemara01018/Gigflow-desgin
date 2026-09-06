@@ -62,6 +62,7 @@ import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
+import { useMediaQuery } from "@/hooks/useMediaQuery"
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -161,10 +162,11 @@ interface SimpleEditorProbs {
   isEdit?: boolean
   content: string
   onEditReady: (editor: Editor) => void
+  tabletWidth: string
   maxWidth: string
 }
 
-export function SimpleEditor({ isEdit, content, onEditReady, maxWidth }: SimpleEditorProbs) {
+export function SimpleEditor({ isEdit, content, onEditReady, tabletWidth, maxWidth }: SimpleEditorProbs) {
   const isMobile = useIsBreakpoint()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">(
@@ -253,6 +255,8 @@ export function SimpleEditor({ isEdit, content, onEditReady, maxWidth }: SimpleE
     openSearchAndReplace()
   }, [closeSearchAndReplace, isSearchAndReplaceOpen, openSearchAndReplace])
 
+  const isTablet = useMediaQuery(`(max-width:1024px)`)
+
   return (
     <div className="simple-editor-wrapper">
       <EditorContext.Provider value={{ editor }}>
@@ -287,7 +291,7 @@ export function SimpleEditor({ isEdit, content, onEditReady, maxWidth }: SimpleE
           editor={editor}
           role="presentation"
           className="simple-editor-content"
-          style={{ maxWidth: maxWidth }}
+          style={{ maxWidth: isTablet ? tabletWidth : maxWidth }}
         />
       </EditorContext.Provider>
     </div>

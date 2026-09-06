@@ -13,7 +13,7 @@ import {
     ICreateCertificationDto,
 } from "@/services/certification.service";
 import { IUserListItem } from "@/services/user.service";
-import CertificationModal from "@/components/models/CertificationModal";
+import CertificationModal from "@/components/modals/CertificationModal";
 import { TrendingUp } from "lucide-react";
 import { DigitalPresenceSection } from "./freelancer-credentials-tab-content/DigitalPresenceSection";
 import { CertificationsSection } from "./freelancer-credentials-tab-content/CertificationsSection";

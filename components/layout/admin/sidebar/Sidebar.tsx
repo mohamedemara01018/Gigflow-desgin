@@ -81,6 +81,7 @@ const NAV_SECTIONS: NavSection[] = [
             { href: "/admin/reports", label: "Reports", icon: AlertTriangle },
             { href: "/admin/categories", label: "Categories", icon: LayoutGrid },
             { href: "/admin/skills", label: "Skills", icon: Wrench }, // Skills management route
+            { href: "/admin/regions", label: "Regions", icon: Building2 }, // Skills management route
         ],
     },
 ];
@@ -140,7 +141,7 @@ function Sidebar({
                 <div className="border-t border-outline-variant px-4 py-4 flex flex-col gap-1">
                     <div className="flex items-center gap-3 px-2 py-2">
                         <span className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-md font-semibold shrink-0">
-                            <UserImage avatarUrl={String(me?.avatar)} firstName={String(me?.firstName)} lastName={String(me?.lastName)} className="w-10 h-10"/>
+                            <UserImage avatarUrl={String(me?.avatar)} firstName={String(me?.firstName)} lastName={String(me?.lastName)} className="w-10 h-10" />
                         </span>
                         <div className="min-w-0">
                             <p className="text-body-sm font-medium text-on-surface truncate">

@@ -12,7 +12,7 @@ import { ICreateSkillDto, ISkill, skillService } from "@/services/skill.service"
 import AdminSkillFilters, { SkillFilterState } from "@/components/features/admin/admin-skills-page/Adminskillfilters";
 import AdminSkillTable from "@/components/features/admin/admin-skills-page/Adminskilltable";
 import { Option } from "@/components/ui/SelectFeild";
-import SkillModal from "@/components/models/skillModal";
+import SkillModal from "@/components/modals/skillModal";
 
 export default function AdminSkillsPage() {
     const [skills, setSkills] = useState<ISkill[]>([]);

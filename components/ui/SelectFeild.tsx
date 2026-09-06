@@ -14,6 +14,7 @@ interface SelectFieldProps {
     value?: string;
     onChange: (name: string, value: string) => void;
     placeholder?: string;
+    disabled?: boolean
 }
 
 export default function SelectField({
@@ -24,6 +25,7 @@ export default function SelectField({
     value,
     onChange,
     placeholder = "Select...",
+    disabled
 }: SelectFieldProps) {
     // Find matching option object from string value
     const selectedOption = options.find((opt) => opt.value === value) || null;
@@ -46,6 +48,7 @@ export default function SelectField({
                 onChange={handleSelectChange}
                 isSearchable
                 placeholder={placeholder}
+                isDisabled={disabled}
                 classNames={{
                     control: ({ isFocused }) =>
                         `rounded-md border bg-surface-container-low px-4 py-2.5 transition-all ${isFocused

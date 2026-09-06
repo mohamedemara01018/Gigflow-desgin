@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, Upload, Plus } from "lucide-react";
+import { X, Upload, Loader2, Trash2 } from "lucide-react";
 import SelectField, { Option } from "../ui/SelectFeild";
 import { PortfolioProjectStatus } from "@/utils/enums.utils";
 import { IPortfolioItem } from "@/services/portfolioItem.service";
+import { skillService } from "@/services/skill.service";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { toastify, IToastificationType } from "@/store/slices/toastificationSlice";
@@ -23,6 +26,7 @@ export interface IPortfolioModalFormData {
     technologies: string[];
     thumbnail: File | null;
     newImages: File[];
+    existingImages?: any[];
 }
 
 interface PortfolioItemModalProps {
@@ -34,6 +38,8 @@ interface PortfolioItemModalProps {
     onClose: () => void;
     onSubmit: (payload: IPortfolioModalFormData) => Promise<void> | void;
     onEdit?: (id: string, payload: IPortfolioModalFormData) => Promise<void> | void;
+    onChangeThumbnail?: (id: string, payload: FormData) => Promise<any>;
+    onDeleteImage?: (id: string, publicId: string) => Promise<any>;
 }
 
 const STATUS_OPTIONS: Option[] = Object.values(PortfolioProjectStatus).map((status) => ({
@@ -50,8 +56,13 @@ export default function PortfolioItemModal({
     onClose,
     onSubmit,
     onEdit,
+    onChangeThumbnail,
+    onDeleteImage,
 }: PortfolioItemModalProps) {
     const dispatch: AppDispatch = useDispatch();
+
+    const [skillOptions, setSkillOptions] = useState<Option[]>([]);
+    const [isLoadingSkills, setIsLoadingSkills] = useState<boolean>(false);
 
     const [title, setTitle] = useState<string>("");
     const [description, setDescription] = useState<string>("");
@@ -61,11 +72,22 @@ export default function PortfolioItemModal({
     const [figmaUrl, setFigmaUrl] = useState<string>("");
     const [status, setStatus] = useState<PortfolioProjectStatus>(PortfolioProjectStatus.DRAFT);
     const [featured, setFeatured] = useState<boolean>(false);
-    const [techInput, setTechInput] = useState<string>("");
-    const [technologies, setTechnologies] = useState<string[]>([]);
+
+    const [selectedTechIds, setSelectedTechIds] = useState<string[]>([]);
+    const [selectedTechSelect, setSelectedTechSelect] = useState<string>("");
+
     const [thumbnail, setThumbnail] = useState<File | null>(null);
     const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+    const [isUpdatingThumbnail, setIsUpdatingThumbnail] = useState<boolean>(false);
+
+    // Existing uploaded gallery images (objects containing image & publicId)
+    const [existingImages, setExistingImages] = useState<any[]>([]);
+    const [deletingImagePublicId, setDeletingImagePublicId] = useState<string | null>(null);
+
+    // Newly selected gallery image files
     const [newImages, setNewImages] = useState<File[]>([]);
+    const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const handleAddToastification = (
@@ -76,11 +98,39 @@ export default function PortfolioItemModal({
         dispatch(toastify({ message, type, duration }));
     };
 
-    // Sync modal state whenever opening or switching between create/edit modes
+    useEffect(() => {
+        if (!isOpen) return;
+
+        let isMounted = true;
+
+        const fetchSkills = async () => {
+            setIsLoadingSkills(true);
+            try {
+                const response = await skillService.getAllSkills();
+                if (isMounted) {
+                    const fetched = response.data.skills.map((s) => ({
+                        value: s._id,
+                        label: s.name,
+                    }));
+                    setSkillOptions(fetched);
+                }
+            } catch (err: any) {
+                handleAddToastification(err.message || "Failed to fetch skills list", "error", DURATION);
+            } finally {
+                if (isMounted) setIsLoadingSkills(false);
+            }
+        };
+
+        fetchSkills();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [isOpen]);
+
     useEffect(() => {
         if (isOpen) {
             if (isEdit && selectedProject) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setTitle(selectedProject.title || "");
                 setDescription(selectedProject.description || "");
                 setRole(selectedProject.role || "");
@@ -89,16 +139,20 @@ export default function PortfolioItemModal({
                 setFigmaUrl(selectedProject.figmaUrl || "");
                 setStatus(selectedProject.status || PortfolioProjectStatus.DRAFT);
                 setFeatured(!!selectedProject.featured);
-                setTechnologies(
+                setSelectedTechIds(
                     selectedProject.technologies?.map((t: any) =>
-                        typeof t === "string" ? t : t._id || t.name
+                        typeof t === "string" ? t : t._id
                     ) || []
                 );
                 setThumbnailPreview(selectedProject.thumbnail?.image || "");
                 setThumbnail(null);
+
+                // Populate existing remote gallery images
+                const remoteImgs = selectedProject.images || [];
+                setExistingImages(remoteImgs);
                 setNewImages([]);
+                setNewImagePreviews([]);
             } else {
-                // Reset form fields for create mode
                 setTitle("");
                 setDescription("");
                 setRole("");
@@ -107,41 +161,82 @@ export default function PortfolioItemModal({
                 setFigmaUrl("");
                 setStatus(PortfolioProjectStatus.DRAFT);
                 setFeatured(false);
-                setTechInput("");
-                setTechnologies([]);
+                setSelectedTechIds([]);
                 setThumbnail(null);
                 setThumbnailPreview("");
+                setExistingImages([]);
                 setNewImages([]);
+                setNewImagePreviews([]);
             }
+            setSelectedTechSelect("");
         }
     }, [isOpen, isEdit, selectedProject]);
 
     if (!isOpen) return null;
 
-    const handleAddTechnology = () => {
-        if (techInput.trim() && !technologies.includes(techInput.trim())) {
-            setTechnologies((prev) => [...prev, techInput.trim()]);
-            setTechInput("");
+    const handleSelectTechnology = (_name: string, value: string) => {
+        if (value && !selectedTechIds.includes(value)) {
+            setSelectedTechIds((prev) => [...prev, value]);
         }
+        setSelectedTechSelect("");
     };
 
-    const handleRemoveTechnology = (techToRemove: string) => {
-        setTechnologies((prev) => prev.filter((tech) => tech !== techToRemove));
+    const handleRemoveTechnology = (techIdToRemove: string) => {
+        setSelectedTechIds((prev) => prev.filter((id) => id !== techIdToRemove));
     };
 
-    const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            setThumbnail(file);
-            setThumbnailPreview(URL.createObjectURL(file));
+        if (!file) return;
+
+        setThumbnail(file);
+        setThumbnailPreview(URL.createObjectURL(file));
+
+        // Direct update on backend if editing existing project
+        if (isEdit && selectedProject?._id && onChangeThumbnail) {
+            try {
+                setIsUpdatingThumbnail(true);
+                const formData = new FormData();
+                formData.append("thumbnail", file);
+                formData.append("publicId", String(selectedProject.thumbnail.publicId))
+                await onChangeThumbnail(selectedProject._id, formData);
+            } catch (error: any) {
+                // Error toastification handled inside parent function
+            } finally {
+                setIsUpdatingThumbnail(false);
+            }
         }
     };
 
     const handleGalleryImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const filesArray = Array.from(e.target.files);
+            const objectUrls = filesArray.map((file) => URL.createObjectURL(file));
+
             setNewImages((prev) => [...prev, ...filesArray]);
+            setNewImagePreviews((prev) => [...prev, ...objectUrls]);
         }
+    };
+
+    const handleRemoveExistingImage = async (indexToRemove: number, imageObj: any) => {
+        if (isEdit && selectedProject?._id && onDeleteImage && imageObj?.publicId) {
+            try {
+                setDeletingImagePublicId(imageObj.publicId);
+                await onDeleteImage(selectedProject._id, imageObj.publicId);
+                setExistingImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+            } catch (error: any) {
+                // Error toastification handled inside parent function
+            } finally {
+                setDeletingImagePublicId(null);
+            }
+        } else {
+            setExistingImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+        }
+    };
+
+    const handleRemoveNewImage = (indexToRemove: number) => {
+        setNewImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+        setNewImagePreviews((prev) => prev.filter((_, idx) => idx !== indexToRemove));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -158,9 +253,10 @@ export default function PortfolioItemModal({
             figmaUrl,
             status,
             featured,
-            technologies,
+            technologies: selectedTechIds,
             thumbnail,
             newImages,
+            existingImages,
         };
 
         try {
@@ -315,62 +411,73 @@ export default function PortfolioItemModal({
                         </div>
                     </div>
 
-                    {/* Technologies Tag Field */}
+                    {/* Technologies */}
                     <div className="w-full">
                         <label className="text-body-sm font-medium text-on-surface block mb-2">
                             Technologies / Tools
                         </label>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={techInput}
-                                onChange={(e) => setTechInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        handleAddTechnology();
-                                    }
-                                }}
-                                placeholder="e.g. React, Next.js, TypeScript"
-                                className="flex-1 bg-surface-container-low border border-outline-variant rounded-md px-3.5 py-2 text-body-md text-on-surface outline-none focus:border-primary"
+                        <div className="relative">
+                            <SelectField
+                                id="technologies-select"
+                                label=""
+                                name="technologies"
+                                value={selectedTechSelect}
+                                onChange={handleSelectTechnology}
+                                options={skillOptions.filter((opt) => !selectedTechIds.includes(opt.value))}
+                                placeholder={
+                                    isLoadingSkills
+                                        ? "Loading technologies..."
+                                        : "Select technology..."
+                                }
+                                disabled={isLoadingSkills}
                             />
-                            <button
-                                type="button"
-                                onClick={handleAddTechnology}
-                                className="bg-surface-container-high text-on-surface px-4 py-2 rounded-md hover:bg-surface-container-highest transition-colors flex items-center gap-1 text-label-md"
-                            >
-                                <Plus size={16} /> Add
-                            </button>
+                            {isLoadingSkills && (
+                                <div className="absolute right-3 top-3 flex items-center">
+                                    <Loader2 size={16} className="animate-spin text-primary" />
+                                </div>
+                            )}
                         </div>
-                        {technologies.length > 0 && (
+
+                        {selectedTechIds.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2.5">
-                                {technologies.map((tech) => (
-                                    <span
-                                        key={tech}
-                                        className="inline-flex items-center gap-1.5 bg-surface-container-high text-on-surface-variant text-label-sm px-3 py-1 rounded-full"
-                                    >
-                                        {tech}
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveTechnology(tech)}
-                                            className="hover:text-error transition-colors"
+                                {selectedTechIds.map((techId) => {
+                                    const skillObj = skillOptions.find((opt) => opt.value === techId);
+                                    const label = skillObj ? skillObj.label : techId;
+
+                                    return (
+                                        <span
+                                            key={techId}
+                                            className="inline-flex items-center gap-1.5 bg-surface-container-high text-on-surface-variant text-label-sm px-3 py-1 rounded-full"
                                         >
-                                            <X size={12} />
-                                        </button>
-                                    </span>
-                                ))}
+                                            {label}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveTechnology(techId)}
+                                                className="hover:text-error transition-colors"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </span>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
 
-                    {/* Thumbnail Upload & Gallery Images */}
+                    {/* Thumbnail & Gallery Image Uploader */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                        {/* Thumbnail Upload */}
                         <div>
                             <label className="text-body-sm font-medium text-on-surface block mb-2">
                                 Thumbnail Image
                             </label>
                             <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-outline-variant rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors overflow-hidden relative">
-                                {thumbnailPreview ? (
+                                {isUpdatingThumbnail ? (
+                                    <div className="flex flex-col items-center gap-1 text-primary text-body-sm">
+                                        <Loader2 size={24} className="animate-spin" />
+                                        <span>Updating thumbnail...</span>
+                                    </div>
+                                ) : thumbnailPreview ? (
                                     /* eslint-disable-next-line @next/next/no-img-element */
                                     <img src={thumbnailPreview} alt="Thumbnail preview" className="w-full h-full object-cover" />
                                 ) : (
@@ -382,24 +489,22 @@ export default function PortfolioItemModal({
                                 <input
                                     type="file"
                                     accept="image/*"
+                                    disabled={isUpdatingThumbnail}
                                     onChange={handleThumbnailChange}
                                     className="hidden"
                                 />
                             </label>
                         </div>
 
+                        {/* Gallery Images Upload Button */}
                         <div>
                             <label className="text-body-sm font-medium text-on-surface block mb-2">
-                                Gallery Images
+                                Add Gallery Images
                             </label>
                             <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-outline-variant rounded-lg cursor-pointer hover:bg-surface-container-low transition-colors">
                                 <div className="flex flex-col items-center gap-1 text-on-surface-variant text-body-sm text-center px-2">
                                     <Upload size={20} />
-                                    <span>
-                                        {newImages.length
-                                            ? `${newImages.length} image(s) selected`
-                                            : "Click to add project images"}
-                                    </span>
+                                    <span>Click to add project images</span>
                                 </div>
                                 <input
                                     type="file"
@@ -412,6 +517,60 @@ export default function PortfolioItemModal({
                         </div>
                     </div>
 
+                    {/* Gallery Preview Section */}
+                    {(existingImages.length > 0 || newImagePreviews.length > 0) && (
+                        <div className="pt-2">
+                            <label className="text-body-sm font-medium text-on-surface block mb-2">
+                                Gallery Previews ({existingImages.length + newImagePreviews.length})
+                            </label>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                                {/* Remote/Existing Images */}
+                                {existingImages.map((imgObj, index) => {
+                                    const imgUrl = typeof imgObj === "string" ? imgObj : imgObj?.image;
+                                    const publicId = imgObj?.publicId;
+                                    const isDeletingThis = deletingImagePublicId === publicId;
+
+                                    return (
+                                        <div key={`existing-${index}`} className="relative h-20 rounded-md overflow-hidden group border border-outline-variant/40">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={imgUrl} alt={`Gallery existing ${index}`} className="w-full h-full object-cover" />
+                                            {isDeletingThis ? (
+                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white">
+                                                    <Loader2 size={16} className="animate-spin" />
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveExistingImage(index, imgObj)}
+                                                    className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white opacity-90 group-hover:opacity-100 hover:bg-error transition-all"
+                                                    title="Remove image"
+                                                >
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Local/New Images */}
+                                {newImagePreviews.map((previewUrl, index) => (
+                                    <div key={`new-${index}`} className="relative h-20 rounded-md overflow-hidden group border border-outline-variant/40">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={previewUrl} alt={`Gallery new ${index}`} className="w-full h-full object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveNewImage(index)}
+                                            className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white opacity-90 group-hover:opacity-100 hover:bg-error transition-all"
+                                            title="Remove image"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Featured Checkbox */}
                     <div className="flex items-center gap-2 pt-1">
                         <input
@@ -419,7 +578,7 @@ export default function PortfolioItemModal({
                             type="checkbox"
                             checked={featured}
                             onChange={(e) => setFeatured(e.target.checked)}
-                            className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary"
+                            className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary cursor-pointer"
                         />
                         <label htmlFor="featured-checkbox" className="text-body-sm text-on-surface cursor-pointer select-none">
                             Mark as Featured Project

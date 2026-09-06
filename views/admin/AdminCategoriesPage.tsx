@@ -11,7 +11,7 @@ import { useDispatch } from "react-redux";
 import { ICategory, ICreateCategoryDto, IUpdateCategoryDto, categoryService } from "@/services/category.service";
 import AdminCategoryFilters, { CategoryFilterState } from "@/components/features/admin/admin-categories-page/AdminCategoryFilters";
 import AdminCategoryTable from "@/components/features/admin/admin-categories-page/AdminCategoryTable";
-import CategoryModal from "@/components/models/CategoryModal";
+import CategoryModal from "@/components/modals/CategoryModal";
 
 export default function AdminCategoryPage() {
     const [categories, setCategories] = useState<ICategory[]>([]);

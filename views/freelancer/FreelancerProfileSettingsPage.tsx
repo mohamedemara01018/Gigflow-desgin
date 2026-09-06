@@ -1,7 +1,7 @@
 "use client";
 
 import CredentialsTabContent from "@/components/features/freelancer/freelancer-profile-settings/FreelancerCredentialstabcontent";
-import PortfolioTabContent from "@/components/features/freelancer/freelancer-profile-settings/Portfoliotabcontent";
+import PortfolioTabContent from "@/components/features/freelancer/freelancer-profile-settings/FreelancerPortfoliotabcontent";
 import ProfileSettingsTabContent from "@/components/features/freelancer/freelancer-profile-settings/FreelancerProfilesettingstabcontent";
 import ProfileTopNav, { ProfileTabId } from "@/components/features/freelancer/freelancer-profile-settings/ProfileTopNav";
 import SkillsExperienceTabContent from "@/components/features/freelancer/freelancer-profile-settings/FreelancerSkillsexperiencetabcontent";

@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BASE_URL } from "@/utils/constant.utils";
 import { UserRole, UserStatus } from "@/utils/enums.utils";
+import { ICountry } from "./country.service";
+import { ICity } from "./city.service";
 
 // 1. Individual User Item
 export interface IUserListItem {
@@ -12,8 +14,8 @@ export interface IUserListItem {
     avatar: string | null;
     public_id: string | null;
     phone: string | null;
-    country: string | null;
-    city: string | null;
+    country: ICountry | null;
+    city: ICity | null;
     verifiedEmailCode: string | null;
     emailCodeExpiresAt?: string | null;
     verifiedPhoneCode: string | null;

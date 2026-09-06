@@ -23,7 +23,6 @@ const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     { id: "personal-info", href: "/settings/personal-info", label: "Personal Info", icon: User },
     { id: "profile", href: "/settings/profile", label: "Profile", icon: UserPen },
     { id: "account", href: "/settings/account", label: "Account Info", icon: UserCog },
-    { id: "skills", href: "/settings/skills", label: "Skills & Exp", icon: Briefcase },
     { id: "security", href: "/settings/security", label: "Security", icon: Lock },
     { id: "payments", href: "/settings/payments", label: "Payments", icon: CreditCard },
     { id: "notifications", href: "/settings/notifications", label: "Notifications", icon: Bell },

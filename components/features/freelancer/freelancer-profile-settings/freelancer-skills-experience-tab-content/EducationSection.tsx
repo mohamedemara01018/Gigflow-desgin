@@ -11,7 +11,7 @@ import {
 } from "@/services/education.service";
 import { AppDispatch } from "@/store/store";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
-import EducationModal from "@/components/models/EducationModal";
+import EducationModal from "@/components/modals/EducationModal";
 import SmallLoading from "@/components/ui/SmallLoading";
 import EmptyState from "@/components/ui/Emptystate";
 

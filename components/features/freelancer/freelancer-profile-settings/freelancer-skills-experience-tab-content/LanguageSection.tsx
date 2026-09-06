@@ -11,7 +11,7 @@ import {
 } from "@/services/language.service"; // Adjust import path
 import { AppDispatch } from "@/store/store";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
-import LanguageModal from "@/components/models/LanguageModal";
+import LanguageModal from "@/components/modals/LanguageModal";
 import SmallLoading from "@/components/ui/SmallLoading";
 import EmptyState from "@/components/ui/Emptystate";
 

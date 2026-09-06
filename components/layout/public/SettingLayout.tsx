@@ -1,3 +1,4 @@
+'use client'
 import SettingsNav from '@/components/features/freelancer/freelancer-settings/SettingsNav';
 import { selectMeSlice } from '@/store/slices/auth/authSlice';
 import { UserRole } from '@/utils/enums.utils';

@@ -187,6 +187,7 @@ export default function ProfileSettingsTabContent({
                             </label>
                             <SimpleEditor
                                 maxWidth="37vw"
+                                tabletWidth='83vw'
                                 isEdit={true}
                                 content={profile?.overview ?? ""}
                                 onEditReady={handleEditorReady}

@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import SkillProfileModal from '@/components/models/SkillProfileModal';
+import SkillProfileModal from '@/components/modals/SkillProfileModal';
 import EmptyState from '@/components/ui/Emptystate';
 import SmallLoading from '@/components/ui/SmallLoading';
 import { ICreateProfileSkillDto, IProfileSkill, profileSkillService } from '@/services/profileSkill.service';

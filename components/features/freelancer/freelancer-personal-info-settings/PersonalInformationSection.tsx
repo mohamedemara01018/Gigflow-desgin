@@ -1,8 +1,10 @@
 import React, { ChangeEvent, useRef } from 'react';
 import SelectField from '../../../ui/SelectFeild';
 import { IUserListItem } from '@/services/user.service';
+import { ICountry } from '@/services/country.service';
+import { ICity } from '@/services/city.service';
 import UserImage from '@/components/ui/UserImage';
-import { Field } from '../freelancer-profile-settings/Field';
+import { Field } from '../../../ui/Field';
 
 export interface PersonalInfoState {
     firstName: string;
@@ -15,6 +17,10 @@ export interface PersonalInfoState {
 interface PersonalInformationSectionProps {
     me: IUserListItem | null;
     personalInfo: PersonalInfoState;
+    countries?: ICountry[];
+    cities?: ICity[];
+    isFetchingCountries?: boolean;
+    isFetchingCities?: boolean;
     onFieldChange: (field: string, value: string) => void;
     avatarUrl?: string;
     onAvatarChange: (file: File) => void;
@@ -26,6 +32,10 @@ interface PersonalInformationSectionProps {
 export default function PersonalInformationSection({
     me,
     personalInfo,
+    countries = [],
+    cities = [],
+    isFetchingCountries = false,
+    isFetchingCities = false,
     onFieldChange,
     onAvatarChange,
     onAvatarRemove,
@@ -60,6 +70,17 @@ export default function PersonalInformationSection({
     };
 
     const isAvatarBusy = changeLoading || removeLoading;
+
+    // Transform API responses into options format required by SelectField
+    const countryOptions = countries.map((country) => ({
+        label: `${country.name}${country.dialCode ? ` (${country.dialCode})` : ''}`,
+        value: country._id,
+    }));
+
+    const cityOptions = cities.map((city) => ({
+        label: city.name,
+        value: city._id,
+    }));
 
     return (
         <section className="card">
@@ -143,19 +164,27 @@ export default function PersonalInformationSection({
 
             <div className="grid sm:grid-cols-2 gap-4 mt-5 pt-5 border-t border-outline-variant">
                 <SelectField
-                    label="Country"
+                    label={isFetchingCountries ? "Country (Loading...)" : "Country"}
                     id="country"
                     name="country"
                     value={personalInfo.country || ''}
-                    options={[{ label: 'US', value: 'us' }]}
+                    options={countryOptions}
+                    disabled={isFetchingCountries}
                     onChange={handleSelectChange}
                 />
                 <SelectField
-                    label="City"
+                    label={
+                        isFetchingCities
+                            ? "City (Loading...)"
+                            : !personalInfo.country
+                                ? "City (Select a country first)"
+                                : "City"
+                    }
                     id="city"
                     name="city"
                     value={personalInfo.city || ''}
-                    options={[{ label: 'San Francisco', value: 'San Francisco' }]}
+                    options={cityOptions}
+                    disabled={!personalInfo.country || isFetchingCities}
                     onChange={handleSelectChange}
                 />
             </div>

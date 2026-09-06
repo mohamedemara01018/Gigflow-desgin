@@ -10,7 +10,7 @@ import {
     IEmploymentHistory,
     IUpdateEmploymentDto,
 } from "@/services/employmentHistory.service";
-import EmploymentHistoryModal from "@/components/models/EmploymentHistoryModal";
+import EmploymentHistoryModal from "@/components/modals/EmploymentHistoryModal";
 import { AppDispatch } from "@/store/store";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
 import { DURATION } from "@/utils/constant.utils";
