@@ -33,6 +33,7 @@ export enum AttachmentEntityType {
 }
 
 
+
 export enum VerificationStatus {
     PENDING = "pending",
     IN_REVIEW = "in_review",
@@ -87,4 +88,32 @@ export enum EmploymentType {
     FREELANCE = "freelance",
     INTERNSHIP = "internship",
     CONTRACT = "contract",
+}
+
+
+export enum JobType {
+    FIXED = "fixed",
+    HOURLY = "hourly",
+}
+
+export enum JobDuration {
+    LESS_THAN_1_MONTH = "less_than_1_month",
+    ONE_TO_THREE_MONTHS = "1_to_3_months",
+    THREE_TO_SIX_MONTHS = "3_to_6_months",
+    MORE_THAN_6_MONTHS = "more_than_6_months",
+}
+
+export enum JobStatus {
+    DRAFT = "draft",
+    OPEN = "open",
+    IN_PROGRESS = "in_progress",
+    COMPLETED = "completed",
+    CANCELLED = "cancelled",
+    CLOSED = "closed",
+}
+
+export enum JobVisibility {
+    PUBLIC = "public",
+    PRIVATE = "private",
+    INVITE_ONLY = "invite_only",
 }

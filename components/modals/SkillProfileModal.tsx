@@ -159,7 +159,10 @@ export default function SkillProfileModal({
                             label="Skill"
                             name="skill"
                             value={skill}
-                            onChange={(_name, value) => setSkill(value)}
+                            onChange={(_name, value) => {
+                                const selectedValue = Array.isArray(value) ? value[0] || "" : value;
+                                setSkill(selectedValue);
+                            }}
                             options={skillOptions}
                             placeholder={
                                 isLoadingSkills

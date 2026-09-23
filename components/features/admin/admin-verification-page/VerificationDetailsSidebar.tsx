@@ -4,7 +4,7 @@
 import BlurredDocumentCard from "@/components/features/admin/admin-verification-page/BlurredDocumentCard";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SmallLoading from "@/components/ui/SmallLoading";
-import { IGetAttachmentsApiResponse } from "@/services/attachment.service";
+import { IGetAttachmentsApiResponse, IGetEntityAttachmentsApiResponse } from "@/services/attachment.service";
 import { IVerificationRequest } from "@/services/verification.service";
 import { VerificationStatus } from "@/utils/enums.utils";
 import { formatDateTime, getInitials } from "@/utils/functions.utils";
@@ -28,20 +28,13 @@ interface VerificationDetailsSidebarProps {
     selectedVerification: IVerificationRequest;
     notes: string;
     onNotesChange: (value: string) => void;
-    // Rejection Reason state props
     rejectionReason: string;
     onRejectionReasonChange: (reason: string) => void;
     customRejectionReason?: string;
     onCustomRejectionReasonChange?: (reason: string) => void;
-
     attachmentLoading: boolean;
-    attachmentResponse?: IGetAttachmentsApiResponse;
+    attachmentResponse?: IGetEntityAttachmentsApiResponse;
     onApprove?: () => void;
-    // NOTE: this now fires only after the confirm dialog is accepted —
-    // it should be the actual rejection submission (e.g. your former
-    // handleReview(REJECTED, ...) call), not something that opens its
-    // own dialog or does its own validation. That responsibility moved
-    // into this component.
     onReject?: () => void;
     onReview?: () => void;
     approveLoading: boolean;

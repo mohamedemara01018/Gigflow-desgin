@@ -1,13 +1,9 @@
 import { Check, View } from "lucide-react";
 
-const STEPS = [
-    { id: 1, label: "Document Type" },
-    { id: 2, label: "Upload Document" },
-    { id: 3, label: "Review" },
-];
 
 
-function StepIndicator({ current }: { current: number }) {
+
+function StepIndicator({ current, STEPS }: { current: number, STEPS: { id: number, label: string }[] }) {
     return (
         <div className="flex items-center justify-center flex-wrap gap-3 mt-10">
             {STEPS.map((step, i) => {

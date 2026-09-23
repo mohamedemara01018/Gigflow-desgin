@@ -19,7 +19,6 @@ const clientRoutes = [
 
 const freelancerRoutes = [
     "/freelancer",
-    "/jobs",
 ];
 
 const adminRoutes = [
@@ -29,6 +28,7 @@ const adminRoutes = [
 const sharedProtectedRoutes = [
     "/profile",
     "/settings",
+    "/jobs"
 ];
 
 const authRoutes = [

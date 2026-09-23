@@ -10,8 +10,8 @@ export interface PersonalInfoState {
     firstName: string;
     lastName: string;
     phone?: string;
-    country?: string;
-    city?: string;
+    country?: string | null;
+    city?: string | null;
 }
 
 interface PersonalInformationSectionProps {
@@ -51,8 +51,9 @@ export default function PersonalInformationSection({
     };
 
     // Custom Select component change handler
-    const handleSelectChange = (name: string, value: string) => {
-        onFieldChange(name, value);
+    const handleSelectChange = (name: string, value: string | string[]) => {
+        const selectedValue = Array.isArray(value) ? value[0] || '' : value;
+        onFieldChange(name, selectedValue);
     };
 
     // Trigger file browser when clicking "Change Photo"
@@ -167,7 +168,7 @@ export default function PersonalInformationSection({
                     label={isFetchingCountries ? "Country (Loading...)" : "Country"}
                     id="country"
                     name="country"
-                    value={personalInfo.country || ''}
+                    value={personalInfo.country || null}
                     options={countryOptions}
                     disabled={isFetchingCountries}
                     onChange={handleSelectChange}
@@ -182,7 +183,7 @@ export default function PersonalInformationSection({
                     }
                     id="city"
                     name="city"
-                    value={personalInfo.city || ''}
+                    value={personalInfo.city || null}
                     options={cityOptions}
                     disabled={!personalInfo.country || isFetchingCities}
                     onChange={handleSelectChange}

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DocumentTypePage from "@/views/public/DocumentTypePage";
-import StepIndicator from "@/components/features/public/verify-identity/StepIndicator";
+import StepIndicator from "@/components/ui/StepIndicator";
 import { AttachmentEntityType, DocumentType } from "@/utils/enums.utils";
 import ReviewDocumentPage from "@/views/public/ReviewDocumentPage";
 import { verificationService } from "@/services/verification.service";
@@ -18,6 +18,14 @@ import { AppDispatch } from "@/store/store";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
 import { attachmentService } from "@/services/attachment.service";
 import UploadDocumentPage from "./UploadDocumentPage";
+
+
+const STEPS = [
+    { id: 1, label: "Document Type" },
+    { id: 2, label: "Upload Document" },
+    { id: 3, label: "Review" },
+];
+
 
 export default function VerifyIdentityPage() {
     const searchParams = useSearchParams();
@@ -129,7 +137,7 @@ export default function VerifyIdentityPage() {
                 </p>
             </div>
 
-            <StepIndicator current={step} />
+            <StepIndicator current={step} STEPS={STEPS} />
             <div className="pt-16 wrapper">
                 <FormError error={error} />
             </div>

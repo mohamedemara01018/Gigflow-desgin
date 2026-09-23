@@ -37,8 +37,8 @@ export default function FreelancerPersonalInfoSettings() {
         firstName: me?.firstName || '',
         lastName: me?.lastName || '',
         phone: me?.phone || '',
-        country: getEntityId(me?.country),
-        city: getEntityId(me?.city)
+        country: getEntityId(me?.country) || null,
+        city: getEntityId(me?.city) || null
     });
 
     // 1. Fetch available active countries on component mount
@@ -94,6 +94,7 @@ export default function FreelancerPersonalInfoSettings() {
         return () => {
             isMounted = false;
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [personalInfo.country]);
 
     // Sync form state when `me` updates from Redux store
@@ -129,7 +130,7 @@ export default function FreelancerPersonalInfoSettings() {
         setPersonalInfo((prev) => {
             // Clear selected city if the country is changed
             if (field === 'country' && prev.country !== value) {
-                return { ...prev, country: value, city: '' };
+                return { ...prev, country: value, city: null };
             }
             return { ...prev, [field]: value };
         });

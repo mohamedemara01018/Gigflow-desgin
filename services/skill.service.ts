@@ -33,6 +33,7 @@ export type IUpdateSkillDto = Partial<ICreateSkillDto>;
 export interface ISkillListApiResponse {
     message: string;
     data: {
+        total: number;
         skills: ISkill[];
     };
 }

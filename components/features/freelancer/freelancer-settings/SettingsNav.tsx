@@ -1,5 +1,7 @@
 'use client'
 
+import { IUserListItem } from "@/services/user.service";
+import { UserRole } from "@/utils/enums.utils";
 import {
     User,
     UserCog,
@@ -19,19 +21,22 @@ export interface SettingsNavItem {
     icon: LucideIcon;
 }
 
-const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
-    { id: "personal-info", href: "/settings/personal-info", label: "Personal Info", icon: User },
-    { id: "profile", href: "/settings/profile", label: "Profile", icon: UserPen },
-    { id: "account", href: "/settings/account", label: "Account Info", icon: UserCog },
-    { id: "security", href: "/settings/security", label: "Security", icon: Lock },
-    { id: "payments", href: "/settings/payments", label: "Payments", icon: CreditCard },
-    { id: "notifications", href: "/settings/notifications", label: "Notifications", icon: Bell },
-];
 
-export default function SettingsNav() {
+
+export default function SettingsNav({ me }: { me: IUserListItem }) {
     const pathname = usePathname();
     const router = useRouter();
 
+    const isFreelancer = me.role == UserRole.FREELANCER
+    const isAdmin = me.role == UserRole.ADMIN
+    const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
+        { id: "personal-info", href: "/settings/personal-info", label: "Personal Info", icon: User },
+        ...(isFreelancer ? [{ id: "profile", href: "/settings/profile", label: "Profile", icon: UserPen }] : []),
+        { id: "account", href: "/settings/account", label: "Account Info", icon: UserCog },
+        { id: "security", href: "/settings/security", label: "Security", icon: Lock },
+        ...(!isAdmin ? [{ id: "payments", href: "/settings/payments", label: "Payments", icon: CreditCard }] : []),
+        { id: "notifications", href: "/settings/notifications", label: "Notifications", icon: Bell },
+    ];
     return (
         <nav className="card p-2! flex flex-col gap-1">
             {SETTINGS_NAV_ITEMS.map(({ id, label, href, icon: Icon }) => {

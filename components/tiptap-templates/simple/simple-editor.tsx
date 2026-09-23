@@ -16,9 +16,7 @@ import { Selection } from "@tiptap/extensions"
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
-import { Spacer } from "@/components/tiptap-ui-primitive/spacer"
 import {
-  Toolbar,
   ToolbarGroup,
   ToolbarSeparator,
 } from "@/components/tiptap-ui-primitive/toolbar"
@@ -57,12 +55,10 @@ import { LinkIcon } from "@/components/tiptap-icons/link-icon"
 
 // --- Hooks ---
 import { useIsBreakpoint } from "@/hooks/use-is-breakpoint"
-import { useWindowSize } from "@/hooks/use-window-size"
-import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
+import { useMediaQuery } from "@/hooks/useMediaQuery"
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
-import { useMediaQuery } from "@/hooks/useMediaQuery"
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -77,13 +73,17 @@ const MainToolbarContent = ({
   isMobile: boolean
 }) => {
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between w-full">
+    <div className="flex flex-wrap items-center gap-1.5 p-2 w-full bg-(--color-surface-container-low,#f8fafc) border-b border-(--color-outline-variant,rgba(0,0,0,0.12)) rounded-t-lg">
+      {/* History */}
+      <ToolbarGroup className="flex items-center gap-0.5">
         <UndoRedoButton action="undo" />
         <UndoRedoButton action="redo" />
+      </ToolbarGroup>
 
-        <ToolbarSeparator />
+      <ToolbarSeparator />
 
+      {/* Structure */}
+      <ToolbarGroup className="flex items-center gap-0.5">
         <HeadingDropdownMenu modal={false} levels={[1, 2, 3, 4]} />
         <ListDropdownMenu
           modal={false}
@@ -91,40 +91,48 @@ const MainToolbarContent = ({
         />
         <BlockquoteButton />
         <CodeBlockButton />
+      </ToolbarGroup>
 
-        <ToolbarSeparator />
+      <ToolbarSeparator />
 
+      {/* Marks */}
+      <ToolbarGroup className="flex items-center gap-0.5">
         <MarkButton type="bold" />
         <MarkButton type="italic" />
-        <MarkButton type="strike" />
-      </div>
-
-      <div className="flex items-center justify-between w-full">
-        <MarkButton type="code" />
         <MarkButton type="underline" />
+        <MarkButton type="strike" />
+        <MarkButton type="code" />
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      {/* Popovers */}
+      <ToolbarGroup className="flex items-center gap-0.5">
         {!isMobile ? (
           <ColorHighlightPopover />
         ) : (
           <ColorHighlightPopoverButton onClick={onHighlighterClick} />
         )}
         {!isMobile ? <LinkPopover /> : <LinkButton onClick={onLinkClick} />}
+      </ToolbarGroup>
 
-        <ToolbarSeparator />
+      <ToolbarSeparator />
 
+      {/* Script */}
+      <ToolbarGroup className="flex items-center gap-0.5">
         <MarkButton type="superscript" />
         <MarkButton type="subscript" />
+      </ToolbarGroup>
 
-        <ToolbarSeparator />
+      <ToolbarSeparator />
 
+      {/* Alignment */}
+      <ToolbarGroup className="flex items-center gap-0.5">
         <TextAlignButton align="left" />
         <TextAlignButton align="center" />
         <TextAlignButton align="right" />
         <TextAlignButton align="justify" />
-
-        <ToolbarSeparator />
-      </div>
-
-      {isMobile && <ToolbarSeparator />}
+      </ToolbarGroup>
     </div>
   )
 }
@@ -136,7 +144,7 @@ const MobileToolbarContent = ({
   type: "highlighter" | "link"
   onBack: () => void
 }) => (
-  <>
+  <div className="flex items-center gap-2 p-2 w-full bg-(--color-surface-container-low,#f8fafc) border-b border-(--color-outline-variant,rgba(0,0,0,0.12))">
     <ToolbarGroup>
       <Button variant="ghost" onClick={onBack}>
         <ArrowLeftIcon className="tiptap-button-icon" />
@@ -155,10 +163,10 @@ const MobileToolbarContent = ({
     ) : (
       <LinkContent />
     )}
-  </>
+  </div>
 )
 
-interface SimpleEditorProbs {
+interface SimpleEditorProps {
   isEdit?: boolean
   content: string
   onEditReady: (editor: Editor) => void
@@ -166,14 +174,18 @@ interface SimpleEditorProbs {
   maxWidth: string
 }
 
-export function SimpleEditor({ isEdit, content, onEditReady, tabletWidth, maxWidth }: SimpleEditorProbs) {
+export function SimpleEditor({
+  isEdit,
+  content,
+  onEditReady,
+  tabletWidth,
+  maxWidth,
+}: SimpleEditorProps) {
   const isMobile = useIsBreakpoint()
-  const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">(
     "main"
   )
   const [isSearchAndReplaceOpen, setIsSearchAndReplaceOpen] = useState(false)
-  const toolbarRef = useRef<HTMLDivElement>(null)
   const searchAndReplaceButtonRef = useRef<HTMLButtonElement>(null)
   const onEditReadyRef = useRef(onEditReady)
 
@@ -189,7 +201,7 @@ export function SimpleEditor({ isEdit, content, onEditReady, tabletWidth, maxWid
         autocorrect: "off",
         autocapitalize: "off",
         "aria-label": "Main content area, start typing to enter text.",
-        class: "simple-editor",
+        class: "simple-editor focus:outline-none min-h-[160px]",
       },
     },
     extensions: [
@@ -215,12 +227,6 @@ export function SimpleEditor({ isEdit, content, onEditReady, tabletWidth, maxWid
       }),
     ],
     content: isEdit ? content : "<p>write your overview here</p>",
-  })
-
-  const rect = useCursorVisibility({
-    editor,
-    // eslint-disable-next-line react-hooks/refs
-    overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
   })
 
   useEffect(() => {
@@ -260,16 +266,7 @@ export function SimpleEditor({ isEdit, content, onEditReady, tabletWidth, maxWid
   return (
     <div className="simple-editor-wrapper">
       <EditorContext.Provider value={{ editor }}>
-        <Toolbar
-          ref={toolbarRef}
-          style={{
-            ...(isMobile
-              ? {
-                bottom: `calc(100% - ${height - rect.y}px)`,
-              }
-              : {}),
-          }}
-        >
+        <header className="w-full relative block">
           {mobileView === "main" ? (
             <MainToolbarContent
               onHighlighterClick={() => setMobileView("highlighter")}
@@ -285,7 +282,7 @@ export function SimpleEditor({ isEdit, content, onEditReady, tabletWidth, maxWid
               onBack={() => setMobileView("main")}
             />
           )}
-        </Toolbar>
+        </header>
 
         <EditorContent
           editor={editor}

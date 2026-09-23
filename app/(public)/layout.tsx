@@ -1,16 +1,13 @@
-import Navbar from '@/components/layout/public/navbar/Navbar'
+import PublicDashboardLayout from '@/components/layout/public/PublicDashboardLayout'
 import React from 'react'
 
 function layout({
     children,
 }: Readonly<{ children: React.ReactNode }>) {
     return (
-        <div>
-            <Navbar />
-            <main className='pt-20'>
-                {children}
-            </main>
-        </div>
+        <PublicDashboardLayout>
+            {children}
+        </PublicDashboardLayout>
     )
 }
 

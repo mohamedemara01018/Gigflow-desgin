@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
@@ -126,6 +127,7 @@ export default function PortfolioItemModal({
         return () => {
             isMounted = false;
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
     useEffect(() => {
@@ -174,9 +176,11 @@ export default function PortfolioItemModal({
 
     if (!isOpen) return null;
 
-    const handleSelectTechnology = (_name: string, value: string) => {
-        if (value && !selectedTechIds.includes(value)) {
-            setSelectedTechIds((prev) => [...prev, value]);
+    const handleSelectTechnology = (_name: string, value: string | string[]) => {
+        const selectedVal = Array.isArray(value) ? value[0] : value;
+
+        if (selectedVal && !selectedTechIds.includes(selectedVal)) {
+            setSelectedTechIds((prev) => [...prev, selectedVal]);
         }
         setSelectedTechSelect("");
     };

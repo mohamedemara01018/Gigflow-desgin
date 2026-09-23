@@ -1,5 +1,6 @@
-
-
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/immutability */
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
@@ -10,8 +11,16 @@ import { AppDispatch } from '@/store/store';
 import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
 import { DURATION } from '@/utils/constant.utils';
 import { userService } from '@/services/user.service';
+import { countryService, ICountry } from '@/services/country.service';
+import { cityService, ICity } from '@/services/city.service';
 import PersonalInformationSection from '@/components/features/freelancer/freelancer-personal-info-settings/PersonalInformationSection';
 import SettingLayout from '@/components/layout/public/SettingLayout';
+
+// Helper to normalize string IDs or populated objects
+const getEntityId = (entity: any): string => {
+    if (!entity) return '';
+    return typeof entity === 'object' ? entity._id || '' : entity;
+};
 
 export default function AdminPeronalInofPage() {
     const { me } = useSelector(selectMeSlice);
@@ -20,24 +29,83 @@ export default function AdminPeronalInofPage() {
     const [loading, setLoading] = useState(false);
     const [changeLoading, setChangeLoading] = useState(false);
     const [removeLoading, setRemoveLoading] = useState(false);
+
+    // Country & City options state
+    const [countries, setCountries] = useState<ICountry[]>([]);
+    const [cities, setCities] = useState<ICity[]>([]);
+    const [isFetchingCountries, setIsFetchingCountries] = useState(false);
+    const [isFetchingCities, setIsFetchingCities] = useState(false);
+
     const [personalInfo, setPersonalInfo] = useState({
         firstName: me?.firstName || '',
         lastName: me?.lastName || '',
         phone: me?.phone || '',
-        country: me?.country || '',
-        city: me?.city || ''
+        country: getEntityId(me?.country) || null,
+        city: getEntityId(me?.city) || null
     });
+
+    // 1. Fetch available active countries on component mount
+    useEffect(() => {
+        let isMounted = true;
+        const loadCountries = async () => {
+            try {
+                setIsFetchingCountries(true);
+                const res = await countryService.getAllCountries({ isActive: true, limit: 250 });
+                if (isMounted) {
+                    setCountries(res.data?.countries || []);
+                }
+            } catch (error: any) {
+                handleAddToastification(error?.message || "Failed to load countries", "error", DURATION);
+            } finally {
+                if (isMounted) setIsFetchingCountries(false);
+            }
+        };
+
+        loadCountries();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    // 2. Fetch cities whenever the selected country changes
+    useEffect(() => {
+        const countryId = personalInfo.country;
+        if (!countryId) {
+            setCities([]);
+            return;
+        }
+
+        let isMounted = true;
+        const loadCities = async () => {
+            try {
+                setIsFetchingCities(true);
+                const res = await cityService.getCitiesByCountry(countryId, { limit: 250 });
+                if (isMounted) {
+                    setCities(res.data?.cities || []);
+                }
+            } catch (error: any) {
+                if (isMounted) setCities([]);
+                handleAddToastification(error?.message || "Failed to load cities", "error", DURATION);
+            } finally {
+                if (isMounted) setIsFetchingCities(false);
+            }
+        };
+
+        loadCities();
+        return () => {
+            isMounted = false;
+        };
+    }, [personalInfo.country]);
 
     // Sync form state when `me` updates from Redux store
     useEffect(() => {
         if (me) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setPersonalInfo({
                 firstName: me.firstName || '',
                 lastName: me.lastName || '',
                 phone: me.phone || '',
-                country: me.country || '',
-                city: me.city || ''
+                country: getEntityId(me.country),
+                city: getEntityId(me.city)
             });
         }
     }, [me]);
@@ -48,8 +116,8 @@ export default function AdminPeronalInofPage() {
             personalInfo.firstName === (me?.firstName || '') &&
             personalInfo.lastName === (me?.lastName || '') &&
             personalInfo.phone === (me?.phone || '') &&
-            personalInfo.country === (me?.country || '') &&
-            personalInfo.city === (me?.city || '')
+            personalInfo.country === getEntityId(me?.country) &&
+            personalInfo.city === getEntityId(me?.city)
         );
     }, [personalInfo, me]);
 
@@ -58,10 +126,13 @@ export default function AdminPeronalInofPage() {
     };
 
     const handlePersonalInfoChange = (field: string, value: string) => {
-        setPersonalInfo((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
+        setPersonalInfo((prev) => {
+            // Clear selected city if country is changed
+            if (field === 'country' && prev.country !== value) {
+                return { ...prev, country: value, city: null };
+            }
+            return { ...prev, [field]: value };
+        });
     };
 
     const updateUser = async () => {
@@ -109,8 +180,8 @@ export default function AdminPeronalInofPage() {
                 firstName: me.firstName || '',
                 lastName: me.lastName || '',
                 phone: me.phone || '',
-                country: me.country || '',
-                city: me.city || ''
+                country: getEntityId(me.country),
+                city: getEntityId(me.city)
             });
         }
     };
@@ -130,6 +201,10 @@ export default function AdminPeronalInofPage() {
             <PersonalInformationSection
                 me={me}
                 personalInfo={personalInfo}
+                countries={countries}
+                cities={cities}
+                isFetchingCountries={isFetchingCountries}
+                isFetchingCities={isFetchingCities}
                 onFieldChange={handlePersonalInfoChange}
                 onAvatarChange={handleAvatarChange}
                 onAvatarRemove={handleAvatarRemove}

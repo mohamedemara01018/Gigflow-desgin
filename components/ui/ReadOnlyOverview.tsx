@@ -26,13 +26,26 @@ import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 import "@/components/tiptap-templates/simple/simple-editor.scss"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 
-function ReadOnlyOverview({ content, tabletWidth, width }: { content: string, tabletWidth: string, width: string }) {
+interface ReadOnlyOverviewProps {
+    content: string
+    tabletWidth?: string
+    width?: string
+    clampLines?: boolean
+}
+
+function ReadOnlyOverview({
+    content,
+    tabletWidth,
+    width,
+    clampLines = false,
+}: ReadOnlyOverviewProps) {
     const editor = useEditor({
         immediatelyRender: false,
         editable: false,
         editorProps: {
             attributes: {
-                class: "simple-editor !max-w-none !w-full !min-h-full outline-none focus:outline-none",
+                class: `simple-editor max-w-none! w-full! min-h-full! outline-none focus:outline-none ${clampLines ? "line-clamp-3 overflow-hidden" : ""
+                    }`,
             },
         },
         extensions: [

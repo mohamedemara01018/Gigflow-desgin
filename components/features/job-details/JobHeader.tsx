@@ -1,37 +1,53 @@
 import { Clock, Heart, MapPin, Network } from "lucide-react";
+import { IJob } from "@/services/jobs.service";
+import { ICategory } from "@/services/category.service";
+import { formatDistanceToNow } from "@/utils/functions.utils";
 
-function JobHeader() {
+interface JobHeaderProps {
+    job: IJob;
+    isFreelancer: boolean
+}
+
+export default function JobHeader({ job, isFreelancer }: JobHeaderProps) {
+    // Extract category name safely depending on whether category is populated or a string
+    const categoryName = typeof job.category === "object" && job.category !== null
+        ? (job.category as ICategory).name
+        : "Web Development";
+
+    // Format relative time (e.g., "2 hours ago")
+    const formattedPostedTime = job.publishedAt
+        ? formatDistanceToNow(new Date(job.publishedAt), { addSuffix: true })
+        : "Recently";
+
     return (
         <section className="card">
             <div className="flex items-start justify-between gap-4">
-                <h1 className="text-headline-lg text-(--color-on-surface)">
-                    Senior Full-stack Engineer for Fintech Dashboard Expansion
+                <h1 className="text-headline-lg text-on-surface">
+                    {job.title}
                 </h1>
-                <button
+                {isFreelancer && <button
                     type="button"
                     aria-label="Save job"
-                    className="shrink-0 w-11 h-11 rounded-full border border-(--color-outline-variant) flex items-center justify-center text-(--color-on-surface-variant) hover:text-(--color-tertiary) hover:border-(--color-tertiary) transition-colors"
+                    className="shrink-0 w-11 h-11 rounded-full border border-outline-variant flex items-center justify-center text-on-surface-variant hover:text-tertiary hover:border-tertiary transition-colors cursor-pointer"
                 >
                     <Heart size={20} />
-                </button>
+                </button>}
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-(--color-on-surface-variant)">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-on-surface-variant">
                 <span className="flex items-center gap-1.5 text-body-sm">
                     <Network size={16} />
-                    Web Development
+                    {categoryName}
                 </span>
                 <span className="flex items-center gap-1.5 text-body-sm">
                     <MapPin size={16} />
-                    London, United Kingdom
+                    {job.location || "Remote"}
                 </span>
                 <span className="flex items-center gap-1.5 text-body-sm">
                     <Clock size={16} />
-                    Posted 2 hours ago
+                    Posted {formattedPostedTime}
                 </span>
             </div>
         </section>
     );
 }
-
-export default JobHeader

@@ -1,7 +1,6 @@
 'use client'
 import SettingsNav from '@/components/features/freelancer/freelancer-settings/SettingsNav';
 import { selectMeSlice } from '@/store/slices/auth/authSlice';
-import { UserRole } from '@/utils/enums.utils';
 import React from 'react';
 import { useSelector } from 'react-redux';
 
@@ -28,14 +27,13 @@ export default function SettingLayout({
 }: Readonly<SettingLayoutProps>) {
     const hasActions = Boolean(onSaveChange || onCancelChange);
     const { me } = useSelector(selectMeSlice);
-    const isFreelancer = me?.role == UserRole.FREELANCER
     return (
         <div className="wrapper">
-            <div className={`grid grid-cols-1 ${!isFreelancer ? '' : 'lg:grid-cols-[240px_1fr]'} gap-6 mt-6`}>
+            <div className={`grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6 mt-6`}>
 
                 <aside className="flex flex-col gap-6">
                     {
-                        isFreelancer && <SettingsNav />
+                        <SettingsNav me={me!} />
                     }
 
                 </aside>

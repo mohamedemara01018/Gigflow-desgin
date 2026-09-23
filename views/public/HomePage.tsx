@@ -13,6 +13,9 @@ import ClientPage from "../client/ClientPage";
 import LandingPage from "./LandingPage";
 import AdminPage from "../admin/AdminPage";
 import AdminDashboardLayout from "@/components/layout/admin/AdminDashboardLayout";
+import ClientDashboardLayout from "@/components/layout/client/ClientDashboardLayout";
+import { IUserListItem } from "@/services/user.service";
+import FreelancerDashboardLayout from "@/components/layout/freelancer/FreelancerDashboardLayout";
 
 
 
@@ -28,10 +31,18 @@ function HomePage() {
 
     switch (me?.role) {
         case UserRole.FREELANCER:
-            return (<FreelancerPage />);
+            return (
+                <FreelancerDashboardLayout>
+                    <FreelancerPage />
+                </FreelancerDashboardLayout>
+            );
 
         case UserRole.CLIENT:
-            return (<ClientPage />);
+            return (
+                <ClientDashboardLayout>
+                    <ClientPage />
+                </ClientDashboardLayout>
+            );
 
         case UserRole.ADMIN:
             return (

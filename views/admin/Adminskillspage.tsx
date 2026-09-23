@@ -11,7 +11,6 @@ import { useDispatch } from "react-redux";
 import { ICreateSkillDto, ISkill, skillService } from "@/services/skill.service";
 import AdminSkillFilters, { SkillFilterState } from "@/components/features/admin/admin-skills-page/Adminskillfilters";
 import AdminSkillTable from "@/components/features/admin/admin-skills-page/Adminskilltable";
-import { Option } from "@/components/ui/SelectFeild";
 import SkillModal from "@/components/modals/skillModal";
 
 export default function AdminSkillsPage() {
@@ -20,7 +19,6 @@ export default function AdminSkillsPage() {
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [searchInput, setSearchInput] = useState("");
-    const [categoryOptions, setCategoryOptions] = useState<Option[]>([]);
     const [filters, setFilters] = useState<SkillFilterState>({
         search: "",
         category: "",
@@ -198,7 +196,6 @@ export default function AdminSkillsPage() {
                 isEdit={isEdit}
                 setIsEdit={setIsEdit}
                 selectedSkill={selectedSkill}
-                categoryOptions={categoryOptions}
                 onClose={handleCloseModal}
                 onSubmit={handleCreateSkill}
                 onEdit={handleUpdateSkill}

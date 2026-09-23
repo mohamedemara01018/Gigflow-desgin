@@ -220,7 +220,10 @@ export default function SkillModal({
                                 label="Category"
                                 name="category"
                                 value={category}
-                                onChange={(_name, value) => setCategory(value)}
+                                onChange={(_name, value) => {
+                                    const selectedValue = Array.isArray(value) ? value[0] || "" : value;
+                                    setCategory(selectedValue);
+                                }}
                                 options={categoryOptions}
                                 placeholder={
                                     categoryOptions.length === 0

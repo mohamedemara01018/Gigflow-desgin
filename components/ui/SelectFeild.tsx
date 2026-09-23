@@ -1,5 +1,5 @@
 import React from "react";
-import Select, { SingleValue } from "react-select";
+import Select, { MultiValue, SingleValue } from "react-select";
 
 export type Option = {
     value: string;
@@ -11,10 +11,11 @@ interface SelectFieldProps {
     id?: string;
     label: string;
     options: Option[];
-    value?: string;
-    onChange: (name: string, value: string) => void;
+    value?: string | string[] | null;
+    onChange: (name: string, value: string | string[]) => void;
     placeholder?: string;
-    disabled?: boolean
+    disabled?: boolean;
+    isMulti?: boolean;
 }
 
 export default function SelectField({
@@ -25,13 +26,24 @@ export default function SelectField({
     value,
     onChange,
     placeholder = "Select...",
-    disabled
+    disabled,
+    isMulti = false,
 }: SelectFieldProps) {
-    // Find matching option object from string value
-    const selectedOption = options.find((opt) => opt.value === value) || null;
+    // Determine selected option(s) based on value type
+    const selectedOption = isMulti
+        ? options.filter((opt) => Array.isArray(value) && value.includes(opt.value))
+        : options.find((opt) => opt.value === value) || null;
 
-    const handleSelectChange = (newValue: SingleValue<Option>) => {
-        onChange(name, newValue ? newValue.value : "");
+    const handleSelectChange = (
+        newValue: MultiValue<Option> | SingleValue<Option>
+    ) => {
+        if (isMulti) {
+            const selectedValues = (newValue as MultiValue<Option>).map((opt) => opt.value);
+            onChange(name, selectedValues);
+        } else {
+            const singleVal = newValue as SingleValue<Option>;
+            onChange(name, singleVal ? singleVal.value : "");
+        }
     };
 
     return (
@@ -43,6 +55,7 @@ export default function SelectField({
                 unstyled
                 id={id}
                 name={name}
+                isMulti={isMulti}
                 options={options}
                 value={selectedOption}
                 onChange={handleSelectChange}
@@ -55,7 +68,7 @@ export default function SelectField({
                             ? "border-primary ring-1 ring-primary"
                             : "border-outline-variant"
                         }`,
-                    valueContainer: () => "p-0",
+                    valueContainer: () => "p-0 gap-1 flex-wrap",
                     input: () => "m-0 p-0 text-on-surface",
                     placeholder: () => "text-on-surface-variant",
                     indicatorsContainer: () => "gap-2",
@@ -66,6 +79,11 @@ export default function SelectField({
                     menu: () =>
                         "mt-2 rounded-xl border border-outline-variant bg-white text-black shadow-lg overflow-hidden z-50",
                     menuList: () => "py-2",
+                    multiValue: () =>
+                        "bg-primary-container/20 text-primary rounded px-2 py-0.5 text-xs flex items-center gap-1 me-1",
+                    multiValueLabel: () => "text-primary font-medium",
+                    multiValueRemove: () =>
+                        "text-primary hover:text-error transition-colors cursor-pointer",
                     option: ({ isFocused, isSelected }) =>
                         `cursor-pointer px-4 py-3 ${isSelected
                             ? "bg-primary text-white"

@@ -53,7 +53,7 @@ function Navbar() {
                         </button>
                         <Logo />
                         <div className="hidden md:flex gap-6 items-center">
-                            <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="/jobs">Browse</Link>
+                            <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="/">Browse</Link>
                             <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">My Jobs</Link>
                             <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">Messages</Link>
                         </div>

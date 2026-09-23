@@ -6,7 +6,7 @@ import VerificationTable from "@/components/features/admin/admin-verification-pa
 import VerificationTabs, { TABS } from "@/components/features/admin/admin-verification-page/VerificationTabs";
 import EmptyState from "@/components/ui/Emptystate";
 import SmallLoading from "@/components/ui/SmallLoading";
-import { attachmentService, IGetAttachmentsApiResponse } from "@/services/attachment.service";
+import { attachmentService, IGetAttachmentsApiResponse, IGetEntityAttachmentsApiResponse } from "@/services/attachment.service";
 import {
     GetAllVerificationParams,
     IVerificationRequest,
@@ -19,7 +19,6 @@ import { AppDispatch } from "@/store/store";
 import { DURATION } from "@/utils/constant.utils";
 import { AttachmentEntityType, VerificationStatus } from "@/utils/enums.utils";
 import { Search } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -36,7 +35,7 @@ export default function AdminVerificationsPage() {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [attachmentLoading, setAttachmentLoading] = useState(false);
     const [verificationResponse, setVerificationResponse] = useState<IVerificationRequestsApiResponse>();
-    const [attachmentResponse, setAttachmentResponse] = useState<IGetAttachmentsApiResponse>();
+    const [attachmentResponse, setAttachmentResponse] = useState<IGetEntityAttachmentsApiResponse>();
     const [filters, setFilters] = useState<GetAllVerificationParams>({
         status: activeTab,
         search: "",
