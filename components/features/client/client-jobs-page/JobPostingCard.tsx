@@ -13,12 +13,15 @@ import {
     FileCheck,
     Trash2,
 } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { IJob, jobService } from "@/services/jobs.service";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
 import { useRouter } from "next/navigation";
+import { selectMeSlice } from "@/store/slices/auth/authSlice";
+import { UserRole } from "@/utils/enums.utils";
+import BookmarkButton from "@/components/ui/BookmarkButton";
 
 const DURATION = 3000;
 
@@ -61,6 +64,8 @@ export default function JobPostingCard({ job, onRefresh }: { job: IJob; onRefres
     const menuRef = useRef<HTMLDivElement>(null);
 
     const categoryTitle = typeof job.category === "object" ? job.category.name : "General";
+    const { me } = useSelector(selectMeSlice);
+    const isFreelancer = me?.role === UserRole.FREELANCER;
 
     const handleToast = useCallback(
         (message: string, type: IToastificationType) => {
@@ -130,15 +135,24 @@ export default function JobPostingCard({ job, onRefresh }: { job: IJob; onRefres
                             )}
                         </div>
 
-                        <div className="text-right shrink-0">
-                            <p className="text-headline-md text-on-surface">
-                                {job.type === "hourly"
-                                    ? `$${job.hourlyRateFrom || 0} - $${job.hourlyRateTo || 0}`
-                                    : `$${job.budget}`}
-                            </p>
-                            <p className="text-body-sm text-on-surface-variant">
-                                {job.type === "hourly" ? "/hr" : "Fixed Price"}
-                            </p>
+                        <div className="flex items-center gap-3 shrink-0">
+                            {isFreelancer && (
+                                <BookmarkButton
+                                    jobId={job._id}
+                                    variant="icon"
+                                    className="w-9 h-9"
+                                />
+                            )}
+                            <div className="text-right">
+                                <p className="text-headline-md text-on-surface">
+                                    {job.type === "hourly"
+                                        ? `$${job.hourlyRateFrom || 0} - $${job.hourlyRateTo || 0}`
+                                        : `$${job.budget}`}
+                                </p>
+                                <p className="text-body-sm text-on-surface-variant">
+                                    {job.type === "hourly" ? "/hr" : "Fixed Price"}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -168,20 +182,31 @@ export default function JobPostingCard({ job, onRefresh }: { job: IJob; onRefres
                     <div className="flex items-center gap-2">
                         {job.status === "open" && (
                             <>
-                                <button className="flex items-center gap-2 bg-primary text-on-primary text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity cursor-pointer">
-                                    View Proposals
-                                    {!!job.proposalsCount && (
-                                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-on-primary/20 text-label-sm">
-                                            {job.proposalsCount}
-                                        </span>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={() => router.push(`/jobs/${job._id}`)}
-                                    className="bg-surface-variant text-on-surface-variant text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity cursor-pointer"
-                                >
-                                    View Job
-                                </button>
+                                {isFreelancer ? (
+                                    <button
+                                        onClick={() => router.push(`/jobs/${job._id}`)}
+                                        className="bg-primary text-on-primary text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity cursor-pointer"
+                                    >
+                                        View Details
+                                    </button>
+                                ) : (
+                                    <>
+                                        <button className="flex items-center gap-2 bg-primary text-on-primary text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity cursor-pointer">
+                                            View Proposals
+                                            {!!job.proposalsCount && (
+                                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-on-primary/20 text-label-sm">
+                                                    {job.proposalsCount}
+                                                </span>
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => router.push(`/jobs/${job._id}`)}
+                                            className="bg-surface-variant text-on-surface-variant text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity cursor-pointer"
+                                        >
+                                            View Job
+                                        </button>
+                                    </>
+                                )}
                             </>
                         )}
 
@@ -192,12 +217,12 @@ export default function JobPostingCard({ job, onRefresh }: { job: IJob; onRefres
                                 </button>
                                 <button className="flex items-center gap-2 bg-surface-variant text-on-surface-variant text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity cursor-pointer">
                                     <MessageSquare size={15} />
-                                    Message Talent
+                                    {isFreelancer ? "Message Client" : "Message Talent"}
                                 </button>
                             </>
                         )}
 
-                        {job.status === "draft" && (
+                        {job.status === "draft" && !isFreelancer && (
                             <>
                                 <button
                                     onClick={() => router.push(`/client/jobs/update/${job._id}`)}
@@ -216,7 +241,7 @@ export default function JobPostingCard({ job, onRefresh }: { job: IJob; onRefres
                         )}
                     </div>
 
-                    {job.status !== "draft" && (
+                    {!isFreelancer && job.status !== "draft" && (
                         <div className="flex items-center gap-1 shrink-0">
                             <button
                                 onClick={() => router.push(`/client/jobs/update/${job._id}`)}

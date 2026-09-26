@@ -14,9 +14,7 @@ import LandingPage from "./LandingPage";
 import AdminPage from "../admin/AdminPage";
 import AdminDashboardLayout from "@/components/layout/admin/AdminDashboardLayout";
 import ClientDashboardLayout from "@/components/layout/client/ClientDashboardLayout";
-import { IUserListItem } from "@/services/user.service";
 import FreelancerDashboardLayout from "@/components/layout/freelancer/FreelancerDashboardLayout";
-
 
 
 function HomePage() {
@@ -27,7 +25,9 @@ function HomePage() {
         dispatch(fetchMe());
     }, [dispatch]);
 
-    console.log('what heppen')
+
+
+
 
     switch (me?.role) {
         case UserRole.FREELANCER:

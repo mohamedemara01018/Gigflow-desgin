@@ -4,6 +4,7 @@ import authReducer from './slices/auth/authSlice'
 import toastificationReducer from './slices/toastificationSlice'
 
 import userProfileReducer from './slices/profile/getUserProfileSlice'
+import socketReducer from './slices/socketSlice'
 export const store = configureStore({
     reducer: {
         toggleSidbarSlice: toggleSidbarReducer,
@@ -12,7 +13,12 @@ export const store = configureStore({
 
         //profile 
 
-        userProfileSlice: userProfileReducer
+        userProfileSlice: userProfileReducer,
+
+        // socket 
+
+        socketSlice: socketReducer,
+
     },
 })
 

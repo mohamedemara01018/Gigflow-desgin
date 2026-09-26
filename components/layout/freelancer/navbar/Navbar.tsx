@@ -1,6 +1,7 @@
 
 'use client'
 import Logo from '@/components/ui/Logo'
+import NotificationBell from '@/components/ui/NotificationBell';
 import ToggleTheme from '@/components/ui/ToggleTheme'
 import UserMenu from '@/components/ui/UserMenu';
 import { authService } from '@/services/auth.service';
@@ -54,7 +55,8 @@ function Navbar() {
                         <Logo />
                         <div className="hidden md:flex gap-6 items-center">
                             <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="/">Browse</Link>
-                            <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">My Jobs</Link>
+                            <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="/freelancer/proposals">Proposals</Link>
+                            <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="/freelancer/saved-jobs">Saved Jobs</Link>
                             <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">Messages</Link>
                         </div>
                     </div>
@@ -66,8 +68,9 @@ function Navbar() {
                             <input className="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-[14px] leading-5 font-['Inter'] text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 w-64 transition-all" placeholder="Search jobs..." type="text" />
                         </div>
                         <ToggleTheme />
-                        <button className="text-on-surface-variant hover:text-primary transition-colors"><Bell size={22} /></button>
-                        <button className="text-on-surface-variant hover:text-primary transition-colors"><Settings size={22} /></button>
+
+                        <NotificationBell />
+
                         <UserMenu
                             firstName={String(me?.firstName)}
                             lastName={String(me?.lastName)}

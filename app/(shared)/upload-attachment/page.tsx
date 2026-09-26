@@ -1,4 +1,4 @@
-import UploadAttachmentPage from '@/components/features/shared/UploadAttachmentPage'
+import UploadAttachmentPage from '@/views/shared/UploadAttachmentPage'
 import React from 'react'
 
 function page() {

@@ -27,13 +27,14 @@ import { AttachmentEntityType } from "@/utils/enums.utils";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
 
 const MAX_FILE_SIZE_MB = 10;
+
+// Restricted to PDFs, Images, and Plain Text
 const ALLOWED_TYPES = [
     "application/pdf",
     "image/jpeg",
     "image/png",
     "image/webp",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "image/gif",
     "text/plain",
 ];
 
@@ -135,7 +136,7 @@ export default function UploadAttachmentPage() {
             return `File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`;
         }
         if (!ALLOWED_TYPES.includes(file.type)) {
-            return "Unsupported file format. Please upload PDF, PNG, JPG, or DOCX.";
+            return "Unsupported file format. Please upload PDF, Image (PNG, JPG, WEBP, GIF), or Plain Text (.txt).";
         }
         return null;
     }, []);
@@ -314,7 +315,7 @@ export default function UploadAttachmentPage() {
                             Project Files & Supporting Specs
                         </h2>
                         <p className="text-body-sm text-on-surface-variant mt-1">
-                            Attach technical requirements, Figma design mocks, wireframes, or reference documents for freelancers.
+                            Attach technical requirements, reference images, PDFs, or text notes for freelancers.
                         </p>
                     </div>
 
@@ -391,7 +392,7 @@ export default function UploadAttachmentPage() {
                             ref={fileInputRef}
                             type="file"
                             multiple
-                            accept=".pdf,.png,.jpg,.jpeg,.docx,.doc,.txt"
+                            accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,application/pdf,image/*,text/plain"
                             onChange={handleFileSelect}
                             className="hidden"
                         />
@@ -402,7 +403,7 @@ export default function UploadAttachmentPage() {
                             Click to upload or drag and drop new files
                         </p>
                         <p className="text-body-sm text-on-surface-variant mt-1">
-                            PDF, PNG, JPG, or DOCX (Max file size: {MAX_FILE_SIZE_MB}MB)
+                            PDF, Image (PNG, JPG, WEBP, GIF), or TXT (Max file size: {MAX_FILE_SIZE_MB}MB)
                         </p>
                     </div>
 

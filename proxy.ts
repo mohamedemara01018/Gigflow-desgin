@@ -28,7 +28,8 @@ const adminRoutes = [
 const sharedProtectedRoutes = [
     "/profile",
     "/settings",
-    "/jobs"
+    "/jobs",
+    "/notification"
 ];
 
 const authRoutes = [

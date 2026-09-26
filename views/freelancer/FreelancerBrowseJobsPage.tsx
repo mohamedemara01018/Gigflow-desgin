@@ -4,12 +4,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { ChevronDown, ArrowRight, Loader2 } from "lucide-react";
 import { jobService, IJob, IGetJobsQueryParams } from "@/services/jobs.service";
-import JobCard from "@/components/features/jobs/JobCard";
-import FilterSidebar from "@/components/features/jobs/FilterSidebar";
-import ToggleSidbar from "@/components/features/jobs/ToggleSidbar";
+import { savedJobService } from "@/services/savedJob.service";
+import { useSelector } from "react-redux";
+import { selectMeSlice } from "@/store/slices/auth/authSlice";
+import JobCard from "@/components/features/shared/jobs/JobCard";
+import FilterSidebar from "@/components/features/shared/jobs/FilterSidebar";
+import ToggleSidbar from "@/components/features/shared/jobs/ToggleSidbar";
 
 export default function FreelancerBrowseJobsPage() {
+    const { me } = useSelector(selectMeSlice);
+
     const [jobs, setJobs] = useState<IJob[]>([]);
+    const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState<boolean>(true);
     const [loadingMore, setLoadingMore] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -23,6 +29,24 @@ export default function FreelancerBrowseJobsPage() {
         page: 1,
         limit: 10,
     });
+
+    // Fetch user's saved job IDs
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
+    const fetchUserSavedJobs = useCallback(async () => {
+        if (!me?._id) return;
+        try {
+            const response = await savedJobService.getUserSavedJobs({ user: me._id, limit: 100 });
+            const savedIds = new Set(response.data.savedJobs.map((item) => item.job._id));
+            setSavedJobIds(savedIds);
+        } catch {
+            // Non-blocking error if saved jobs fail to fetch
+        }
+    }, [me?._id]);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchUserSavedJobs();
+    }, [fetchUserSavedJobs]);
 
     const fetchJobs = useCallback(async (isLoadMore: boolean = false) => {
         try {
@@ -67,6 +91,19 @@ export default function FreelancerBrowseJobsPage() {
             fetchJobs(true);
         }
     };
+
+    // Callback to synchronize saved job IDs across components
+    const handleToggleSaveJob = useCallback((jobId: string, isSaved: boolean) => {
+        setSavedJobIds((prev) => {
+            const updated = new Set(prev);
+            if (isSaved) {
+                updated.add(jobId);
+            } else {
+                updated.delete(jobId);
+            }
+            return updated;
+        });
+    }, []);
 
     return (
         <main className="bg-surface min-h-screen py-8">
@@ -127,7 +164,12 @@ export default function FreelancerBrowseJobsPage() {
 
                     {/* Jobs List */}
                     {!loading && !error && jobs.map((job) => (
-                        <JobCard key={job._id} job={job} />
+                        <JobCard
+                            key={job._id}
+                            job={job}
+                            isJobSaved={savedJobIds.has(job._id)}
+                            onToggleSave={handleToggleSaveJob}
+                        />
                     ))}
 
                     {/* Load More Button */}

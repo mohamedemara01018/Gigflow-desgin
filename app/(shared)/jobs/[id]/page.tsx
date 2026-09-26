@@ -1,4 +1,4 @@
-import JobDetailPage from "@/components/features/shared/JobDetailPage";
+import JobDetailPage from "@/views/shared/JobDetailPage";
 import React from "react";
 
 interface PageProps {

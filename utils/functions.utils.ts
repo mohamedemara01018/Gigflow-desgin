@@ -1,3 +1,5 @@
+
+
 export const formatDateTime = (date: string | Date) => {
     const formattedDate = new Date(date);
 
@@ -10,13 +12,11 @@ export const formatDateTime = (date: string | Date) => {
     };
 };
 
-
 export function getInitials(firstName: string, lastName: string) {
     const first = firstName?.charAt(0) ?? "";
     const last = lastName?.charAt(0) ?? "";
     return (first + last).toUpperCase() || "?";
 }
-
 
 interface FormatDistanceToNowOptions {
     addSuffix?: boolean;
@@ -78,3 +78,37 @@ export function formatDistanceToNow(
 
     return distanceText;
 }
+
+
+export function formatCurrency(amount?: number | null): string {
+    if (amount === null || amount === undefined || Number.isNaN(amount)) return "—";
+    return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+    }).format(amount);
+}
+
+
+export function formatBytes(bytes?: number | null): string {
+    if (!bytes || bytes <= 0) return "0 B";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+export function calculateNetAmount(bidAmount: number, feeRate = 0.1): number {
+    return Math.round(bidAmount * (1 - feeRate) * 100) / 100;
+}
+
+export function toRichTextContent(text?: string | null): string {
+    const HTML_PATTERN = /<\/?[a-z][\s\S]*>/i;
+    if (!text) return "<p></p>";
+    if (HTML_PATTERN.test(text)) return text;
+    const escaped = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    return `<p>${escaped.replace(/\n/g, "<br>")}</p>`;
+}
+

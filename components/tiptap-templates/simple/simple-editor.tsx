@@ -226,7 +226,7 @@ export function SimpleEditor({
         injectCSS: false,
       }),
     ],
-    content: isEdit ? content : "<p>write your overview here</p>",
+    content: isEdit ? content : "<p></p>",
   })
 
   useEffect(() => {

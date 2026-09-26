@@ -37,7 +37,8 @@
     "react-dom": "19.2.4",
     "react-hotkeys-hook": "^5.3.3",
     "react-redux": "^9.3.0",
-    "react-select": "^5.10.2"
+    "react-select": "^5.10.2",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@base-ui/react": "^1.7.0",

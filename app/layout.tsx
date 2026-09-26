@@ -3,6 +3,7 @@ import "./globals.css";
 import StoreProvider from "@/provider/StoreProvider";
 import MeProvider from "@/provider/MeProvider";
 import ToastificationProvider from "@/provider/ToastificationProvider";
+import SocketProvider from "@/provider/SocketProvider";
 
 export const metadata: Metadata = {
   title: "GigFlow – Scale Your Freelance Career With Precision",
@@ -31,7 +32,9 @@ export default function RootLayout({
         <StoreProvider>
           <ToastificationProvider>
             <MeProvider>
-              {children}
+              <SocketProvider>
+                {children}
+              </SocketProvider>
             </MeProvider>
           </ToastificationProvider>
         </StoreProvider>

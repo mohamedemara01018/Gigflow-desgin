@@ -1,6 +1,7 @@
 'use client';
 
 import Logo from '@/components/ui/Logo';
+import NotificationBell from '@/components/ui/NotificationBell';
 import ToggleTheme from '@/components/ui/ToggleTheme';
 import UserMenu from '@/components/ui/UserMenu';
 import { authService } from '@/services/auth.service';
@@ -8,7 +9,7 @@ import { selectMeSlice } from '@/store/slices/auth/authSlice';
 import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
 import { AppDispatch } from '@/store/store';
 import { DURATION } from '@/utils/constant.utils';
-import { Bell, Search, Settings, TextAlignJustify, X, Plus } from 'lucide-react';
+import { Search, TextAlignJustify, X, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -97,12 +98,7 @@ export default function Navbar() {
 
                         <ToggleTheme />
 
-                        <button
-                            className="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg"
-                            aria-label="Notifications"
-                        >
-                            <Bell size={22} />
-                        </button>
+                        <NotificationBell />
 
 
                         <UserMenu

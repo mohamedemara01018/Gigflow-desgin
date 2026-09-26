@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import ApplyCard from "@/components/features/job-details/ApplyCard";
-import ClientInfoCard from "@/components/features/job-details/ClientInfoCard";
-import JobDescription from "@/components/features/job-details/JobDescription";
-import JobDetailsCard from "@/components/features/job-details/JobDetailsCard";
-import JobHeader from "@/components/features/job-details/JobHeader";
+import ApplyCard from "@/components/features/shared/job-details/ApplyCard";
+import ClientInfoCard from "@/components/features/shared/job-details/ClientInfoCard";
+import JobDescription from "@/components/features/shared/job-details/JobDescription";
+import JobDetailsCard from "@/components/features/shared/job-details/JobDetailsCard";
+import JobHeader from "@/components/features/shared/job-details/JobHeader";
+import JobAttachmentsCard from "@/components/features/shared/job-details/JobAttachmentsCard";
 import { jobService, IJob } from "@/services/jobs.service";
 import {
     ArrowLeft,
@@ -16,10 +17,11 @@ import {
     CalendarDays,
 } from "lucide-react";
 import { IJobSkill, jobSkillService } from "@/services/jobSkill.service";
+import { attachmentService, IAttachmentItem } from "@/services/attachment.service";
 import Loading from "@/components/ui/Loading";
 import { useSelector } from "react-redux";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
-import { UserRole } from "@/utils/enums.utils";
+import { UserRole, AttachmentEntityType } from "@/utils/enums.utils";
 
 interface JobDetailPageProps {
     jobId: string;
@@ -27,12 +29,16 @@ interface JobDetailPageProps {
 
 export default function JobDetailPage({ jobId }: JobDetailPageProps) {
     const router = useRouter();
+
     const [job, setJob] = useState<IJob | null>(null);
     const [skills, setSkills] = useState<IJobSkill[]>([]);
+    const [attachments, setAttachments] = useState<IAttachmentItem[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+
     const { me } = useSelector(selectMeSlice);
-    const isFreelancer = me?.role == UserRole.FREELANCER
+    const isFreelancer = me?.role === UserRole.FREELANCER;
+
     useEffect(() => {
         let isMounted = true;
 
@@ -41,10 +47,13 @@ export default function JobDetailPage({ jobId }: JobDetailPageProps) {
                 setIsLoading(true);
                 setError(null);
 
-                // Fetch job details and job skills concurrently
-                const [jobRes, skillsRes] = await Promise.all([
+                const [jobRes, skillsRes, attachmentsRes] = await Promise.all([
                     jobService.getJobById(jobId),
                     jobSkillService.getJobSkills({ jobId }),
+                    attachmentService.getEntityAttachments({
+                        entity: AttachmentEntityType.JOB,
+                        entityId: jobId,
+                    }).catch(() => null),
                 ]);
 
                 if (isMounted) {
@@ -54,13 +63,14 @@ export default function JobDetailPage({ jobId }: JobDetailPageProps) {
                     if (skillsRes.data?.jobSkills) {
                         setSkills(skillsRes.data.jobSkills);
                     }
+                    if (attachmentsRes?.data?.attachments) {
+                        setAttachments(attachmentsRes.data.attachments);
+                    }
                 }
             } catch (err: unknown) {
                 if (isMounted) {
                     const message =
-                        err instanceof Error
-                            ? err.message
-                            : "Failed to load job details";
+                        err instanceof Error ? err.message : "Failed to load job details";
                     setError(message);
                 }
             } finally {
@@ -80,9 +90,7 @@ export default function JobDetailPage({ jobId }: JobDetailPageProps) {
     }, [jobId]);
 
     if (isLoading) {
-        return (
-            <Loading />
-        );
+        return <Loading />;
     }
 
     if (error || !job) {
@@ -93,7 +101,7 @@ export default function JobDetailPage({ jobId }: JobDetailPageProps) {
                 </p>
                 <button
                     onClick={() => router.back()}
-                    className="text-primary hover:underline inline-flex items-center gap-2"
+                    className="text-primary hover:underline inline-flex items-center gap-2 cursor-pointer"
                 >
                     <ArrowLeft size={18} />
                     Back to search
@@ -102,7 +110,6 @@ export default function JobDetailPage({ jobId }: JobDetailPageProps) {
         );
     }
 
-    // Format dynamic job details sidebar items
     const jobDetails = [
         {
             icon: Banknote,
@@ -142,13 +149,19 @@ export default function JobDetailPage({ jobId }: JobDetailPageProps) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
                     <div className="flex flex-col gap-6">
-                        <JobHeader job={job} isFreelancer={isFreelancer} />
+                        <JobHeader
+                            job={job}
+                            isFreelancer={isFreelancer}
+                        />
                         <JobDescription job={job} skills={skills} />
                     </div>
 
                     <aside className="flex flex-col gap-6">
-                        {isFreelancer && <ApplyCard job={job} />}
+                        {isFreelancer && (
+                            <ApplyCard job={job} />
+                        )}
                         <JobDetailsCard JOB_DETAILS={jobDetails} />
+                        <JobAttachmentsCard attachments={attachments} />
                         <ClientInfoCard client={job.client} />
                     </aside>
                 </div>

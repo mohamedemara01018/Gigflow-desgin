@@ -1,20 +1,21 @@
-import { Clock, Heart, MapPin, Network } from "lucide-react";
+"use client";
+
+import { Clock, MapPin, Network } from "lucide-react";
 import { IJob } from "@/services/jobs.service";
 import { ICategory } from "@/services/category.service";
 import { formatDistanceToNow } from "@/utils/functions.utils";
 
 interface JobHeaderProps {
     job: IJob;
-    isFreelancer: boolean
+    isFreelancer?: boolean;
 }
 
-export default function JobHeader({ job, isFreelancer }: JobHeaderProps) {
-    // Extract category name safely depending on whether category is populated or a string
-    const categoryName = typeof job.category === "object" && job.category !== null
-        ? (job.category as ICategory).name
-        : "Web Development";
+export default function JobHeader({ job }: JobHeaderProps) {
+    const categoryName =
+        typeof job.category === "object" && job.category !== null
+            ? (job.category as ICategory).name
+            : "Web Development";
 
-    // Format relative time (e.g., "2 hours ago")
     const formattedPostedTime = job.publishedAt
         ? formatDistanceToNow(new Date(job.publishedAt), { addSuffix: true })
         : "Recently";
@@ -25,13 +26,6 @@ export default function JobHeader({ job, isFreelancer }: JobHeaderProps) {
                 <h1 className="text-headline-lg text-on-surface">
                     {job.title}
                 </h1>
-                {isFreelancer && <button
-                    type="button"
-                    aria-label="Save job"
-                    className="shrink-0 w-11 h-11 rounded-full border border-outline-variant flex items-center justify-center text-on-surface-variant hover:text-tertiary hover:border-tertiary transition-colors cursor-pointer"
-                >
-                    <Heart size={20} />
-                </button>}
             </div>
 
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-on-surface-variant">

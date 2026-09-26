@@ -71,9 +71,6 @@ export default function ClientCreateNewJobPage() {
         [dispatch]
     );
 
-    useEffect(() => {
-        console.log('selectedSkillIds', selectedSkillIds)
-    }, [selectedSkillIds])
     // Set client ID from auth user if creating new job
     useEffect(() => {
         const currentUserId = me?._id;
