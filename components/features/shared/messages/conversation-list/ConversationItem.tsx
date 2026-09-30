@@ -100,21 +100,24 @@ export default function ConversationItem({
 
 
 
-    const recipientId = me?.role == UserRole.FREELANCER ? c.client._id : c.freelancer._id
+    const clientUid = typeof c.client === "object" ? c.client?._id : c.client;
+    const freelancerUid = typeof c.freelancer === "object" ? c.freelancer?._id : c.freelancer;
+    const recipientId = me?.role === UserRole.FREELANCER ? clientUid : freelancerUid;
+    const jobId = typeof c?.job === "object" ? c.job?._id : c?.job;
 
     const getProposalOfJob = useCallback(async () => {
         // Extract job and freelancer IDs safely
-        const jobId = typeof c?.job === "object" ? c.job?._id : c?.job;
-        const freelancerId = typeof c?.freelancer === "object" ? c.freelancer?._id : c?.freelancer;
+        const effectiveJobId = typeof c?.job === "object" ? c.job?._id : c?.job;
+        const effectiveFreelancerId = typeof c?.freelancer === "object" ? c.freelancer?._id : c?.freelancer;
 
-        if (!jobId || !freelancerId) return;
+        if (!effectiveJobId || !effectiveFreelancerId) return;
 
         try {
             setIsLoadingProposal(true);
 
             const res = await proposalService.getAllProposals({
-                job: jobId,
-                freelancer: freelancerId,
+                job: effectiveJobId,
+                freelancer: effectiveFreelancerId,
             });
 
             // Assuming response structure contains an array of proposals
@@ -135,13 +138,18 @@ export default function ConversationItem({
 
     useEffect(() => {
         getProposalOfJob();
-    }, [getProposalOfJob])
+    }, [getProposalOfJob]);
+
     return (
         <div
             onClick={() => {
-                router.replace(`/messages?recipient=${recipientId}&job=${c.job?._id}&proposal=${proposal?._id}`)
-                onSelect(c._id)
-
+                const queryParts: string[] = [];
+                if (recipientId) queryParts.push(`recipient=${recipientId}`);
+                if (jobId) queryParts.push(`job=${jobId}`);
+                if (proposal?._id) queryParts.push(`proposal=${proposal._id}`);
+                const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+                router.replace(`/messages${queryString}`);
+                onSelect(c._id);
             }}
             className={`group relative text-left rounded-md p-3 transition-colors cursor-pointer ${active ? "bg-primary-container/10" : "hover:bg-surface-container-low"
                 }`}

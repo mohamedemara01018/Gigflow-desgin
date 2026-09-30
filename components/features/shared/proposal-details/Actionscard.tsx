@@ -68,8 +68,9 @@ export default function ActionsCard({ proposal, refetchProposal }: ActionsCardPr
 
     const handleMessageClient = () => {
         const clientId = typeof proposal.job?.client === "object" ? proposal.job.client?._id : proposal.job?.client;
+        const jobId = typeof proposal.job === "object" ? proposal.job?._id : proposal.job;
         if (clientId) {
-            router.push(`/messages?recipient=${clientId}`);
+            router.push(`/messages?recipient=${clientId}&job=${jobId || ""}&proposal=${proposal._id || ""}`);
         } else {
             handleToast("Client details unavailable.", "error");
         }

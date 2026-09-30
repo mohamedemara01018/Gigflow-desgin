@@ -25,6 +25,7 @@ import { fetchUserProfileById, selectUserProfileSlice } from '@/store/slices/pro
 import { IProfile } from '@/services/profile.service';
 // 1. Import your certification service and interface
 import { certificationService, ICertification } from '@/services/certification.service';
+import { socket } from '@/utils/socket';
 
 export default function FreelancerProfilePage({ id }: { id: string }) {
     const dispatch: AppDispatch = useDispatch();
@@ -49,6 +50,8 @@ export default function FreelancerProfilePage({ id }: { id: string }) {
 
     useEffect(() => {
         if (!id) return;
+
+        socket.emit("check_presence", { userIds: [String(id)] });
 
         const fetchData = async () => {
             try {

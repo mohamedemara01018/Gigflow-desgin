@@ -1,13 +1,27 @@
 /* eslint-disable @next/next/no-img-element */
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
 import { IProfile } from "@/services/profile.service";
 import { IUserListItem } from "@/services/user.service";
+import { selectOnlineUsers } from "@/store/slices/socketSlice";
 import { UserRole } from "@/utils/enums.utils";
 import { formatDateTime, getInitials } from "@/utils/functions.utils";
+import { socket } from "@/utils/socket";
 import { BadgeCheck, Clock, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 function HeroSection({ profile, freelancer, me }: { profile: IProfile; freelancer: IUserListItem; me: IUserListItem }) {
     const router = useRouter();
+    const onlineUsers = useSelector(selectOnlineUsers);
+
+    const freelancerId = freelancer?._id ? String(freelancer._id) : "";
+    const isOnline = Boolean(freelancerId && onlineUsers[freelancerId]);
+
+    useEffect(() => {
+        if (freelancerId) {
+            socket.emit("check_presence", { userIds: [freelancerId] });
+        }
+    }, [freelancerId]);
 
     // Helper function to resolve city & country names whether populated or unpopulated string/ID
     const getLocationText = () => {
@@ -25,29 +39,53 @@ function HeroSection({ profile, freelancer, me }: { profile: IProfile; freelance
     return (
         <section className="relative">
             <div className="px-6 md:px-12 pt-8 flex flex-col md:flex-row items-end md:items-center gap-4 relative z-10">
-                <div className="relative">
+                <div className="relative shrink-0">
                     {freelancer?.avatar ? (
                         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-surface overflow-hidden bg-surface" style={{ boxShadow: 'var(--shadow-level-2)' }}>
                             <img className="w-full h-full object-cover" alt={freelancer?.firstName} src={freelancer?.avatar} />
                         </div>
                     ) : (
-                        <div className="absolute bottom-3 right-3 w-6 h-6 rounded-full bg-primary border-4 border-surface" title="Online Status">
-                            {getInitials(String(freelancer?.firstName), String(freelancer?.lastName))}
+                        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-surface overflow-hidden bg-primary/10 flex items-center justify-center text-primary text-3xl md:text-4xl font-bold font-['Geist']" style={{ boxShadow: 'var(--shadow-level-2)' }}>
+                            {getInitials(String(freelancer?.firstName || ""), String(freelancer?.lastName || ""))}
                         </div>
                     )}
+
+                    {/* Live Presence indicator dot on avatar */}
+                    <span
+                        className={`absolute bottom-2 right-2 md:bottom-3 md:right-3 w-5 h-5 md:w-6 md:h-6 rounded-full border-4 border-surface transition-colors duration-300 ${
+                            isOnline ? "bg-green-500 shadow-sm shadow-green-500/50" : "bg-gray-400"
+                        }`}
+                        title={isOnline ? "Online" : "Offline"}
+                    />
                 </div>
                 <div className="flex-1 pb-2">
                     <div className="flex flex-wrap items-center gap-3">
                         <h1 className="font-['Geist'] font-semibold text-[32px] leading-10 text-on-surface">
                             {freelancer?.firstName + ' ' + freelancer?.lastName}
                         </h1>
-                        <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[12px] leading-4 font-['Geist'] font-semibold flex items-center gap-1">
-                            {freelancer?.isEmailVerified && freelancer.isIdentityVerified && (
-                                <>
-                                    <BadgeCheck size={14} /> Verified
-                                </>
-                            )}
+
+                        {/* Online / Offline Presence Badge */}
+                        <span
+                            className={`px-3 py-1 rounded-full text-[12px] leading-4 font-['Geist'] font-semibold flex items-center gap-1.5 transition-colors duration-300 ${
+                                isOnline
+                                    ? "bg-green-500/10 text-green-600 border border-green-500/20"
+                                    : "bg-surface-container text-on-surface-variant border border-outline-variant"
+                            }`}
+                            title={isOnline ? "User is currently online" : "User is currently offline"}
+                        >
+                            <span
+                                className={`w-2 h-2 rounded-full shrink-0 ${
+                                    isOnline ? "bg-green-500 shadow-xs shadow-green-500/50" : "bg-gray-400"
+                                }`}
+                            />
+                            {isOnline ? "Online" : "Offline"}
                         </span>
+
+                        {freelancer?.isEmailVerified && freelancer.isIdentityVerified && (
+                            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[12px] leading-4 font-['Geist'] font-semibold flex items-center gap-1">
+                                <BadgeCheck size={14} /> Verified
+                            </span>
+                        )}
                         <span className="bg-primary text-on-primary px-3 py-1 rounded-full text-[12px] leading-4 font-['Geist'] font-bold">
                             Available Now
                         </span>

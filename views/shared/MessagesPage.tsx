@@ -963,7 +963,7 @@ export default function MessagesPage({
                         <div className="sticky top-6 max-h-[calc(100vh-7rem)] overflow-y-auto">
                             {activeConversation && (
                                 isLoadingContract ? (
-                                    <div className="flex h-full min-h-[300px] items-center justify-center border border-border rounded-lg bg-white">
+                                    <div className="flex h-full min-h-75 items-center justify-center border border-border rounded-lg bg-white">
                                         <Loading />
                                     </div>
                                 ) : (

@@ -6,6 +6,7 @@ import { UserRole } from "@/utils/enums.utils";
 import UserImage from "@/components/ui/UserImage";
 import { useSelector } from "react-redux";
 import { selectOnlineUsers } from "@/store/slices/socketSlice";
+import { IContract } from "@/services/contract.service";
 
 interface ChatHeaderProps {
     conversation: IConversation;
@@ -47,7 +48,7 @@ export default function ChatHeader({
             : null;
 
     return (
-        <div className="p-5 pb-3 border-b border-outline-variant bg-white">
+        <div className="p-5 pb-3 border-b border-outline-variant bg-surface-container-high">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                     {onToggleSidebar && (
@@ -69,9 +70,8 @@ export default function ChatHeader({
                         />
                         {/* Live Presence Dot on Avatar */}
                         <span
-                            className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${
-                                isOnline ? "bg-green-500 shadow-xs shadow-green-500/50" : "bg-gray-300"
-                            }`}
+                            className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${isOnline ? "bg-green-500 shadow-xs shadow-green-500/50" : "bg-gray-300"
+                                }`}
                             title={isOnline ? "Online" : "Offline"}
                         />
                     </div>
@@ -95,14 +95,12 @@ export default function ChatHeader({
                         ) : (
                             <div className="flex items-center gap-1.5 text-body-xs mt-0.5">
                                 <span
-                                    className={`inline-block w-2 h-2 rounded-full shrink-0 ${
-                                        isOnline ? "bg-green-500 shadow-xs shadow-green-500/50" : "bg-gray-400"
-                                    }`}
+                                    className={`inline-block w-2 h-2 rounded-full shrink-0 ${isOnline ? "bg-green-500 shadow-xs shadow-green-500/50" : "bg-gray-400"
+                                        }`}
                                 />
                                 <span
-                                    className={`font-medium ${
-                                        isOnline ? "text-green-600 font-semibold" : "text-on-surface-variant"
-                                    }`}
+                                    className={`font-medium ${isOnline ? "text-green-600 font-semibold" : "text-on-surface-variant"
+                                        }`}
                                 >
                                     {isOnline ? "Online" : "Offline"}
                                 </span>
@@ -146,7 +144,7 @@ export default function ChatHeader({
                         Contract
                         <span className="mx-2 text-on-surface-variant">•</span>
                         <span className="text-primary font-medium capitalize">
-                            {typeof contract === "object" ? (contract as any).status || "Draft" : "Draft"}
+                            {typeof contract === "object" ? (contract as IContract).status || "Draft" : "Draft"}
                         </span>
                     </span>
                     {onToggleDossier && (
