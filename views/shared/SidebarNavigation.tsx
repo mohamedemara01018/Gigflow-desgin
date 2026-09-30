@@ -4,6 +4,8 @@
 import { MessageSquare, Menu } from "lucide-react";
 import { IConversation, IUserRef } from "@/services/conversation.service";
 import { UserRole } from "@/utils/enums.utils";
+import { useSelector } from "react-redux";
+import { selectOnlineUsers } from "@/store/slices/socketSlice";
 
 interface SidebarNavigationProps {
     conversations: IConversation[];
@@ -22,6 +24,8 @@ export default function SidebarNavigation({
     currentUserRole,
     onOpenFullList,
 }: SidebarNavigationProps) {
+    const onlineUsers = useSelector(selectOnlineUsers);
+
     const getOtherParticipant = (c: IConversation): IUserRef | null => {
         if (currentUserRole === UserRole.CLIENT) {
             return typeof c.freelancer === "object" ? (c.freelancer as IUserRef) : null;
@@ -59,6 +63,8 @@ export default function SidebarNavigation({
             <div className="flex-1 overflow-y-auto w-full flex flex-col items-center gap-3 no-scrollbar">
                 {conversations.map((c) => {
                     const participant = getOtherParticipant(c);
+                    const participantId = participant?._id ? String(participant._id) : "";
+                    const isOnline = Boolean(participantId && onlineUsers[participantId]);
                     const unread = getUnreadCount(c);
                     const isActive = c._id === activeId;
 
@@ -68,19 +74,27 @@ export default function SidebarNavigation({
                             onClick={() => onSelect(c._id)}
                             className={`relative p-1.5 rounded-full transition-all ${isActive ? "ring-2 ring-primary" : "hover:bg-surface-container"
                                 }`}
-                            title={participant ? `${participant.firstName} ${participant.lastName}` : "Chat"}
+                            title={participant ? `${participant.firstName} ${participant.lastName} (${isOnline ? "Online" : "Offline"})` : "Chat"}
                         >
-                            {participant?.avatar ? (
-                                <img
-                                    src={participant.avatar}
-                                    alt="Avatar"
-                                    className="w-10 h-10 rounded-full object-cover"
+                            <div className="relative">
+                                {participant?.avatar ? (
+                                    <img
+                                        src={participant.avatar}
+                                        alt="Avatar"
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+                                        <MessageSquare size={18} />
+                                    </div>
+                                )}
+                                <span
+                                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                                        isOnline ? "bg-green-500 shadow-xs shadow-green-500/50" : "bg-gray-300"
+                                    }`}
+                                    title={isOnline ? "Online" : "Offline"}
                                 />
-                            ) : (
-                                <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
-                                    <MessageSquare size={18} />
-                                </div>
-                            )}
+                            </div>
 
                             {unread > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-error text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-surface">

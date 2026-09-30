@@ -14,6 +14,8 @@ export interface IMilestone {
     dueDate?: string | null;
     status: MilestoneStatus | string;
     submittedAt?: string | null;
+    submissionNotes?: string | null;
+    submissionUrl?: string | null;
     approvedAt?: string | null;
     rejectedAt?: string | null;
     rejectionReason?: string | null;
@@ -40,6 +42,11 @@ export interface IUpdateMilestoneDto {
     amount?: number;
     dueDate?: string;
     order?: number;
+}
+
+export interface ISubmitMilestoneDto {
+    submissionNotes?: string;
+    submissionUrl?: string;
 }
 
 export interface IRejectMilestoneDto {
@@ -137,10 +144,14 @@ export const milestoneService = {
         return data;
     },
 
-    submitMilestone: async (id: string) => {
+    submitMilestone: async (id: string, payload?: ISubmitMilestoneDto) => {
         const response = await fetch(`${BASE_URL}/api/milestone/${id}/submit`, {
             method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
             credentials: "include",
+            body: JSON.stringify(payload || {}),
         });
 
         const data: IMilestoneSingleApiResponse = await response.json();

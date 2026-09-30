@@ -11,7 +11,10 @@ import {
     XCircle,
     Send,
     Trash2,
-    ArrowRight,
+    ExternalLink,
+    Check,
+    RotateCcw,
+    FileText,
     Loader2
 } from "lucide-react";
 
@@ -24,6 +27,7 @@ import {
 import {
     IMilestone,
     ICreateMilestoneDto,
+    ISubmitMilestoneDto,
     IRejectMilestoneDto,
 } from "@/services/milestone.service";
 import { IProposal, proposalService } from "@/services/proposal.service";
@@ -34,6 +38,8 @@ import ContractHeader from "./project-dossier/ContractHeader";
 import ContractResponseAction from "./project-dossier/ContractResponseAction";
 import ContractFinancialSummary from "./project-dossier/ContractFinancialSummary";
 import CreateMilestoneModal from "@/components/modals/CreateMilestoneModal";
+import SubmitMilestoneModal from "@/components/modals/SubmitMilestoneModal";
+import RejectMilestoneModal from "@/components/modals/RejectMilestoneModal";
 import { useSelector } from "react-redux";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
 
@@ -52,7 +58,7 @@ interface ProjectDossierProps {
     onDeleteContract?: (id: string) => Promise<void>;
     onCreateMilestone?: (payload: ICreateMilestoneDto) => Promise<void>;
     onDeleteMilestone?: (id: string) => Promise<void>;
-    onSubmitMilestone?: (id: string) => Promise<void>;
+    onSubmitMilestone?: (id: string, payload?: ISubmitMilestoneDto) => Promise<void>;
     onApproveMilestone?: (id: string) => Promise<void>;
     onRejectMilestone?: (id: string, payload: IRejectMilestoneDto) => Promise<void>;
 }
@@ -72,13 +78,13 @@ const getMilestoneBadge = (status: MilestoneStatus | string) => {
         case "approved":
         case "completed":
             return {
-                label: "Approved",
+                label: "Approved & Paid",
                 colorClass: "bg-green-100 text-green-700",
                 icon: <CheckCircle2 size={12} />,
             };
         case "submitted":
             return {
-                label: "Submitted",
+                label: "Submitted (Under Review)",
                 colorClass: "bg-purple-100 text-purple-700",
                 icon: <Send size={12} />,
             };
@@ -121,11 +127,19 @@ export default function ProjectDossier({
     onDeleteContract,
     onCreateMilestone,
     onDeleteMilestone,
+    onSubmitMilestone,
+    onApproveMilestone,
+    onRejectMilestone,
 }: ProjectDossierProps) {
     const [proposalData, setProposalData] = useState<IProposal | null>(null);
     const [isLoadingProposal, setIsLoadingProposal] = useState(false);
     const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
     const [isSendingToFreelancer, setIsSendingToFreelancer] = useState(false);
+
+    // Submission and Rejection modal states
+    const [selectedMilestoneForSubmit, setSelectedMilestoneForSubmit] = useState<IMilestone | null>(null);
+    const [selectedMilestoneForReject, setSelectedMilestoneForReject] = useState<IMilestone | null>(null);
+    const [approvingMilestoneId, setApprovingMilestoneId] = useState<string | null>(null);
 
     const { me } = useSelector(selectMeSlice);
     const isFreelancer = me?.role === UserRole.FREELANCER;
@@ -185,6 +199,16 @@ export default function ProjectDossier({
             await onSendContract(contract._id);
         } finally {
             setIsSendingToFreelancer(false);
+        }
+    };
+
+    const handleApprove = async (milestoneId: string) => {
+        if (!onApproveMilestone) return;
+        try {
+            setApprovingMilestoneId(milestoneId);
+            await onApproveMilestone(milestoneId);
+        } finally {
+            setApprovingMilestoneId(null);
         }
     };
 
@@ -322,11 +346,31 @@ export default function ProjectDossier({
                     <div className="flex flex-col gap-3">
                         {milestones.map((milestone, idx) => {
                             const badge = getMilestoneBadge(milestone.status);
+                            const mStatus = (milestone.status || "").toLowerCase();
+                            const isCurrentApproving = approvingMilestoneId === milestone._id;
+
+                            const canFreelancerSubmit =
+                                isActive &&
+                                isFreelancer &&
+                                (mStatus === "in_progress" || mStatus === "rejected");
+
+                            const canClientReview =
+                                isActive &&
+                                isClient &&
+                                mStatus === "submitted";
 
                             return (
                                 <div
                                     key={milestone._id || idx}
-                                    className="p-3.5 border border-border rounded-lg bg-surface-container-lowest flex flex-col gap-2 relative group"
+                                    className={`p-3.5 border rounded-xl flex flex-col gap-2.5 transition-all ${
+                                        mStatus === "submitted"
+                                            ? "border-purple-200 bg-purple-50/30 shadow-xs"
+                                            : mStatus === "in_progress"
+                                                ? "border-blue-200 bg-blue-50/20"
+                                                : mStatus === "approved"
+                                                    ? "border-green-200 bg-green-50/20"
+                                                    : "border-border bg-surface-container-lowest"
+                                    }`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -360,15 +404,56 @@ export default function ProjectDossier({
                                         </p>
                                     )}
 
-                                    {milestone.status === MilestoneStatus.REJECTED && milestone.rejectionReason && (
-                                        <div className="p-2 bg-red-50 border border-red-200 rounded text-body-xs text-red-700">
-                                            <span className="font-semibold">Rejection Reason: </span>
-                                            {milestone.rejectionReason}
+                                    {/* Submission Deliverables Box (Shown when submitted or approved) */}
+                                    {(milestone.submissionNotes || milestone.submissionUrl) && (
+                                        <div className="p-3 bg-white border border-purple-100 rounded-lg flex flex-col gap-2 shadow-2xs">
+                                            <div className="flex items-center justify-between text-body-xs font-semibold text-purple-900 border-b border-purple-50 pb-1.5">
+                                                <span className="flex items-center gap-1.5">
+                                                    <FileText size={13} className="text-purple-600" />
+                                                    Deliverables Submitted
+                                                </span>
+                                                {milestone.submittedAt && (
+                                                    <span className="text-[11px] text-on-surface-variant font-normal">
+                                                        {formatDate(milestone.submittedAt)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {milestone.submissionNotes && (
+                                                <p className="text-body-xs text-on-surface leading-relaxed whitespace-pre-line">
+                                                    {milestone.submissionNotes}
+                                                </p>
+                                            )}
+                                            {milestone.submissionUrl && (
+                                                <div className="pt-1">
+                                                    <a
+                                                        href={milestone.submissionUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                                                    >
+                                                        <ExternalLink size={12} />
+                                                        View Deliverable Link
+                                                    </a>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
+                                    {/* Revision Requested Feedback Box */}
+                                    {mStatus === "rejected" && milestone.rejectionReason && (
+                                        <div className="p-3 bg-red-50/80 border border-red-200 rounded-lg flex flex-col gap-1 text-body-xs text-red-800">
+                                            <span className="font-semibold flex items-center gap-1 text-red-900">
+                                                <RotateCcw size={12} /> Client Requested Revisions:
+                                            </span>
+                                            <p className="italic text-red-950">
+                                                &ldquo;{milestone.rejectionReason}&rdquo;
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Financial & Due Date Info */}
                                     <div className="flex items-center justify-between text-body-xs text-on-surface-variant pt-2 border-t border-border/50">
-                                        <span className="font-semibold text-on-surface">
+                                        <span className="font-semibold text-on-surface text-body-sm">
                                             ${milestone.amount?.toLocaleString()}
                                         </span>
                                         {milestone.dueDate && (
@@ -377,6 +462,50 @@ export default function ProjectDossier({
                                             </span>
                                         )}
                                     </div>
+
+                                    {/* Action Buttons */}
+                                    {/* 1. Freelancer: Submit / Resubmit Work */}
+                                    {canFreelancerSubmit && (
+                                        <div className="pt-2 border-t border-border/50 flex justify-end">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedMilestoneForSubmit(milestone)}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors shadow-xs cursor-pointer"
+                                            >
+                                                <Send size={13} />
+                                                {mStatus === "rejected" ? "Resubmit Work" : "Submit Deliverables"}
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* 2. Client: Review Submitted Deliverables (Approve & Release or Request Changes) */}
+                                    {canClientReview && (
+                                        <div className="pt-2 border-t border-border/50 flex flex-wrap items-center justify-end gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedMilestoneForReject(milestone)}
+                                                disabled={isCurrentApproving}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-50"
+                                            >
+                                                <RotateCcw size={13} />
+                                                Request Changes
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleApprove(milestone._id)}
+                                                disabled={isCurrentApproving}
+                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+                                            >
+                                                {isCurrentApproving ? (
+                                                    <Loader2 size={13} className="animate-spin" />
+                                                ) : (
+                                                    <Check size={13} />
+                                                )}
+                                                Approve & Release (${milestone.amount?.toLocaleString()})
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -384,7 +513,7 @@ export default function ProjectDossier({
                 )}
             </section>
 
-            {/* Modal Integration */}
+            {/* Modal: Create Milestone */}
             {isClient && onCreateMilestone && (
                 <CreateMilestoneModal
                     isOpen={isMilestoneModalOpen}
@@ -395,6 +524,22 @@ export default function ProjectDossier({
                     onCreateMilestone={onCreateMilestone}
                 />
             )}
+
+            {/* Modal: Submit Milestone Work (Freelancer) */}
+            <SubmitMilestoneModal
+                isOpen={Boolean(selectedMilestoneForSubmit)}
+                onClose={() => setSelectedMilestoneForSubmit(null)}
+                milestone={selectedMilestoneForSubmit}
+                onSubmitMilestone={onSubmitMilestone}
+            />
+
+            {/* Modal: Reject Milestone / Request Revision (Client) */}
+            <RejectMilestoneModal
+                isOpen={Boolean(selectedMilestoneForReject)}
+                onClose={() => setSelectedMilestoneForReject(null)}
+                milestone={selectedMilestoneForReject}
+                onRejectMilestone={onRejectMilestone}
+            />
         </div>
     );
 }

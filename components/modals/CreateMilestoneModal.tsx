@@ -118,15 +118,15 @@ export default function CreateMilestoneModal({
 
     return (
         <div
-            className="fixed inset-0 z-99 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
             onClick={handleClose}
         >
             <div
-                className="bg-white rounded-xl shadow-xl border border-border w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+                className="bg-surface-container rounded-2xl shadow-2xl border border-outline-variant/60 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Modal Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/60 bg-surface-container">
                     <div>
                         <h2 className="text-title-md font-semibold text-on-surface">Create Milestone</h2>
                         <p className="text-body-xs text-on-surface-variant mt-0.5">
@@ -137,14 +137,14 @@ export default function CreateMilestoneModal({
                         type="button"
                         onClick={handleClose}
                         disabled={isSubmitting}
-                        className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
+                        className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 cursor-pointer"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Financial Summary */}
-                <div className="bg-surface-container-low px-6 py-3 border-b border-border grid grid-cols-3 text-center gap-2">
+                <div className="bg-surface-container-high/60 px-6 py-3 border-b border-outline-variant/60 grid grid-cols-3 text-center gap-2">
                     <div>
                         <p className="text-body-xs text-on-surface-variant">Contract Total</p>
                         <p className="text-body-sm font-semibold text-on-surface">${contractTotalAmount.toLocaleString()}</p>
@@ -162,9 +162,9 @@ export default function CreateMilestoneModal({
                 </div>
 
                 {/* Modal Form */}
-                <form id="create-milestone-form" onSubmit={handleSubmit} className="p-6 flex-1 overflow-y-auto space-y-4">
+                <form id="create-milestone-form" onSubmit={handleSubmit} className="p-6 flex-1 overflow-y-auto space-y-4 bg-surface-container">
                     {error && (
-                        <div className="flex items-center gap-2 p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center gap-2 p-3 text-xs text-error bg-error/10 border border-error/20 rounded-lg">
                             <AlertCircle size={16} className="shrink-0" />
                             <span>{error}</span>
                         </div>
@@ -173,7 +173,7 @@ export default function CreateMilestoneModal({
                     {/* Title Input */}
                     <div className="space-y-1.5">
                         <label className="text-body-xs font-semibold text-on-surface">
-                            Title <span className="text-red-500">*</span>
+                            Title <span className="text-error">*</span>
                         </label>
                         <input
                             type="text"
@@ -182,7 +182,7 @@ export default function CreateMilestoneModal({
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             disabled={isSubmitting}
-                            className="w-full text-body-sm p-2.5 border border-border rounded-lg bg-white focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:bg-gray-50"
+                            className="w-full text-body-sm p-2.5 border border-outline-variant rounded-lg bg-surface text-on-surface focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:bg-surface-container-high"
                         />
                     </div>
 
@@ -197,7 +197,7 @@ export default function CreateMilestoneModal({
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             disabled={isSubmitting}
-                            className="w-full text-body-sm p-2.5 border border-border rounded-lg bg-white focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none disabled:bg-gray-50"
+                            className="w-full text-body-sm p-2.5 border border-outline-variant rounded-lg bg-surface text-on-surface focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none disabled:bg-surface-container-high"
                         />
                     </div>
 
@@ -205,10 +205,10 @@ export default function CreateMilestoneModal({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-body-xs font-semibold text-on-surface">
-                                Amount ($) <span className="text-red-500">*</span>
+                                Amount ($) <span className="text-error">*</span>
                             </label>
                             <div className="relative flex items-center">
-                                <span className="absolute left-3 text-gray-500">
+                                <span className="absolute left-3 text-on-surface-variant">
                                     <DollarSign size={16} />
                                 </span>
                                 <input
@@ -221,7 +221,7 @@ export default function CreateMilestoneModal({
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     disabled={isSubmitting}
-                                    className="w-full text-body-sm pl-8 pr-3 py-2.5 border border-border rounded-lg bg-white focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:bg-gray-50"
+                                    className="w-full text-body-sm pl-8 pr-3 py-2.5 border border-outline-variant rounded-lg bg-surface text-on-surface focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:bg-surface-container-high"
                                 />
                             </div>
                         </div>
@@ -235,19 +235,19 @@ export default function CreateMilestoneModal({
                                 value={dueDate}
                                 onChange={(e) => setDueDate(e.target.value)}
                                 disabled={isSubmitting}
-                                className="w-full text-body-sm p-2.5 border border-border rounded-lg bg-white focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:bg-gray-50"
+                                className="w-full text-body-sm p-2.5 border border-outline-variant rounded-lg bg-surface text-on-surface focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:bg-surface-container-high"
                             />
                         </div>
                     </div>
                 </form>
 
                 {/* Modal Footer: Exactly Two Buttons (Cancel & Create) */}
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-surface-container-lowest">
+                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant/60 bg-surface-container">
                     <button
                         type="button"
                         onClick={handleClose}
                         disabled={isSubmitting}
-                        className="px-4 py-2 text-body-sm font-medium border border-border rounded-lg text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50 cursor-pointer"
+                        className="px-4 py-2 text-body-sm font-medium border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 cursor-pointer"
                     >
                         Cancel
                     </button>
@@ -255,7 +255,7 @@ export default function CreateMilestoneModal({
                         type="submit"
                         form="create-milestone-form"
                         disabled={isSubmitting || remainingBudget <= 0}
-                        className="inline-flex items-center gap-2 px-5 py-2 text-body-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
+                        className="inline-flex items-center gap-2 px-5 py-2 text-body-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                     >
                         {isSubmitting ? (
                             <>

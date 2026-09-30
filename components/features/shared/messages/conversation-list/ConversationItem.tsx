@@ -13,6 +13,7 @@ import UserImage from "@/components/ui/UserImage";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
+import { selectOnlineUsers } from "@/store/slices/socketSlice";
 import { UserRole } from "@/utils/enums.utils";
 import { IProposal, proposalService } from "@/services/proposal.service";
 import { AppDispatch } from "@/store/store";
@@ -50,10 +51,13 @@ export default function ConversationItem({
     const [showMenu, setShowMenu] = useState(false);
     const router = useRouter();
     const { me } = useSelector(selectMeSlice);
+    const onlineUsers = useSelector(selectOnlineUsers);
 
     const [proposal, setProposal] = useState<IProposal | null>(null);
     const [isLoadingProposal, setIsLoadingProposal] = useState<boolean>(false);
 
+    const participantId = participant?._id ? String(participant._id) : "";
+    const isOnline = Boolean(participantId && onlineUsers[participantId]);
 
     const handleToast = useCallback(
         (message: string, type: IToastificationType) => {
@@ -150,13 +154,27 @@ export default function ConversationItem({
                         avatarUrl={participant?.avatar || ""}
                         className="w-11 h-11"
                     />
+                    <span
+                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                            isOnline ? "bg-green-500 shadow-xs shadow-green-500/50" : "bg-gray-300"
+                        }`}
+                        title={isOnline ? "Online" : "Offline"}
+                    />
                 </div>
 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                        <p className="flex items-center gap-1.5 text-body-md text-on-surface font-medium truncate">
-                            {participantName}
-                        </p>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="text-body-md text-on-surface font-medium truncate">
+                                {participantName}
+                            </p>
+                            <span
+                                className={`w-2 h-2 rounded-full shrink-0 ${
+                                    isOnline ? "bg-green-500" : "bg-gray-300"
+                                }`}
+                                title={isOnline ? "Online" : "Offline"}
+                            />
+                        </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                             {muted && <VolumeX size={12} className="text-on-surface-variant shrink-0" />}
                             {pinned && <Pin size={12} className="text-primary fill-primary shrink-0" />}

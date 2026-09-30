@@ -27,6 +27,8 @@ import {
     milestoneService,
     IMilestone,
     ICreateMilestoneDto,
+    ISubmitMilestoneDto,
+    IRejectMilestoneDto,
 } from "@/services/milestone.service";
 import ChatPanel from "@/components/features/shared/messages/Chatpanel";
 import ConversationList from "@/components/features/shared/messages/Conversationlist";
@@ -89,13 +91,13 @@ export default function MessagesPage({
 
     // 1. Fetch Conversations & Handle Direct Navigation via Props
     const initConversations = useCallback(async () => {
-        if (!currentUserId) return;
+        if (!currentUserId || !currentUserRole) return;
 
         try {
             setIsLoading(true);
 
             const listRes = await conversationService.getUserConversations(String(currentUserId));
-            let fetchedConversations = listRes.data.conversations;
+            let fetchedConversations = listRes.data.conversations || [];
 
             if (recipient) {
                 const payload: ICreateOrGetConversationDto = {
@@ -107,9 +109,13 @@ export default function MessagesPage({
                 const targetRes = await conversationService.createOrGetConversation(payload);
                 const targetConv = targetRes.data.conversation;
 
-                const exists = fetchedConversations.some((c) => c._id === targetConv._id);
+                const exists = fetchedConversations.some((c) => String(c._id) === String(targetConv._id));
                 if (!exists) {
                     fetchedConversations = [targetConv, ...fetchedConversations];
+                } else {
+                    fetchedConversations = fetchedConversations.map((c) =>
+                        String(c._id) === String(targetConv._id) ? { ...c, ...targetConv } : c
+                    );
                 }
 
                 setActiveId(targetConv._id);
@@ -117,7 +123,15 @@ export default function MessagesPage({
                 setActiveId(fetchedConversations[0]._id);
             }
 
-            setConversations(fetchedConversations);
+            // Deduplicate all conversations by unique _id
+            const uniqueMap = new Map<string, IConversation>();
+            fetchedConversations.forEach((c) => {
+                if (c && c._id) {
+                    uniqueMap.set(String(c._id), c);
+                }
+            });
+
+            setConversations(Array.from(uniqueMap.values()));
         } catch (error: any) {
             handleToast(error.message || "Failed to fetch conversations", "error");
         } finally {
@@ -128,6 +142,27 @@ export default function MessagesPage({
     useEffect(() => {
         initConversations();
     }, [initConversations]);
+
+    // Request presence for conversation participants
+    useEffect(() => {
+        if (!conversations || conversations.length === 0) return;
+
+        const participantIds = Array.from(
+            new Set(
+                conversations
+                    .flatMap((c) => {
+                        const clientUid = typeof c.client === "object" ? c.client?._id : c.client;
+                        const freelancerUid = typeof c.freelancer === "object" ? c.freelancer?._id : c.freelancer;
+                        return [clientUid, freelancerUid];
+                    })
+                    .filter(Boolean)
+            )
+        ) as string[];
+
+        if (participantIds.length > 0) {
+            socket.emit("check_presence", { userIds: participantIds });
+        }
+    }, [conversations]);
 
     // 2. Fetch Messages
     const fetchMessages = useCallback(
@@ -348,6 +383,9 @@ export default function MessagesPage({
             setActiveContract((prev) => {
                 if (!prev) return prev;
                 const currentMilestones = prev.milestones || [];
+                if (currentMilestones.some((m) => String(m._id) === String(newMilestone._id))) {
+                    return prev;
+                }
                 return {
                     ...prev,
                     milestones: [...currentMilestones, newMilestone].sort((a, b) => (a.order || 0) - (b.order || 0)),
@@ -380,6 +418,81 @@ export default function MessagesPage({
             handleToast("Milestone deleted", "info");
         } catch (error: any) {
             handleToast(error.message || "Failed to delete milestone", "error");
+        } finally {
+            setIsLoadingContract(false);
+        }
+    };
+
+    const handleSubmitMilestone = async (id: string, payload?: ISubmitMilestoneDto) => {
+        try {
+            setIsLoadingContract(true);
+            const res = await milestoneService.submitMilestone(id, payload);
+            const updated = res.data.milestone;
+
+            setActiveContract((prev) => {
+                if (!prev) return prev;
+                const list = prev.milestones || [];
+                return {
+                    ...prev,
+                    milestones: list.map((m) => (m._id === id ? updated : m)),
+                };
+            });
+
+            handleToast("Milestone deliverables submitted successfully for client review", "success");
+        } catch (error: any) {
+            handleToast(error.message || "Failed to submit milestone work", "error");
+            throw error;
+        } finally {
+            setIsLoadingContract(false);
+        }
+    };
+
+    const handleApproveMilestone = async (id: string) => {
+        try {
+            setIsLoadingContract(true);
+            await milestoneService.approveMilestone(id);
+
+            // Re-fetch contract & milestones to sync activated next milestone and contract status
+            if (activeContract?._id) {
+                const [contractRes, milestonesRes] = await Promise.all([
+                    contractService.getContractById(activeContract._id),
+                    milestoneService.getContractMilestones(activeContract._id).catch(() => ({ data: { milestones: [] } })),
+                ]);
+
+                setActiveContract({
+                    ...contractRes.data.contract,
+                    milestones: milestonesRes.data?.milestones || [],
+                });
+            }
+
+            handleToast("Milestone approved! Payment released.", "success");
+        } catch (error: any) {
+            handleToast(error.message || "Failed to approve milestone", "error");
+            throw error;
+        } finally {
+            setIsLoadingContract(false);
+        }
+    };
+
+    const handleRejectMilestone = async (id: string, payload: IRejectMilestoneDto) => {
+        try {
+            setIsLoadingContract(true);
+            const res = await milestoneService.rejectMilestone(id, payload);
+            const updated = res.data.milestone;
+
+            setActiveContract((prev) => {
+                if (!prev) return prev;
+                const list = prev.milestones || [];
+                return {
+                    ...prev,
+                    milestones: list.map((m) => (m._id === id ? updated : m)),
+                };
+            });
+
+            handleToast("Revision requested. Freelancer will be notified.", "info");
+        } catch (error: any) {
+            handleToast(error.message || "Failed to request milestone revision", "error");
+            throw error;
         } finally {
             setIsLoadingContract(false);
         }
@@ -523,11 +636,16 @@ export default function MessagesPage({
 
         // Realtime Milestone Sockets
         const handleMilestoneCreated = (newMilestone: IMilestone) => {
-            if (activeContract?._id === newMilestone.contract) {
+            const milestoneContractId =
+                typeof newMilestone.contract === "object"
+                    ? (newMilestone.contract as any)._id
+                    : newMilestone.contract;
+
+            if (String(activeContract?._id) === String(milestoneContractId)) {
                 setActiveContract((prev) => {
                     if (!prev) return prev;
                     const list = prev.milestones || [];
-                    if (list.some((m) => m._id === newMilestone._id)) return prev;
+                    if (list.some((m) => String(m._id) === String(newMilestone._id))) return prev;
                     return {
                         ...prev,
                         milestones: [...list, newMilestone].sort((a, b) => (a.order || 0) - (b.order || 0)),
@@ -537,13 +655,18 @@ export default function MessagesPage({
         };
 
         const handleMilestoneUpdated = (updatedMilestone: IMilestone) => {
-            if (activeContract?._id === updatedMilestone.contract) {
+            const milestoneContractId =
+                typeof updatedMilestone.contract === "object"
+                    ? (updatedMilestone.contract as any)._id
+                    : updatedMilestone.contract;
+
+            if (String(activeContract?._id) === String(milestoneContractId)) {
                 setActiveContract((prev) => {
                     if (!prev) return prev;
                     const list = prev.milestones || [];
                     return {
                         ...prev,
-                        milestones: list.map((m) => (m._id === updatedMilestone._id ? updatedMilestone : m)),
+                        milestones: list.map((m) => (String(m._id) === String(updatedMilestone._id) ? updatedMilestone : m)),
                     };
                 });
             }
@@ -855,6 +978,9 @@ export default function MessagesPage({
                                         onDeleteContract={handleDeleteContract}
                                         onCreateMilestone={handleCreateMilestone}
                                         onDeleteMilestone={handleDeleteMilestone}
+                                        onSubmitMilestone={handleSubmitMilestone}
+                                        onApproveMilestone={handleApproveMilestone}
+                                        onRejectMilestone={handleRejectMilestone}
                                     />
                                 )
                             )}
@@ -917,6 +1043,9 @@ export default function MessagesPage({
                                     onDeleteContract={handleDeleteContract}
                                     onCreateMilestone={handleCreateMilestone}
                                     onDeleteMilestone={handleDeleteMilestone}
+                                    onSubmitMilestone={handleSubmitMilestone}
+                                    onApproveMilestone={handleApproveMilestone}
+                                    onRejectMilestone={handleRejectMilestone}
                                 />
                             )
                         )}
