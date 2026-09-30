@@ -6,8 +6,6 @@ import { useState, useEffect, useCallback } from "react";
 import { X, DollarSign, AlertCircle, Loader2 } from "lucide-react";
 import { ICreateMilestoneDto } from "@/services/milestone.service";
 
-
-
 interface CreateMilestoneModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -33,7 +31,7 @@ export default function CreateMilestoneModal({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Round floating-point calculation issues
+    // Calculate remaining budget
     const remainingBudget = Math.max(0, Math.round((contractTotalAmount - existingMilestonesTotal) * 100) / 100);
 
     const resetForm = useCallback(() => {
@@ -50,14 +48,12 @@ export default function CreateMilestoneModal({
         onClose();
     }, [isSubmitting, resetForm, onClose]);
 
-    // Reset state when modal opens
     useEffect(() => {
         if (isOpen) {
             resetForm();
         }
     }, [isOpen, resetForm]);
 
-    // Handle ESC key press
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape" && isOpen) {
@@ -82,7 +78,6 @@ export default function CreateMilestoneModal({
             return;
         }
 
-        // Floating precision guard
         if (Math.round(numAmount * 100) > Math.round(remainingBudget * 100)) {
             setError(
                 `Milestone amount ($${numAmount.toLocaleString()}) exceeds the remaining contract budget ($${remainingBudget.toLocaleString()}).`
@@ -90,7 +85,6 @@ export default function CreateMilestoneModal({
             return;
         }
 
-        // Safely parse date to ISO string preserving local start-of-day
         let isoDueDate: string | undefined = undefined;
         if (dueDate) {
             const [year, month, day] = dueDate.split("-").map(Number);
@@ -100,7 +94,7 @@ export default function CreateMilestoneModal({
         const payload: ICreateMilestoneDto = {
             contract: contractId,
             title: title.trim(),
-            description: description.trim() || undefined,
+            description: description.trim() ? description.trim() : undefined,
             amount: Math.round(numAmount * 100) / 100,
             dueDate: isoDueDate,
         };
@@ -124,7 +118,7 @@ export default function CreateMilestoneModal({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
+            className="fixed inset-0 z-99 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
             onClick={handleClose}
         >
             <div
@@ -143,7 +137,7 @@ export default function CreateMilestoneModal({
                         type="button"
                         onClick={handleClose}
                         disabled={isSubmitting}
-                        className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                        className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
                     >
                         <X size={20} />
                     </button>
@@ -160,7 +154,7 @@ export default function CreateMilestoneModal({
                         <p className="text-body-sm font-semibold text-primary">${existingMilestonesTotal.toLocaleString()}</p>
                     </div>
                     <div>
-                        <p className="text-body-xs text-on-surface-variant">Remaining Budget</p>
+                        <p className="text-body-xs text-on-surface-variant">Remaining</p>
                         <p className={`text-body-sm font-semibold ${remainingBudget > 0 ? "text-green-600" : "text-amber-600"}`}>
                             ${remainingBudget.toLocaleString()}
                         </p>
@@ -179,12 +173,12 @@ export default function CreateMilestoneModal({
                     {/* Title Input */}
                     <div className="space-y-1.5">
                         <label className="text-body-xs font-semibold text-on-surface">
-                            Milestone Title <span className="text-red-500">*</span>
+                            Title <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             required
-                            placeholder="e.g., Deliver MVP Wireframes & API Schemas"
+                            placeholder="e.g., Phase 1: Database Architecture & Core APIs"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             disabled={isSubmitting}
@@ -199,7 +193,7 @@ export default function CreateMilestoneModal({
                         </label>
                         <textarea
                             rows={3}
-                            placeholder="Describe specific scope or criteria to complete this milestone..."
+                            placeholder="Describe deliverables and completion criteria for this milestone..."
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             disabled={isSubmitting}
@@ -247,13 +241,13 @@ export default function CreateMilestoneModal({
                     </div>
                 </form>
 
-                {/* Modal Footer */}
+                {/* Modal Footer: Exactly Two Buttons (Cancel & Create) */}
                 <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-surface-container-lowest">
                     <button
                         type="button"
                         onClick={handleClose}
                         disabled={isSubmitting}
-                        className="px-4 py-2 text-body-sm font-medium border border-border rounded-lg text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50"
+                        className="px-4 py-2 text-body-sm font-medium border border-border rounded-lg text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50 cursor-pointer"
                     >
                         Cancel
                     </button>
@@ -261,7 +255,7 @@ export default function CreateMilestoneModal({
                         type="submit"
                         form="create-milestone-form"
                         disabled={isSubmitting || remainingBudget <= 0}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-body-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-5 py-2 text-body-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
                     >
                         {isSubmitting ? (
                             <>

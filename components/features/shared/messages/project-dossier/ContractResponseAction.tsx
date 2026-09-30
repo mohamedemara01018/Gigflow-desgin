@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, AlertCircle, Loader2 } from "lucide-react";
 import { IRespondContractDto } from "@/services/contract.service";
 import { useSelector } from "react-redux";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
@@ -17,62 +17,124 @@ export default function ContractResponseAction({
 }: ContractResponseActionProps) {
     const [rejectionReason, setRejectionReason] = useState("");
     const [showRejectInput, setShowRejectInput] = useState(false);
-    const { me } = useSelector(selectMeSlice)
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const { me } = useSelector(selectMeSlice);
+
     const handleAccept = async () => {
-        await onRespondContract(contractId, { action: "accept", userId: String(me?._id) });
+        try {
+            setIsSubmitting(true);
+            setError(null);
+            await onRespondContract(contractId, {
+                action: "accept",
+                userId: String(me?._id),
+            });
+        } catch (err: any) {
+            setError(err?.message || "Failed to accept contract");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleReject = async () => {
-        if (!rejectionReason.trim()) return;
-        await onRespondContract(contractId, {
-            action: "reject",
-            userId: String(me?._id),
-            rejectionReason,
-        });
-        setShowRejectInput(false);
-        setRejectionReason("");
+        if (!rejectionReason.trim()) {
+            setError("A rejection reason is required.");
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            setError(null);
+            await onRespondContract(contractId, {
+                action: "reject",
+                userId: String(me?._id),
+                rejectionReason: rejectionReason.trim(),
+            });
+            setShowRejectInput(false);
+            setRejectionReason("");
+        } catch (err: any) {
+            setError(err?.message || "Failed to reject contract");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
-        <div className="flex flex-col gap-2 p-3 bg-amber-50/50 border border-amber-200 rounded-md">
-            <p className="text-xs text-amber-800 font-medium">Contract Response Pending</p>
+        <div className="flex flex-col gap-2.5 p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl">
+            <div className="flex items-center justify-between">
+                <span className="text-xs text-amber-900 font-bold uppercase tracking-wider">
+                    Contract Review Pending
+                </span>
+                <span className="text-body-xs text-amber-700">
+                    Review terms &amp; milestones
+                </span>
+            </div>
+
+            {error && (
+                <div className="flex items-center gap-1.5 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-body-xs">
+                    <AlertCircle size={13} className="shrink-0" />
+                    <span>{error}</span>
+                </div>
+            )}
+
             {!showRejectInput ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pt-1">
                     <button
+                        type="button"
                         onClick={handleAccept}
-                        className="flex-1 inline-flex items-center justify-center gap-1 py-1 px-2 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition-colors"
+                        disabled={isSubmitting}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50"
                     >
-                        <Check size={14} /> Accept
+                        {isSubmitting ? (
+                            <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                            <Check size={14} />
+                        )}
+                        Accept Contract
                     </button>
                     <button
+                        type="button"
                         onClick={() => setShowRejectInput(true)}
-                        className="flex-1 inline-flex items-center justify-center gap-1 py-1 px-2 border border-red-300 text-red-600 rounded text-xs font-medium hover:bg-red-50 transition-colors"
+                        disabled={isSubmitting}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 border border-red-300 bg-white text-red-600 rounded-lg text-xs font-semibold hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
                     >
-                        <X size={14} /> Reject
+                        <X size={14} /> Reject Contract
                     </button>
                 </div>
             ) : (
-                <div className="flex flex-col gap-2">
-                    <input
-                        type="text"
-                        placeholder="Reason for rejection..."
+                <div className="flex flex-col gap-2 pt-1">
+                    <label className="text-xs font-semibold text-gray-700">
+                        Reason for Rejection <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                        rows={2}
+                        placeholder="Explain why you are declining (e.g., timeline, scope adjustments)..."
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
-                        className="text-xs p-1.5 border border-red-200 rounded bg-white"
+                        disabled={isSubmitting}
+                        className="text-body-sm p-2 border border-red-200 rounded-md bg-white resize-none focus:outline-hidden focus:ring-1 focus:ring-red-400"
                     />
-                    <div className="flex justify-end gap-1.5">
+                    <div className="flex justify-end gap-2">
                         <button
-                            onClick={() => setShowRejectInput(false)}
-                            className="px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-200 rounded"
+                            type="button"
+                            onClick={() => {
+                                setShowRejectInput(false);
+                                setError(null);
+                            }}
+                            disabled={isSubmitting}
+                            className="px-3 py-1 text-xs text-gray-600 border border-border rounded-md hover:bg-gray-100 cursor-pointer disabled:opacity-50"
                         >
                             Cancel
                         </button>
                         <button
+                            type="button"
                             onClick={handleReject}
-                            disabled={!rejectionReason.trim()}
-                            className="px-2 py-0.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                            disabled={!rejectionReason.trim() || isSubmitting}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 font-semibold cursor-pointer disabled:opacity-50"
                         >
-                            Confirm Reject
+                            {isSubmitting && <Loader2 size={13} className="animate-spin" />}
+                            Confirm Rejection
                         </button>
                     </div>
                 </div>

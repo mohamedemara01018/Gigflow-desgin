@@ -3,14 +3,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-    Calendar,
     PlusCircle,
     CheckCircle2,
     Clock,
     Flag,
     AlertCircle,
     XCircle,
-    Send
+    Send,
+    Trash2,
+    ArrowRight,
+    Loader2
 } from "lucide-react";
 
 import {
@@ -35,20 +37,21 @@ import CreateMilestoneModal from "@/components/modals/CreateMilestoneModal";
 import { useSelector } from "react-redux";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
 
-// Extended IContract interface in case milestones are populated dynamically
 export interface IContractWithMilestones extends IContract {
     milestones?: IMilestone[];
 }
 
 interface ProjectDossierProps {
-    proposal: string;
+    proposal?: string;
     activeConversationId: string;
     contract?: IContractWithMilestones | null;
     onCreateContract?: (payload: ICreateContractDto) => Promise<void>;
+    onSendContract?: (id: string) => Promise<void>;
     onRespondContract?: (id: string, payload: IRespondContractDto) => Promise<void>;
     onUpdateContract?: (id: string, payload: IUpdateContractDto) => Promise<void>;
     onDeleteContract?: (id: string) => Promise<void>;
     onCreateMilestone?: (payload: ICreateMilestoneDto) => Promise<void>;
+    onDeleteMilestone?: (id: string) => Promise<void>;
     onSubmitMilestone?: (id: string) => Promise<void>;
     onApproveMilestone?: (id: string) => Promise<void>;
     onRejectMilestone?: (id: string, payload: IRejectMilestoneDto) => Promise<void>;
@@ -64,39 +67,40 @@ const formatDate = (dateStr?: string | null) => {
 };
 
 const getMilestoneBadge = (status: MilestoneStatus | string) => {
-    switch (status) {
-        case MilestoneStatus.APPROVED:
-        case "COMPLETED":
+    const s = (status || "").toLowerCase();
+    switch (s) {
+        case "approved":
+        case "completed":
             return {
                 label: "Approved",
                 colorClass: "bg-green-100 text-green-700",
                 icon: <CheckCircle2 size={12} />,
             };
-        case MilestoneStatus.SUBMITTED:
+        case "submitted":
             return {
                 label: "Submitted",
                 colorClass: "bg-purple-100 text-purple-700",
                 icon: <Send size={12} />,
             };
-        case MilestoneStatus.IN_PROGRESS:
+        case "in_progress":
             return {
                 label: "In Progress",
                 colorClass: "bg-blue-100 text-blue-700",
                 icon: <Clock size={12} />,
             };
-        case MilestoneStatus.REJECTED:
+        case "rejected":
             return {
-                label: "Rejected",
+                label: "Revision Requested",
                 colorClass: "bg-red-100 text-red-700",
                 icon: <XCircle size={12} />,
             };
-        case MilestoneStatus.CANCELLED:
+        case "cancelled":
             return {
                 label: "Cancelled",
                 colorClass: "bg-gray-100 text-gray-700",
                 icon: <XCircle size={12} />,
             };
-        case MilestoneStatus.PENDING:
+        case "pending":
         default:
             return {
                 label: "Pending",
@@ -111,16 +115,22 @@ export default function ProjectDossier({
     activeConversationId,
     contract,
     onCreateContract,
+    onSendContract,
     onRespondContract,
     onUpdateContract,
     onDeleteContract,
     onCreateMilestone,
+    onDeleteMilestone,
 }: ProjectDossierProps) {
     const [proposalData, setProposalData] = useState<IProposal | null>(null);
     const [isLoadingProposal, setIsLoadingProposal] = useState(false);
     const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
+    const [isSendingToFreelancer, setIsSendingToFreelancer] = useState(false);
+
     const { me } = useSelector(selectMeSlice);
-    const isFreelancer = me?.role == UserRole.FREELANCER;
+    const isFreelancer = me?.role === UserRole.FREELANCER;
+    const isClient = me?.role === UserRole.CLIENT;
+
     const getProposalOfContract = useCallback(async () => {
         if (!proposalId) return;
         try {
@@ -148,17 +158,18 @@ export default function ProjectDossier({
         );
     }
 
-    const isActive = contract.status === ContractStatus.ACTIVE;
-    const isPending = contract.status === ContractStatus.DRAFT;
+    const isActive = contract.status === ContractStatus.ACTIVE || (contract.status as string) === "active";
+    const isDraft = contract.status === ContractStatus.DRAFT || (contract.status as string) === "draft";
+    const isRejected = contract.status === ContractStatus.REJECTED || (contract.status as string) === "rejected";
     const isHourly = contract.type === ContractType.HOURLY || contract.type === "hourly";
 
-    // Milestone calculation metrics
+    // Milestone metrics
     const milestones = contract.milestones || [];
     const totalAllocatedMilestones = milestones.reduce((sum, m) => sum + (m.amount || 0), 0);
-    const remainingBudget = Math.max(0, contract.totalAmount - totalAllocatedMilestones);
+    const remainingBudget = Math.max(0, Math.round((contract.totalAmount - totalAllocatedMilestones) * 100) / 100);
 
     const completedMilestonesCount = milestones.filter(
-        (m) => m.status === MilestoneStatus.APPROVED || m.status === "COMPLETED"
+        (m) => (m.status || "").toLowerCase() === "approved" || (m.status || "").toLowerCase() === "completed"
     ).length;
 
     const progress = milestones.length > 0
@@ -166,6 +177,16 @@ export default function ProjectDossier({
         : contract.status === ContractStatus.COMPLETED || contract.status === "completed"
             ? 100
             : 0;
+
+    const handleSendToFreelancer = async () => {
+        if (!onSendContract || !contract._id) return;
+        try {
+            setIsSendingToFreelancer(true);
+            await onSendContract(contract._id);
+        } finally {
+            setIsSendingToFreelancer(false);
+        }
+    };
 
     return (
         <div className="flex flex-col gap-4 h-full overflow-y-auto pr-0.5">
@@ -179,33 +200,67 @@ export default function ProjectDossier({
                     onDeleteContract={onDeleteContract}
                 />
 
-                {isPending && onRespondContract && isFreelancer ? (
+                {/* Freelancer Review Actions */}
+                {isDraft && isFreelancer && onRespondContract ? (
                     <ContractResponseAction
                         contractId={contract._id}
                         onRespondContract={onRespondContract}
                     />
-                ) : isPending ? (
-                    <div className="flex items-center gap-2.5 p-3.5 border border-amber-200 bg-amber-50/60 rounded-xl text-amber-800 text-body-sm font-medium">
-                        <span className="relative flex h-2.5 w-2.5 shrink-0">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                        </span>
-                        <span>
-                            {isFreelancer
-                                ? "Waiting for client response."
-                                : "Pending freelancer approval. You'll be notified once accepted or rejected."}
-                        </span>
-                    </div>
                 ) : null}
 
-                {(contract.startDate || contract.endDate) && (
-                    <div className="flex flex-col gap-2 border-b border-border pb-3 text-body-sm">
-                        <div className="flex items-center gap-2 text-on-surface-variant">
-                            <Calendar size={16} className="shrink-0" />
-                            <span>
-                                {formatDate(contract.startDate)} – {formatDate(contract.endDate)}
+                {/* Client Draft Actions & "Send to Freelancer" */}
+                {isDraft && isClient && (
+                    <div className="flex flex-col gap-2.5 p-3.5 border border-amber-200 bg-amber-50/60 rounded-xl">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">
+                                Draft Contract
+                            </span>
+                            <span className="text-body-xs text-amber-700">
+                                {milestones.length === 0
+                                    ? "Add milestones below"
+                                    : remainingBudget > 0
+                                        ? `$${remainingBudget.toLocaleString()} unallocated`
+                                        : "Ready for review"}
                             </span>
                         </div>
+                        <p className="text-body-xs text-amber-800">
+                            Create deliverables/milestones below, then send the contract to the freelancer for review.
+                        </p>
+                        {onSendContract && (
+                            <button
+                                type="button"
+                                onClick={handleSendToFreelancer}
+                                disabled={isSendingToFreelancer}
+                                className="inline-flex items-center justify-center gap-2 py-2 px-3 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                                {isSendingToFreelancer ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                ) : (
+                                    <Send size={14} />
+                                )}
+                                Send to Freelancer
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {/* Rejection Notice */}
+                {isRejected && (
+                    <div className="p-3.5 border border-red-200 bg-red-50 rounded-xl flex flex-col gap-1.5 text-body-xs text-red-800">
+                        <div className="flex items-center gap-1.5 font-semibold text-red-900">
+                            <XCircle size={15} />
+                            <span>Contract Rejected by Freelancer</span>
+                        </div>
+                        {contract.rejectionReason && (
+                            <p className="italic bg-white/70 p-2 rounded border border-red-100 text-red-900">
+                                &ldquo;{contract.rejectionReason}&rdquo;
+                            </p>
+                        )}
+                        {isClient && (
+                            <p className="text-red-700 mt-1">
+                                You can edit the contract or milestone terms above and re-send.
+                            </p>
+                        )}
                     </div>
                 )}
 
@@ -231,15 +286,16 @@ export default function ProjectDossier({
                 <div className="flex items-center justify-between pb-3 border-b border-border">
                     <div>
                         <h3 className="text-body-md font-semibold text-on-surface">Milestones</h3>
-                        <p className="text-body-xs text-on-surface-variant">
-                            Allocated: ${totalAllocatedMilestones.toLocaleString()} / ${contract.totalAmount.toLocaleString()} (${remainingBudget.toLocaleString()} remaining)
+                        <p className="text-body-xs text-on-surface-variant mt-0.5">
+                            Allocated: ${totalAllocatedMilestones.toLocaleString()} / ${contract.totalAmount.toLocaleString()} ({remainingBudget > 0 ? `$${remainingBudget.toLocaleString()} remaining` : "Fully allocated"})
                         </p>
                     </div>
-                    {onCreateMilestone && (
+
+                    {/* Create Milestone button (Shown only to Client while DRAFT/REJECTED and budget remains) */}
+                    {isClient && (isDraft || isRejected) && onCreateMilestone && remainingBudget > 0 && (
                         <button
                             onClick={() => setIsMilestoneModalOpen(true)}
-                            disabled={remainingBudget <= 0}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors cursor-pointer"
                         >
                             <PlusCircle size={14} />
                             Create Milestone
@@ -247,10 +303,20 @@ export default function ProjectDossier({
                     )}
                 </div>
 
-                {/* Milestone Items */}
+                {/* Milestone Items List */}
                 {milestones.length === 0 ? (
                     <div className="text-center py-6 text-on-surface-variant text-body-sm">
                         No milestones created yet.
+                        {isClient && isDraft && (
+                            <div className="mt-2">
+                                <button
+                                    onClick={() => setIsMilestoneModalOpen(true)}
+                                    className="text-primary font-semibold text-xs hover:underline cursor-pointer"
+                                >
+                                    + Add the first milestone
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="flex flex-col gap-3">
@@ -260,7 +326,7 @@ export default function ProjectDossier({
                             return (
                                 <div
                                     key={milestone._id || idx}
-                                    className="p-3.5 border border-border rounded-lg bg-surface-container-lowest flex flex-col gap-2"
+                                    className="p-3.5 border border-border rounded-lg bg-surface-container-lowest flex flex-col gap-2 relative group"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -271,10 +337,21 @@ export default function ProjectDossier({
                                                 {milestone.title}
                                             </h4>
                                         </div>
-                                        <span className={`text-body-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${badge.colorClass}`}>
-                                            {badge.icon}
-                                            {badge.label}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-body-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${badge.colorClass}`}>
+                                                {badge.icon}
+                                                {badge.label}
+                                            </span>
+                                            {isClient && (isDraft || isRejected) && onDeleteMilestone && (
+                                                <button
+                                                    onClick={() => onDeleteMilestone(milestone._id)}
+                                                    title="Delete Milestone"
+                                                    className="text-gray-400 hover:text-red-600 p-0.5 rounded cursor-pointer transition-colors"
+                                                >
+                                                    <Trash2 size={13} />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {milestone.description && (
@@ -308,7 +385,7 @@ export default function ProjectDossier({
             </section>
 
             {/* Modal Integration */}
-            {onCreateMilestone && (
+            {isClient && onCreateMilestone && (
                 <CreateMilestoneModal
                     isOpen={isMilestoneModalOpen}
                     onClose={() => setIsMilestoneModalOpen(false)}

@@ -247,6 +247,27 @@ export const contractService = {
     },
 
     /**
+     * Send a draft contract to the freelancer for review
+     */
+    sendContract: async (id: string): Promise<IContractSingleApiResponse> => {
+        const response = await fetch(`${API_URL}/${id}/send`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        const data: IContractSingleApiResponse = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to send contract");
+        }
+
+        return data;
+    },
+
+    /**
      * Delete a contract document
      */
     deleteContract: async (id: string): Promise<IDeleteApiResponse> => {

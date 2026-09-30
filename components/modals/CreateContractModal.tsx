@@ -6,20 +6,20 @@ import { X, DollarSign, AlertCircle, Loader2 } from "lucide-react";
 import { ICreateContractDto } from "@/services/contract.service";
 import { IProposal, proposalService } from "@/services/proposal.service";
 import { conversationService, IConversation } from "@/services/conversation.service";
-import { ContractType } from "@/utils/enums.utils";
+import { ContractType, ProposalStatus } from "@/utils/enums.utils";
 
 interface CreateContractModalProps {
     isOpen: boolean;
     onClose: () => void;
-    proposalId: string;
-    activeConversationId: string;
+    proposalId?: string;
+    activeConversationId?: string;
     onCreateContract?: (payload: ICreateContractDto) => Promise<void>;
 }
 
 export default function CreateContractModal({
     isOpen,
     onClose,
-    proposalId,
+    proposalId: initialProposalId,
     activeConversationId,
     onCreateContract,
 }: CreateContractModalProps) {
@@ -27,8 +27,8 @@ export default function CreateContractModal({
     const [description, setDescription] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const [totalAmount, setTotalAmount] = useState<number>(0);
 
+    const [resolvedProposalId, setResolvedProposalId] = useState<string>("");
     const [proposalData, setProposalData] = useState<IProposal | null>(null);
     const [conversationData, setConversationData] = useState<IConversation | null>(null);
     const [isLoadingData, setIsLoadingData] = useState(false);
@@ -43,18 +43,50 @@ export default function CreateContractModal({
                 setIsLoadingData(true);
                 setError(null);
 
-                const [propRes, convRes] = await Promise.all([
-                    proposalId ? proposalService.getProposalById(proposalId) : null,
-                    activeConversationId ? conversationService.getConversationById(activeConversationId) : null,
-                ]);
+                let currentProposalId = initialProposalId;
+                let fetchedConversation: IConversation | null = null;
 
-                if (propRes) {
+                if (activeConversationId) {
+                    const convRes = await conversationService.getConversationById(activeConversationId);
+                    fetchedConversation = convRes.data?.conversation || convRes.data;
+                    setConversationData(fetchedConversation);
+                }
+
+                // If proposalId was not provided, look for the accepted proposal for this conversation's job & freelancer
+                if (!currentProposalId && fetchedConversation) {
+                    const jobId =
+                        typeof fetchedConversation.job === "object"
+                            ? fetchedConversation.job?._id
+                            : fetchedConversation.job;
+                    const freelancerId =
+                        typeof fetchedConversation.freelancer === "object"
+                            ? fetchedConversation.freelancer?._id
+                            : fetchedConversation.freelancer;
+
+                    if (jobId && freelancerId) {
+                        const proposalsRes = await proposalService.getAllProposals({
+                            job: jobId,
+                            freelancer: freelancerId,
+                            status: ProposalStatus.ACCEPTED,
+                        });
+                        const proposalsList = proposalsRes.data?.proposals || [];
+                        if (proposalsList.length > 0) {
+                            currentProposalId = proposalsList[0]._id;
+                        }
+                    }
+                }
+
+                if (currentProposalId) {
+                    setResolvedProposalId(currentProposalId);
+                    const propRes = await proposalService.getProposalById(currentProposalId);
                     const fetchedProposal = propRes.data?.proposal || propRes.data;
                     setProposalData(fetchedProposal);
-                    setTotalAmount(fetchedProposal?.bidAmount ?? 0);
-                }
-                if (convRes) {
-                    setConversationData(convRes.data?.conversation || convRes.data);
+
+                    // If title is not yet entered, provide job title as default hint
+                    const jobTitle = typeof fetchedProposal?.job === "object" ? fetchedProposal.job?.title : "";
+                    if (jobTitle && !title) {
+                        setTitle(jobTitle);
+                    }
                 }
             } catch (err: any) {
                 console.error("Failed to load modal details:", err);
@@ -65,14 +97,14 @@ export default function CreateContractModal({
         };
 
         fetchData();
-    }, [isOpen, proposalId, activeConversationId]);
+    }, [isOpen, initialProposalId, activeConversationId]);
 
     const handleClose = () => {
+        if (isSubmitting) return;
         setTitle("");
         setDescription("");
         setStartDate("");
         setEndDate("");
-        setTotalAmount(0);
         setError(null);
         onClose();
     };
@@ -85,9 +117,15 @@ export default function CreateContractModal({
             return;
         }
 
+        const effectiveProposalId = resolvedProposalId || initialProposalId;
+        if (!effectiveProposalId) {
+            setError("No accepted proposal found to attach this contract to.");
+            return;
+        }
+
         const jobId = typeof conversationData?.job === "object"
             ? conversationData?.job?._id
-            : conversationData?.job;
+            : conversationData?.job || (typeof proposalData?.job === "object" ? proposalData?.job?._id : proposalData?.job);
 
         const clientId = typeof conversationData?.client === "object"
             ? conversationData?.client?._id
@@ -95,19 +133,19 @@ export default function CreateContractModal({
 
         const freelancerId = typeof conversationData?.freelancer === "object"
             ? conversationData?.freelancer?._id
-            : conversationData?.freelancer;
+            : conversationData?.freelancer || (typeof proposalData?.freelancer === "object" ? proposalData?.freelancer?._id : proposalData?.freelancer);
 
         const payload: ICreateContractDto = {
             job: String(jobId || ""),
             client: String(clientId || ""),
-            proposal: proposalId || "",
+            proposal: effectiveProposalId,
             freelancer: String(freelancerId || ""),
             title: title.trim(),
-            description: description.trim() || undefined,
-            totalAmount: totalAmount,
+            description: description.trim() ? description.trim() : (null as any),
+            totalAmount: proposalData?.bidAmount ?? 0,
             type: ContractType.FIXED,
-            startDate: startDate ? new Date(startDate).toISOString() : undefined,
-            endDate: endDate ? new Date(endDate).toISOString() : undefined,
+            startDate: startDate ? new Date(startDate).toISOString() : (null as any),
+            endDate: endDate ? new Date(endDate).toISOString() : (null as any),
         };
 
         try {
@@ -127,29 +165,31 @@ export default function CreateContractModal({
 
     if (!isOpen) return null;
 
+    const bidAmount = proposalData?.bidAmount ?? 0;
+
     return (
         <div className="fixed inset-0 z-99 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-            <div className="bg-surface-container rounded-xl shadow-xl border border-border w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-surface rounded-xl shadow-xl border border-border w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Modal Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-white">
                     <div>
-                        <h2 className="text-title-md font-semibold text-on-surface">Create Draft Contract</h2>
+                        <h2 className="text-title-md font-semibold text-on-surface">Create Contract</h2>
                         <p className="text-body-xs text-on-surface-variant mt-0.5">
-                            Set contract details and total amount.
+                            Draft contract terms based on the accepted proposal.
                         </p>
                     </div>
                     <button
                         type="button"
                         onClick={handleClose}
                         disabled={isSubmitting}
-                        className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                        className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Modal Form */}
-                <form id="create-contract-form" onSubmit={handleSubmit} className="p-6 flex-1 overflow-y-auto space-y-4">
+                <form id="create-contract-form" onSubmit={handleSubmit} className="p-6 flex-1 overflow-y-auto space-y-4 bg-white">
                     {error && (
                         <div className="flex items-center gap-2 p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg">
                             <AlertCircle size={16} className="shrink-0" />
@@ -165,7 +205,7 @@ export default function CreateContractModal({
                         <input
                             type="text"
                             required
-                            placeholder="e.g., Full Stack Development Contract"
+                            placeholder="e.g., Full Stack Web Application Development"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             disabled={isSubmitting || isLoadingData}
@@ -180,7 +220,7 @@ export default function CreateContractModal({
                         </label>
                         <textarea
                             rows={3}
-                            placeholder="Provide details about terms, expectations, or deliverables..."
+                            placeholder="Provide details about expectations, project deliverables, and milestones..."
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             disabled={isSubmitting || isLoadingData}
@@ -188,35 +228,28 @@ export default function CreateContractModal({
                         />
                     </div>
 
-                    {/* Total Amount */}
+                    {/* Total Amount (Read-Only) */}
                     <div className="space-y-1.5">
                         <label className="text-body-xs font-semibold text-on-surface">
                             Total Amount
                         </label>
-                        <div className="relative flex items-center">
-                            <span className="absolute left-3 text-gray-500">
-                                <DollarSign size={16} />
+                        <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface-container-lowest">
+                            <div className="flex items-center gap-2 text-on-surface font-semibold text-body-md">
+                                <DollarSign size={18} className="text-primary" />
+                                <span>
+                                    {isLoadingData ? "Loading..." : `$${bidAmount.toLocaleString()}`}
+                                </span>
+                            </div>
+                            <span className="text-body-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">
+                                Fixed from Proposal
                             </span>
-                            <input
-                                type="number"
-                                value={isLoadingData ? "" : totalAmount}
-                                onChange={(e) => {
-                                    const val = parseFloat(e.target.value);
-                                    setTotalAmount(isNaN(val) ? 0 : val);
-                                }}
-                                className="w-full text-body-sm pl-8 pr-3 py-2.5 border border-border rounded-lg bg-white text-on-surface font-semibold focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:bg-gray-50"
-                                min={1}
-                                step={1}
-                                placeholder={isLoadingData ? "Loading..." : "0.00"}
-                                disabled={isLoadingData || isSubmitting}
-                            />
                         </div>
                         <p className="text-body-xs text-on-surface-variant">
-                            Initial value loaded from the accepted proposal bid amount.
+                            Amount is locked to the accepted proposal bid amount.
                         </p>
                     </div>
 
-                    {/* Dates */}
+                    {/* Start Date & End Date */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-body-xs font-semibold text-on-surface">
@@ -247,21 +280,21 @@ export default function CreateContractModal({
                     </div>
                 </form>
 
-                {/* Modal Footer */}
+                {/* Modal Footer: Exactly Two Buttons (Cancel & Create) */}
                 <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-surface-container-lowest">
                     <button
                         type="button"
                         onClick={handleClose}
                         disabled={isSubmitting}
-                        className="px-4 py-2 text-body-sm font-medium border border-border rounded-lg text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50"
+                        className="px-4 py-2 text-body-sm font-medium border border-border rounded-lg text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50 cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         form="create-contract-form"
-                        disabled={isSubmitting || isLoadingData}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-body-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        disabled={isSubmitting || isLoadingData || !resolvedProposalId && !initialProposalId}
+                        className="inline-flex items-center gap-2 px-5 py-2 text-body-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
                     >
                         {isSubmitting ? (
                             <>

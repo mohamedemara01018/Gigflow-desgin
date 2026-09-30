@@ -15,18 +15,19 @@ export default function ClientBriefCard({ job: propJob, proposal }: ClientBriefC
 
     if (!job) return null;
 
-    const clientObj = typeof job.client === "object" ? job.client : null;
-    const clientName = clientObj?.companyName || clientObj?.name || "Client";
+    const clientObj = typeof job.client === "object" ? (job.client as any) : null;
+    const clientName = clientObj?.companyName || clientObj?.name || (clientObj?.firstName ? `${clientObj.firstName} ${clientObj.lastName || ""}`.trim() : "Client");
     const isPaymentVerified = clientObj?.paymentVerified ?? true;
 
     const jobTitle = job.title || "Job Posting";
-    const budgetAmount = job.budget?.amount ?? 0;
-    const experienceLevel = job.experienceLevel
-        ? `${job.experienceLevel.charAt(0).toUpperCase()}${job.experienceLevel.slice(1)} Level`
+    const budgetAmount = typeof job.budget === "number" ? job.budget : (job.budget as any)?.amount ?? 0;
+    const rawJob = job as any;
+    const experienceLevel = rawJob.experienceLevel
+        ? `${rawJob.experienceLevel.charAt(0).toUpperCase()}${rawJob.experienceLevel.slice(1)} Level`
         : "Expert Level";
 
-    const jobType = job.type
-        ? `${job.type.charAt(0).toUpperCase()}${job.type.slice(1)}`
+    const jobType = rawJob.type
+        ? `${rawJob.type.charAt(0).toUpperCase()}${rawJob.type.slice(1)}`
         : "Fixed";
 
     return (

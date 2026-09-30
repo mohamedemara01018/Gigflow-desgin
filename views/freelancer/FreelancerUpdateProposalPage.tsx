@@ -241,7 +241,7 @@ export default function FreelancerUpdateProposalPage({ proposalId }: { proposalI
                     </div>
                 </div>
 
-                <ProposalSidebar />
+                {job && <ProposalSidebar job={job} />}
             </div>
         </main>
     );

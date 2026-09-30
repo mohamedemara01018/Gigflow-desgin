@@ -18,14 +18,19 @@ import {
 } from "@/services/message.service";
 import {
     contractService,
-    IContract,
     ICreateContractDto,
     IUpdateContractDto,
     IRespondContractDto,
+    IContract,
 } from "@/services/contract.service";
+import {
+    milestoneService,
+    IMilestone,
+    ICreateMilestoneDto,
+} from "@/services/milestone.service";
 import ChatPanel from "@/components/features/shared/messages/Chatpanel";
 import ConversationList from "@/components/features/shared/messages/Conversationlist";
-import ProjectDossier from "@/components/features/shared/messages/Projectdossier";
+import ProjectDossier, { IContractWithMilestones } from "@/components/features/shared/messages/Projectdossier";
 import { ContractStatus, MessageStatus, MessageType, UserRole } from "@/utils/enums.utils";
 import { AppDispatch } from "@/store/store";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
@@ -39,20 +44,20 @@ const DURATION = 3000;
 interface MessagesPageProps {
     recipient?: string;
     job?: string;
-    proposal?: string
+    proposal?: string;
 }
 
 export default function MessagesPage({
     recipient,
     job,
-    proposal
+    proposal,
 }: MessagesPageProps) {
     const dispatch: AppDispatch = useDispatch();
 
     const [conversations, setConversations] = useState<IConversation[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [messages, setMessages] = useState<IMessage[]>([]);
-    const [activeContract, setActiveContract] = useState<IContract | null>(null);
+    const [activeContract, setActiveContract] = useState<IContractWithMilestones | null>(null);
     const [isLoadingContract, setIsLoadingContract] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isLoadingSendMessage, setIsLoadingSendMessage] = useState(false);
@@ -160,7 +165,7 @@ export default function MessagesPage({
         [currentUserRole, handleToast]
     );
 
-    // 3. Fetch Contract for Active Conversation
+    // 3. Fetch Contract and Milestones for Active Conversation
     const fetchContract = useCallback(
         async (contractIdOrObj: any) => {
             if (!contractIdOrObj) {
@@ -177,8 +182,18 @@ export default function MessagesPage({
 
             try {
                 setIsLoadingContract(true);
-                const res = await contractService.getContractById(contractId);
-                setActiveContract(res.data.contract);
+                const [contractRes, milestonesRes] = await Promise.all([
+                    contractService.getContractById(contractId),
+                    milestoneService.getContractMilestones(contractId).catch(() => ({ data: { milestones: [] } })),
+                ]);
+
+                const contractData = contractRes.data.contract;
+                const milestonesData = milestonesRes.data?.milestones || [];
+
+                setActiveContract({
+                    ...contractData,
+                    milestones: milestonesData,
+                });
             } catch (error: any) {
                 handleToast(error.message || "Failed to fetch contract details", "error");
                 setActiveContract(null);
@@ -203,7 +218,7 @@ export default function MessagesPage({
         }
     }, [activeConversation, fetchContract]);
 
-    // 4. Contract Operations (With Role and Active Status Checks)
+    // 4. Contract Operations
     const handleCreateContract = async (payload: ICreateContractDto) => {
         if (currentUserRole !== UserRole.CLIENT) {
             handleToast("Unauthorized: Only CLIENT can create contracts.", "error");
@@ -215,34 +230,63 @@ export default function MessagesPage({
             const res = await contractService.createContract(payload);
             const createdContract = res.data.contract;
 
-            setActiveContract(createdContract);
+            setActiveContract({
+                ...createdContract,
+                milestones: [],
+            });
 
-            // Update local conversation reference if applicable
+            // Update local conversation reference
             setConversations((prev) =>
                 prev.map((c) =>
                     c._id === activeId ? { ...c, contract: createdContract._id } : c
                 )
             );
 
-            handleToast("Contract created successfully", "success");
+            handleToast("Draft contract created successfully", "success");
         } catch (error: any) {
             handleToast(error.message || "Failed to create contract", "error");
+            throw error;
+        } finally {
+            setIsLoadingContract(false);
+        }
+    };
+
+    const handleSendContract = async (id: string) => {
+        try {
+            setIsLoadingContract(true);
+            const res = await contractService.sendContract(id);
+            setActiveContract((prev) => ({
+                ...(prev || ({} as any)),
+                ...res.data.contract,
+            }));
+            handleToast("Contract sent to freelancer for review", "success");
+        } catch (error: any) {
+            handleToast(error.message || "Failed to send contract", "error");
         } finally {
             setIsLoadingContract(false);
         }
     };
 
     const handleRespondToContract = async (id: string, payload: IRespondContractDto) => {
-        if (activeContract?.status === ContractStatus.ACTIVE) {
-            handleToast("Action restricted: Cannot respond to an active contract.", "error");
-            return;
-        }
-
         try {
             setIsLoadingContract(true);
             const res = await contractService.respondToContract(id, payload);
-            setActiveContract(res.data.contract);
-            handleToast(`Contract ${payload.action}ed successfully`, "success");
+            const updated = res.data.contract;
+
+            // Re-fetch milestones in case first milestone was activated
+            const milestonesRes = await milestoneService.getContractMilestones(id).catch(() => ({ data: { milestones: [] } }));
+
+            setActiveContract({
+                ...updated,
+                milestones: milestonesRes.data?.milestones || [],
+            });
+
+            handleToast(
+                payload.action === "accept"
+                    ? "Contract accepted! Work is now active."
+                    : "Contract declined.",
+                "success"
+            );
         } catch (error: any) {
             handleToast(error.message || "Failed to respond to contract", "error");
         } finally {
@@ -259,7 +303,10 @@ export default function MessagesPage({
         try {
             setIsLoadingContract(true);
             const res = await contractService.updateContract(id, payload);
-            setActiveContract(res.data.contract);
+            setActiveContract((prev) => ({
+                ...(prev || ({} as any)),
+                ...res.data.contract,
+            }));
             handleToast("Contract updated successfully", "success");
         } catch (error: any) {
             handleToast(error.message || "Failed to update contract", "error");
@@ -279,7 +326,6 @@ export default function MessagesPage({
             await contractService.deleteContract(id);
             setActiveContract(null);
 
-            // Clear contract reference from local conversation state
             setConversations((prev) =>
                 prev.map((c) => (c._id === activeId ? { ...c, contract: undefined } : c))
             );
@@ -292,7 +338,54 @@ export default function MessagesPage({
         }
     };
 
-    // 5. Socket Event Handlers
+    // 5. Milestone Operations
+    const handleCreateMilestone = async (payload: ICreateMilestoneDto) => {
+        try {
+            setIsLoadingContract(true);
+            const res = await milestoneService.createMilestone(payload);
+            const newMilestone = res.data.milestone;
+
+            setActiveContract((prev) => {
+                if (!prev) return prev;
+                const currentMilestones = prev.milestones || [];
+                return {
+                    ...prev,
+                    milestones: [...currentMilestones, newMilestone].sort((a, b) => (a.order || 0) - (b.order || 0)),
+                };
+            });
+
+            handleToast("Milestone created successfully", "success");
+        } catch (error: any) {
+            handleToast(error.message || "Failed to create milestone", "error");
+            throw error;
+        } finally {
+            setIsLoadingContract(false);
+        }
+    };
+
+    const handleDeleteMilestone = async (id: string) => {
+        try {
+            setIsLoadingContract(true);
+            await milestoneService.deleteMilestone(id);
+
+            setActiveContract((prev) => {
+                if (!prev) return prev;
+                const filtered = (prev.milestones || []).filter((m) => m._id !== id);
+                return {
+                    ...prev,
+                    milestones: filtered,
+                };
+            });
+
+            handleToast("Milestone deleted", "info");
+        } catch (error: any) {
+            handleToast(error.message || "Failed to delete milestone", "error");
+        } finally {
+            setIsLoadingContract(false);
+        }
+    };
+
+    // 6. Socket Event Handlers
     useEffect(() => {
         if (!activeId) return;
 
@@ -379,11 +472,110 @@ export default function MessagesPage({
             });
         };
 
+        // Realtime Contract Sockets
+        const handleContractCreated = (newContract: IContract) => {
+            const contractJobId = typeof newContract.job === "object" ? (newContract.job as any)._id : newContract.job;
+            const convJobId = typeof activeConversation?.job === "object" ? activeConversation?.job?._id : activeConversation?.job;
+
+            if (contractJobId === convJobId || (newContract as any).conversation === activeId) {
+                fetchContract(newContract._id);
+            }
+
+            setConversations((prev) =>
+                prev.map((c) => {
+                    const cJob = typeof c.job === "object" ? c.job?._id : c.job;
+                    if (cJob === contractJobId) {
+                        return { ...c, contract: newContract._id };
+                    }
+                    return c;
+                })
+            );
+        };
+
+        const handleContractUpdated = (updatedContract: IContract) => {
+            if (activeContract?._id === updatedContract._id) {
+                setActiveContract((prev) => ({
+                    ...(prev || ({} as any)),
+                    ...updatedContract,
+                    milestones: prev?.milestones || [],
+                }));
+
+                if (updatedContract._id) {
+                    milestoneService.getContractMilestones(updatedContract._id).then((mRes) => {
+                        setActiveContract((prev) => ({
+                            ...(prev || ({} as any)),
+                            ...updatedContract,
+                            milestones: mRes.data?.milestones || [],
+                        }));
+                    }).catch(() => {});
+                }
+            }
+        };
+
+        const handleContractDeleted = ({ contractId }: { contractId: string }) => {
+            if (activeContract?._id === contractId) {
+                setActiveContract(null);
+            }
+            setConversations((prev) =>
+                prev.map((c) => (c._id === activeId ? { ...c, contract: undefined } : c))
+            );
+        };
+
+        // Realtime Milestone Sockets
+        const handleMilestoneCreated = (newMilestone: IMilestone) => {
+            if (activeContract?._id === newMilestone.contract) {
+                setActiveContract((prev) => {
+                    if (!prev) return prev;
+                    const list = prev.milestones || [];
+                    if (list.some((m) => m._id === newMilestone._id)) return prev;
+                    return {
+                        ...prev,
+                        milestones: [...list, newMilestone].sort((a, b) => (a.order || 0) - (b.order || 0)),
+                    };
+                });
+            }
+        };
+
+        const handleMilestoneUpdated = (updatedMilestone: IMilestone) => {
+            if (activeContract?._id === updatedMilestone.contract) {
+                setActiveContract((prev) => {
+                    if (!prev) return prev;
+                    const list = prev.milestones || [];
+                    return {
+                        ...prev,
+                        milestones: list.map((m) => (m._id === updatedMilestone._id ? updatedMilestone : m)),
+                    };
+                });
+            }
+        };
+
+        const handleMilestoneDeleted = ({ milestoneId, contractId }: { milestoneId: string; contractId: string }) => {
+            if (activeContract?._id === contractId) {
+                setActiveContract((prev) => {
+                    if (!prev) return prev;
+                    const list = prev.milestones || [];
+                    return {
+                        ...prev,
+                        milestones: list.filter((m) => m._id !== milestoneId),
+                    };
+                });
+            }
+        };
+
         socket.on("message:received", handleNewMessage);
         socket.on("message:updated", handleMessageEdited);
         socket.on("message:deleted", handleMessageDeleted);
         socket.on("message:status_updated", handleStatusUpdated);
         socket.on("user_typing", handleUserTyping);
+
+        socket.on("contract:created", handleContractCreated);
+        socket.on("contract:sent", handleContractUpdated);
+        socket.on("contract:updated", handleContractUpdated);
+        socket.on("contract:deleted", handleContractDeleted);
+
+        socket.on("milestone:created", handleMilestoneCreated);
+        socket.on("milestone:updated", handleMilestoneUpdated);
+        socket.on("milestone:deleted", handleMilestoneDeleted);
 
         return () => {
             socket.emit("leave_conversation", { conversationId: activeId });
@@ -392,8 +584,17 @@ export default function MessagesPage({
             socket.off("message:deleted", handleMessageDeleted);
             socket.off("message:status_updated", handleStatusUpdated);
             socket.off("user_typing", handleUserTyping);
+
+            socket.off("contract:created", handleContractCreated);
+            socket.off("contract:sent", handleContractUpdated);
+            socket.off("contract:updated", handleContractUpdated);
+            socket.off("contract:deleted", handleContractDeleted);
+
+            socket.off("milestone:created", handleMilestoneCreated);
+            socket.off("milestone:updated", handleMilestoneUpdated);
+            socket.off("milestone:deleted", handleMilestoneDeleted);
         };
-    }, [activeId, currentUserId]);
+    }, [activeId, activeContract?._id, activeConversation?.job, currentUserId, fetchContract]);
 
     const handleStopTyping = useCallback(() => {
         if (isTypingRef.current && activeId && currentUserId) {
@@ -644,13 +845,16 @@ export default function MessagesPage({
                                     </div>
                                 ) : (
                                     <ProjectDossier
-                                        proposal={proposal!}
+                                        proposal={proposal}
                                         activeConversationId={activeId!}
                                         contract={activeContract}
                                         onCreateContract={handleCreateContract}
+                                        onSendContract={handleSendContract}
                                         onRespondContract={handleRespondToContract}
                                         onUpdateContract={handleUpdateContract}
                                         onDeleteContract={handleDeleteContract}
+                                        onCreateMilestone={handleCreateMilestone}
+                                        onDeleteMilestone={handleDeleteMilestone}
                                     />
                                 )
                             )}
@@ -691,7 +895,7 @@ export default function MessagesPage({
                         <div className="flex justify-end mb-2">
                             <button
                                 onClick={() => setIsDossierOpen(false)}
-                                className="text-body-sm font-semibold p-1"
+                                className="text-body-sm font-semibold p-1 cursor-pointer"
                             >
                                 Close ✕
                             </button>
@@ -703,14 +907,16 @@ export default function MessagesPage({
                                 </div>
                             ) : (
                                 <ProjectDossier
-                                    proposal={proposal!}
+                                    proposal={proposal}
                                     activeConversationId={activeId!}
-
                                     contract={activeContract}
                                     onCreateContract={handleCreateContract}
+                                    onSendContract={handleSendContract}
                                     onRespondContract={handleRespondToContract}
                                     onUpdateContract={handleUpdateContract}
                                     onDeleteContract={handleDeleteContract}
+                                    onCreateMilestone={handleCreateMilestone}
+                                    onDeleteMilestone={handleDeleteMilestone}
                                 />
                             )
                         )}
