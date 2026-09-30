@@ -146,10 +146,12 @@ export default function FreelancerSavedJobsPage() {
                             />
                         ))}
                         {filteredSavedJobs.length === 0 && (
-                            <EmptyState
-                                title="No saved jobs found matching your criteria."
-                                size="compact"
-                            />
+                            <div className="card text-center text-body-md text-on-surface-variant py-12!">
+                                <EmptyState
+                                    title="No saved jobs found matching your criteria."
+                                    size="compact"
+                                />
+                            </div>
                         )}
                     </div>
                 )}

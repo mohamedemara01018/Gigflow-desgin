@@ -20,7 +20,7 @@ import {
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import ReadOnlyOverview from "@/components/ui/ReadOnlyOverview";
-import AttachmentRow from "./AttachmentRow";
+import AttachmentRow from "../../../ui/AttachmentRow";
 
 import {
     attachmentService,

@@ -199,7 +199,7 @@ export default function FreelancerSubmitProposalPage({ jobId }: { jobId: string 
                     </div>
                 </div>
 
-                <ProposalSidebar />
+                {job && <ProposalSidebar job={job!} />}
             </div>
         </main>
     );

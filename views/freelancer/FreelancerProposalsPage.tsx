@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import ProposalCard from "@/components/features/freelancer/freelancer-proposals/Proposalcard";
 import { proposalService, IProposal } from "@/services/proposal.service";
+import EmptyState from "@/components/ui/Emptystate";
 
 
 
@@ -149,7 +150,10 @@ export default function FreelancerProposalsPage() {
 
                     {!loading && !error && filteredProposals.length === 0 && (
                         <div className="card text-center text-body-md text-on-surface-variant py-12!">
-                            No proposals match your current filters.
+                            <EmptyState
+                                title="No proposals match your current filters."
+                                size="compact"
+                            />
                         </div>
                     )}
                 </div>

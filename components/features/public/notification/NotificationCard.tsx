@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ExternalLink, Trash2 } from "lucide-react";
+import { ExternalLink, Trash2 } from "lucide-react";
 import UserImage from "@/components/ui/UserImage";
 import { formatDistanceToNow } from "@/utils/functions.utils";
 import { INotification } from "@/services/notification.service";
@@ -20,10 +20,16 @@ interface NotificationCardProps {
     onDelete: (id: string) => void;
 }
 
-export default function NotificationCard({ item, onMarkRead, onDelete }: NotificationCardProps) {
-    const senderName = item.sender
-        ? `${item.sender.firstName} ${item.sender.lastName}`.trim()
-        : "System";
+export default function NotificationCard({
+    item,
+    onMarkRead,
+    onDelete,
+}: NotificationCardProps) {
+    const firstName = item.sender?.firstName || "";
+    const lastName = item.sender?.lastName || "";
+    console.log(item )
+    const senderName =
+        firstName || lastName ? `${firstName} ${lastName}`.trim() : "System";
 
     return (
         <div
@@ -33,39 +39,45 @@ export default function NotificationCard({ item, onMarkRead, onDelete }: Notific
                 : "bg-primary/10 border-l-4 border-primary"
                 }`}
         >
-            {item.sender ? (
-                <UserImage
-                    avatarUrl={item.sender.avatar || ""}
-                    firstName={item.sender.firstName}
-                    lastName={item.sender.lastName}
-                    className="w-10 h-10"
-                />
-            ) : (
-                <span className="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0">
-                    <Bell size={18} />
-                </span>
-            )}
+            {/* Avatar Section using UserImage */}
+            <UserImage
+                avatarUrl={item.sender?.avatar || ""}
+                firstName={firstName}
+                lastName={lastName}
+                className="w-10 h-10 shrink-0"
+            />
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
+                    {/* Sender & Metadata Tags */}
                     <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-body-sm font-semibold text-on-surface">
                             {senderName}
                         </span>
+
                         {item.sender?.role && (
-                            <span className={`text-label-sm px-2 py-0.5 rounded-full ${BADGE_CLASSES.neutral}`}>
+                            <span
+                                className={`text-label-sm px-2 py-0.5 rounded-full capitalize ${BADGE_CLASSES.neutral}`}
+                            >
                                 {item.sender.role}
                             </span>
                         )}
+
                         {item.type && (
-                            <span className={`text-label-sm px-2 py-0.5 rounded-full font-semibold uppercase ${BADGE_CLASSES.primary}`}>
+                            <span
+                                className={`text-label-sm px-2 py-0.5 rounded-full font-semibold uppercase ${BADGE_CLASSES.primary}`}
+                            >
                                 {item.type}
                             </span>
                         )}
                     </div>
+
+                    {/* Timestamp and Delete Action */}
                     <div className="flex items-center gap-2 shrink-0">
                         <span className="flex items-center gap-1.5 text-label-sm text-on-surface-variant">
-                            {!item.isRead && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                            {!item.isRead && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            )}
                             {formatDistanceToNow(item.createdAt)}
                         </span>
                         <button
@@ -81,6 +93,7 @@ export default function NotificationCard({ item, onMarkRead, onDelete }: Notific
                     </div>
                 </div>
 
+                {/* Content Section */}
                 <p className="text-body-md font-semibold text-on-surface mt-1.5">
                     {item.title}
                 </p>
@@ -88,6 +101,7 @@ export default function NotificationCard({ item, onMarkRead, onDelete }: Notific
                     {item.message}
                 </p>
 
+                {/* Optional Action Link */}
                 {item.link && (
                     <div className="flex items-center gap-2 mt-3">
                         <a

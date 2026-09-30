@@ -29,7 +29,10 @@ const sharedProtectedRoutes = [
     "/profile",
     "/settings",
     "/jobs",
-    "/notification"
+    '/proposals',
+    '/upload-attachment',
+    "/notification",
+    '/messages'
 ];
 
 const authRoutes = [

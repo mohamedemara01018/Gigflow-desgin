@@ -120,38 +120,65 @@ export enum JobVisibility {
 
 
 export enum NotificationType {
+    // --- Proposals & Offers ---
     PROPOSAL_RECEIVED = "proposal_received",
     PROPOSAL_ACCEPTED = "proposal_accepted",
     PROPOSAL_REJECTED = "proposal_rejected",
+    PROPOSAL_WITHDRAWN = "proposal_withdrawn",
 
+    // --- Invitations ---
     INVITATION_RECEIVED = "invitation_received",
+    INVITATION_ACCEPTED = "invitation_accepted",
+    INVITATION_DECLINED = "invitation_declined",
 
+    // --- Contracts ---
     CONTRACT_CREATED = "contract_created",
     CONTRACT_UPDATED = "contract_updated",
     CONTRACT_COMPLETED = "contract_completed",
+    CONTRACT_CANCELLED = "contract_cancelled",
+    CONTRACT_PAUSED = "contract_paused",
 
+    // --- Milestones ---
     MILESTONE_CREATED = "milestone_created",
     MILESTONE_SUBMITTED = "milestone_submitted",
     MILESTONE_APPROVED = "milestone_approved",
     MILESTONE_REJECTED = "milestone_rejected",
+    MILESTONE_REVISED = "milestone_revised",
 
+    // --- Payments & Escrow ---
     PAYMENT_RECEIVED = "payment_received",
     PAYMENT_SENT = "payment_sent",
     PAYMENT_FAILED = "payment_failed",
+    PAYMENT_ESCROW_FUNDED = "payment_escrow_funded",
+    PAYMENT_REFUNDED = "payment_refunded",
 
-    MESSAGE_RECEIVED = "message_received",
+    // --- Messaging ---
+    // MESSAGE_RECEIVED = "message_received",
 
+    // --- Jobs ---
     JOB_POSTED = "job_posted",
+    JOB_UPDATED = "job_updated",
     JOB_CLOSED = "job_closed",
 
+    // --- Reviews & Feedback ---
     REVIEW_RECEIVED = "review_received",
+    REVIEW_UPDATED = "review_updated",
 
+    // --- Account Verification & KYC ---
     VERIFICATION_APPROVED = "verification_approved",
     VERIFICATION_REJECTED = "verification_rejected",
+    VERIFICATION_PENDING = "verification_pending",
 
+    // --- Payouts & Withdrawals ---
+    WITHDRAWAL_REQUESTED = "withdrawal_requested",
     WITHDRAWAL_COMPLETED = "withdrawal_completed",
     WITHDRAWAL_FAILED = "withdrawal_failed",
 
+    // --- Disputes ---
+    DISPUTE_OPENED = "dispute_opened",
+    DISPUTE_RESOLVED = "dispute_resolved",
+
+    // --- System & Announcements ---
     SYSTEM = "system",
 }
 
@@ -183,4 +210,51 @@ export enum DeliveryDurationUnit {
     WEEKS = "weeks",
     MONTHS = "months",
     YEARS = "years",
+}
+
+
+export enum ConversationStatus {
+    ACTIVE = "active",
+    ARCHIVED = "archived",
+    BLOCKED = "blocked",
+}
+
+export enum MessageType {
+    TEXT = "text",
+    IMAGE = "image",
+    FILE = "file",
+    SYSTEM = "system",
+}
+
+export enum MessageStatus {
+    SENT = "sent",
+    DELIVERED = "delivered",
+    READ = "read",
+    FAILED = "failed",
+}
+
+
+export enum ContractType {
+    FIXED = "fixed",
+    HOURLY = "hourly",
+}
+
+export enum ContractStatus {
+    DRAFT = "draft",
+    ACTIVE = "active",
+    PAUSED = "paused",
+    COMPLETED = "completed",
+    CANCELLED = "cancelled",
+    REJECTED = "rejected",
+    DISPUTED = "disputed",
+}
+
+
+export enum MilestoneStatus {
+    PENDING = "pending",
+    IN_PROGRESS = "in_progress",
+    SUBMITTED = "submitted",
+    APPROVED = "approved",
+    REJECTED = "rejected",
+    CANCELLED = "cancelled",
 }

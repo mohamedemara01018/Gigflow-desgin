@@ -41,7 +41,7 @@ export default function Navbar() {
     const navLinks = [
         { label: 'My Jobs', href: '/client/jobs' },
         { label: 'Find Talent', href: '/client/talent' },
-        { label: 'Messages', href: '/client/messages' },
+        { label: 'Messages', href: '/messages' },
         { label: 'Reports', href: '/client/reports' },
     ];
 

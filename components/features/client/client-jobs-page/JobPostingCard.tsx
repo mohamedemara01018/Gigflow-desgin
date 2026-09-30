@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
 import { UserRole } from "@/utils/enums.utils";
 import BookmarkButton from "@/components/ui/BookmarkButton";
+import Link from "next/link";
 
 const DURATION = 3000;
 
@@ -191,14 +192,14 @@ export default function JobPostingCard({ job, onRefresh }: { job: IJob; onRefres
                                     </button>
                                 ) : (
                                     <>
-                                        <button className="flex items-center gap-2 bg-primary text-on-primary text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity cursor-pointer">
+                                        <Link href={`/client/proposals/job/${job._id}`} className="flex items-center gap-2 bg-primary text-on-primary text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity cursor-pointer">
                                             View Proposals
                                             {!!job.proposalsCount && (
                                                 <span className="flex items-center justify-center w-5 h-5 rounded-full bg-on-primary/20 text-label-sm">
                                                     {job.proposalsCount}
                                                 </span>
                                             )}
-                                        </button>
+                                        </Link>
                                         <button
                                             onClick={() => router.push(`/jobs/${job._id}`)}
                                             className="bg-surface-variant text-on-surface-variant text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity cursor-pointer"

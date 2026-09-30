@@ -35,7 +35,7 @@ export interface IEstimatedDuration {
 export interface IProposal {
     _id: string;
     job: IJobRef;
-    freelancer: IFreelancerRef | string;
+    freelancer: IFreelancerRef;
     coverLetter: string;
     bidAmount: number;
     estimatedDuration: IEstimatedDuration;

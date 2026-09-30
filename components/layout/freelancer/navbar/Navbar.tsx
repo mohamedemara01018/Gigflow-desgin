@@ -57,7 +57,7 @@ function Navbar() {
                             <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="/">Browse</Link>
                             <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="/freelancer/proposals">Proposals</Link>
                             <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="/freelancer/saved-jobs">Saved Jobs</Link>
-                            <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">Messages</Link>
+                            <Link className="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="/messages">Messages</Link>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
