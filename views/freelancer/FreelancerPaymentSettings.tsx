@@ -1,164 +1,242 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import {
-    Landmark,
+    CreditCard,
     Plus,
-    ChevronDown,
-    FileText,
     Loader2,
+    AlertCircle,
+    ShieldCheck,
 } from "lucide-react";
-import { useState } from "react";
-
-
-
+import { IPaymentMethodItem, paymentMethodService } from "@/services/paymentMethod.service";
+import PaymentMethodCard from "@/components/features/shared/payment-methods/PaymentMethodCard";
+import AddPaymentMethodModal from "@/components/features/shared/payment-methods/AddPaymentMethodModal";
+import { useDispatch } from "react-redux";
+import { toastify } from "@/store/slices/toastificationSlice";
+import { DURATION } from "@/utils/constant.utils";
 
 export default function FreelancerPaymentSettings() {
+    const dispatch = useDispatch();
 
-    const [taxDocsLoading] = useState(true);
+    const [paymentMethods, setPaymentMethods] = useState<IPaymentMethodItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [actionId, setActionId] = useState<string | null>(null);
+    const [actionType, setActionType] = useState<"default" | "delete" | null>(null);
+
+    const fetchPaymentMethods = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const res = await paymentMethodService.getPaymentMethods();
+            if (res?.data?.paymentMethods) {
+                setPaymentMethods(res.data.paymentMethods);
+            }
+        } catch (err: any) {
+            setError(err?.message || "Failed to load payment methods");
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPaymentMethods();
+    }, [fetchPaymentMethods]);
+
+    const handleSetDefault = async (id: string) => {
+        // Optimistic update for instant UI feedback
+        setPaymentMethods((prev) =>
+            prev.map((pm) => ({
+                ...pm,
+                isDefault: pm._id === id,
+            }))
+        );
+
+        try {
+            setActionId(id);
+            setActionType("default");
+            const res = await paymentMethodService.setDefaultPaymentMethod(id);
+            if (res?.data?.paymentMethod) {
+                // Confirm with server response
+                setPaymentMethods((prev) =>
+                    prev.map((pm) => ({
+                        ...pm,
+                        isDefault: pm._id === id,
+                    }))
+                );
+            }
+            dispatch(
+                toastify({
+                    type: "success",
+                    message: "Default payment method updated successfully.",
+                    duration: DURATION,
+                })
+            );
+            await fetchPaymentMethods();
+        } catch (err: any) {
+            // Roll back on error
+            await fetchPaymentMethods();
+            dispatch(
+                toastify({
+                    type: "error",
+                    message: err?.message || "Failed to update default payment method.",
+                    duration: DURATION,
+                })
+            );
+        } finally {
+            setActionId(null);
+            setActionType(null);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        try {
+            setActionId(id);
+            setActionType("delete");
+            await paymentMethodService.deletePaymentMethod(id);
+            dispatch(
+                toastify({
+                    type: "success",
+                    message: "Payment method removed successfully.",
+                    duration: DURATION,
+                })
+            );
+            await fetchPaymentMethods();
+        } catch (err: any) {
+            dispatch(
+                toastify({
+                    type: "error",
+                    message: err?.message || "Failed to remove payment method.",
+                    duration: DURATION,
+                })
+            );
+        } finally {
+            setActionId(null);
+            setActionType(null);
+        }
+    };
 
     return (
         <div className="space-y-8">
             <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                     <h1 className="text-headline-lg text-on-surface">
-                        Payments &amp; Notifications
+                        Payments &amp; Payment Methods
                     </h1>
                     <p className="text-body-md text-on-surface-variant mt-2 max-w-140">
-                        Manage your earnings flow and control how GigFlow communicates
-                        with you.
+                        Manage your credit cards, bank accounts, and PayPal payment methods for
+                        secure billing and transactions.
                     </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button className="bg-surface-container-high text-on-surface text-label-md rounded-md px-5 py-2.5 hover:bg-surface-container-highest transition-colors">
-                        Discard Changes
-                    </button>
-                    <button className="bg-primary text-on-primary text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity">
-                        Save Preferences
-                    </button>
                 </div>
             </div>
 
             <div className="flex flex-col gap-6">
-                <section className="card">
-                    <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-headline-md text-on-surface">
-                            <Landmark size={20} className="text-primary" />
-                            Withdrawal Methods
-                        </span>
-                        <button className="flex items-center gap-1.5 text-primary text-label-md font-medium hover:underline">
+                {/* Payment Methods Section */}
+                <section className="bg-surface-container border border-outline-variant p-6 rounded-2xl shadow-xs">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex items-center gap-2.5">
+                            <CreditCard size={22} className="text-primary" />
+                            <h2 className="text-headline-sm font-semibold text-on-surface">
+                                Saved Payment Methods
+                            </h2>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="flex items-center gap-2 bg-primary text-on-primary text-label-md font-semibold px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-xs"
+                        >
                             <Plus size={16} />
-                            Add Method
+                            Add Payment Method
                         </button>
                     </div>
 
-                    <div className="flex flex-col gap-3 mt-5">
-                        <div className="flex items-center gap-3 bg-surface-container-low rounded-md p-4">
-                            <span className="w-10 h-10 rounded-md bg-surface-container-high flex items-center justify-center">
-                                <Landmark size={18} className="text-on-surface-variant" />
-                            </span>
-                            <div className="flex-1">
-                                <span className="flex items-center gap-2">
-                                    <p className="text-body-md font-medium text-on-surface">
-                                        Chase Bank ****8921
-                                    </p>
-                                    <span className="text-label-sm bg-primary text-on-primary px-2 py-0.5 rounded-full">
-                                        DEFAULT
-                                    </span>
-                                </span>
-                                <p className="text-body-sm text-on-surface-variant mt-0.5">
-                                    USD • Checking Account
-                                </p>
+                    <div className="mt-5">
+                        {isLoading ? (
+                            <div className="py-12 flex flex-col items-center justify-center gap-3 text-on-surface-variant bg-surface-container rounded-xl">
+                                <Loader2 size={28} className="text-primary animate-spin" />
+                                <p className="text-body-sm font-medium">Loading payment methods...</p>
                             </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 bg-surface-container-low rounded-md p-4">
-                            <span className="w-10 h-10 rounded-md bg-surface-container-high flex items-center justify-center text-secondary font-bold text-body-md">
-                                P
-                            </span>
-                            <div>
-                                <p className="text-body-md font-medium text-on-surface">
-                                    alex.rivera@example.com
-                                </p>
-                                <p className="text-body-sm text-on-surface-variant mt-0.5">
-                                    EUR • PayPal Account
-                                </p>
+                        ) : error ? (
+                            <div className="p-4 bg-error/10 border border-error/20 rounded-xl flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2 text-error text-body-sm">
+                                    <AlertCircle size={18} className="shrink-0" />
+                                    <span>{error}</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={fetchPaymentMethods}
+                                    className="px-3 py-1.5 rounded-lg bg-error text-on-error text-label-sm font-medium hover:opacity-90 cursor-pointer shrink-0"
+                                >
+                                    Retry
+                                </button>
                             </div>
-                        </div>
+                        ) : paymentMethods.length === 0 ? (
+                            <div className="text-center py-10 px-4 border border-dashed border-outline-variant rounded-xl bg-surface-container">
+                                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
+                                    <CreditCard size={22} />
+                                </div>
+                                <h3 className="text-body-lg font-semibold text-on-surface">
+                                    No payment methods saved
+                                </h3>
+                                <p className="text-body-sm text-on-surface-variant max-w-md mx-auto mt-1 mb-4">
+                                    Add a credit/debit card, US bank account, or PayPal to seamlessly pay for contracts and milestones.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-on-primary text-label-md font-medium hover:opacity-90 cursor-pointer shadow-xs"
+                                >
+                                    <Plus size={16} />
+                                    Add Payment Method
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                {paymentMethods.map((method) => (
+                                    <PaymentMethodCard
+                                        key={method._id}
+                                        method={method}
+                                        onSetDefault={handleSetDefault}
+                                        onDelete={handleDelete}
+                                        isSettingDefault={
+                                            actionId === method._id && actionType === "default"
+                                        }
+                                        isDeleting={
+                                            actionId === method._id && actionType === "delete"
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </section>
 
-                <section className="card">
-                    <span className="flex items-center gap-2 text-headline-md text-on-surface">
-                        <Landmark size={20} className="text-primary" />
-                        Payment Preferences
-                    </span>
 
-                    <div className="grid sm:grid-cols-2 gap-6 mt-5">
-                        <div>
-                            <label className="text-body-sm font-medium text-on-surface block mb-2">
-                                Primary Currency
-                            </label>
-                            <div className="relative">
-                                <select
-                                    defaultValue="USD - US Dollar"
-                                    className="w-full appearance-none bg-surface-container-low rounded-md px-3.5 py-2.5 pr-9 text-body-md text-on-surface outline-none"
-                                >
-                                    <option>USD - US Dollar</option>
-                                </select>
-                                <ChevronDown
-                                    size={16}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
-                                />
-                            </div>
-                            <p className="text-body-sm text-on-surface-variant mt-2">
-                                Earnings will be converted to this currency before
-                                withdrawal.
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="text-body-sm font-medium text-on-surface block mb-2">
-                                Withdrawal Schedule
-                            </label>
-                            <div className="relative">
-                                <select
-                                    defaultValue="Weekly (Every Wednesday)"
-                                    className="w-full appearance-none bg-surface-container-low rounded-md px-3.5 py-2.5 pr-9 text-body-md text-on-surface outline-none"
-                                >
-                                    <option>Weekly (Every Wednesday)</option>
-                                </select>
-                                <ChevronDown
-                                    size={16}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
-                                />
-                            </div>
-                            <p className="text-body-sm text-on-surface-variant mt-2">
-                                Auto-withdraw balances over $100.00.
-                            </p>
-                        </div>
+                {/* Security and Compliance */}
+                <section className="bg-surface-container border border-outline-variant p-6 rounded-2xl shadow-xs">
+                    <div className="flex items-center gap-2.5 text-on-surface">
+                        <ShieldCheck size={22} className="text-primary" />
+                        <h2 className="text-headline-sm font-semibold text-on-surface">
+                            Security &amp; Encryption
+                        </h2>
                     </div>
+                    <p className="text-body-sm text-on-surface-variant mt-2">
+                        All transactions are encrypted with 256-bit AES encryption. GigFlow adheres to
+                        strict PCI-DSS Level 1 compliance standards through Stripe infrastructure.
+                    </p>
                 </section>
-
-                <section className="card min-h-45 flex items-center justify-center">
-                    {taxDocsLoading ? (
-                        <div className="flex flex-col items-center gap-3 text-on-surface-variant">
-                            <Loader2 size={28} className="text-primary animate-spin" />
-                            <p className="text-body-md font-medium text-on-surface">
-                                Loading Tax Documents…
-                            </p>
-                            <p className="text-body-sm">
-                                Fetching your latest W-9 and 1099 forms.
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="w-full flex items-center gap-2 text-headline-md text-on-surface">
-                            <FileText size={20} className="text-primary" />
-                            Tax Information
-                        </div>
-                    )}
-                </section>
-
             </div>
+
+            {/* Add Payment Method Modal */}
+            <AddPaymentMethodModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSuccess={fetchPaymentMethods}
+            />
         </div>
     );
 }

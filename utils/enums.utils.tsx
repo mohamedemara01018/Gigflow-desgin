@@ -258,3 +258,24 @@ export enum MilestoneStatus {
     REJECTED = "rejected",
     CANCELLED = "cancelled",
 }
+
+export enum PaymentMethod {
+    CARD = "card",
+    US_BANK_ACCOUNT = "us_bank_account",
+    PAYPAL = "paypal",
+}
+
+export enum PaymentStatus {
+    PENDING = "pending",
+    PROCESSING = "processing",
+    COMPLETED = "completed",
+    FAILED = "failed",
+    REFUNDED = "refunded",
+    PARTIALLY_REFUNDED = "partially_refunded",
+    CANCELLED = "cancelled",
+}
+
+export enum PaymentType {
+    MILESTONE = "milestone",
+    CONTRACT = "contract",
+}
