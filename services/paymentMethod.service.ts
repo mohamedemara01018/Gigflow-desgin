@@ -62,6 +62,32 @@ export interface IPaymentMethodSingleResponse {
     };
 }
 
+export interface IStripeConnectStatus {
+    hasConnectAccount: boolean;
+    stripeConnectAccountId: string | null;
+    detailsSubmitted: boolean;
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+    onboardingComplete: boolean;
+}
+
+export interface IStripeConnectStatusResponse {
+    status: string;
+    success: boolean;
+    data: IStripeConnectStatus;
+}
+
+export interface IStripeConnectOnboardingResponse {
+    status: string;
+    success: boolean;
+    message: string;
+    url: string;
+    data: {
+        url: string;
+        stripeConnectAccountId: string;
+    };
+}
+
 export const paymentMethodService = {
     createSetupIntent: async (): Promise<ISetupIntentResponse> => {
         const response = await fetch(`${BASE_URL}/api/payment-methods/setup-intent`, {
@@ -156,6 +182,57 @@ export const paymentMethodService = {
         const data = await response.json();
         if (!response.ok) {
             throw new Error(data.message || "Failed to delete payment method");
+        }
+        return data;
+    },
+
+    // ==========================================
+    // STRIPE CONNECT ONBOARDING & STATUS
+    // ==========================================
+    createConnectOnboardingLink: async (): Promise<IStripeConnectOnboardingResponse> => {
+        const response = await fetch(`${BASE_URL}/api/stripe/connect/onboarding`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to start Stripe Connect onboarding");
+        }
+        return data;
+    },
+
+    getConnectStatus: async (): Promise<IStripeConnectStatusResponse> => {
+        const response = await fetch(`${BASE_URL}/api/stripe/connect/status`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to fetch Stripe Connect status");
+        }
+        return data;
+    },
+
+    createConnectDashboardLink: async (): Promise<{ success: boolean; url: string; data?: any }> => {
+        const response = await fetch(`${BASE_URL}/api/stripe/connect/dashboard`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to open Stripe Connect dashboard");
         }
         return data;
     },

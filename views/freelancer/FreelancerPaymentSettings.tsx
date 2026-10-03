@@ -1,54 +1,96 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import {
-    CreditCard,
-    Plus,
-    Loader2,
-    AlertCircle,
-    ShieldCheck,
-} from "lucide-react";
-import { IPaymentMethodItem, paymentMethodService } from "@/services/paymentMethod.service";
-import PaymentMethodCard from "@/components/features/shared/payment-methods/PaymentMethodCard";
-import AddPaymentMethodModal from "@/components/features/shared/payment-methods/AddPaymentMethodModal";
-import { useDispatch } from "react-redux";
+import { SetStateAction, useCallback, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { toastify } from "@/store/slices/toastificationSlice";
 import { DURATION } from "@/utils/constant.utils";
+import {
+    IPaymentMethodItem,
+    IStripeConnectStatus,
+    paymentMethodService,
+} from "@/services/paymentMethod.service";
+
+import AddPaymentMethodModal from "@/components/features/shared/payment-methods/AddPaymentMethodModal";
+import PaymentMethodDetailsModal from "@/components/features/shared/payment-methods/PaymentMethodDetailsModal";
+import DeletePaymentMethodModal from "@/components/features/shared/payment-methods/DeletePaymentMethodModal";
+import StripeConnectSection from "@/components/features/freelancer/freelancer-payment-settings/StripeConnectSection";
+import SavedPaymentMethodsSection from "@/components/features/freelancer/freelancer-payment-settings/SavedPaymentMethodsSection";
+import SecurityComplianceSection from "@/components/features/freelancer/freelancer-payment-settings/SecurityComplianceSection";
+import { selectMeSlice } from "@/store/slices/auth/authSlice";
+import { UserRole } from "@/utils/enums.utils";
+
+
 
 export default function FreelancerPaymentSettings() {
     const dispatch = useDispatch();
 
+    // Payment Methods State
     const [paymentMethods, setPaymentMethods] = useState<IPaymentMethodItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [isLoadingMethods, setIsLoadingMethods] = useState(true);
+    const [methodsError, setMethodsError] = useState<string | null>(null);
 
+    // Stripe Connect Payouts State
+    const [connectStatus, setConnectStatus] = useState<IStripeConnectStatus | null>(null);
+    const [isLoadingConnect, setIsLoadingConnect] = useState(true);
+    const [connectError, setConnectError] = useState<string | null>(null);
+    const [isStartingOnboarding, setIsStartingOnboarding] = useState(false);
+    const [isOpeningDashboard, setIsOpeningDashboard] = useState(false);
+
+    // Modals state
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [selectedDetailsMethod, setSelectedDetailsMethod] = useState<IPaymentMethodItem | null>(null);
+    const [methodToDelete, setMethodToDelete] = useState<IPaymentMethodItem | null>(null);
+
+    // Async action indicators
     const [actionId, setActionId] = useState<string | null>(null);
     const [actionType, setActionType] = useState<"default" | "delete" | null>(null);
 
+    const { me } = useSelector(selectMeSlice);
+
+    const isFreelancer = me?.role == UserRole.FREELANCER
+    const isClient = me?.role == UserRole.CLIENT
+
     const fetchPaymentMethods = useCallback(async () => {
         try {
-            setIsLoading(true);
-            setError(null);
+            setIsLoadingMethods(true);
+            setMethodsError(null);
             const res = await paymentMethodService.getPaymentMethods();
             if (res?.data?.paymentMethods) {
                 setPaymentMethods(res.data.paymentMethods);
+            } else {
+                setPaymentMethods([]);
             }
         } catch (err: any) {
-            setError(err?.message || "Failed to load payment methods");
+            setMethodsError(err?.message || "Failed to load payment methods");
         } finally {
-            setIsLoading(false);
+            setIsLoadingMethods(false);
+        }
+    }, []);
+
+    const fetchConnectStatus = useCallback(async () => {
+        try {
+            setIsLoadingConnect(true);
+            setConnectError(null);
+            const res = await paymentMethodService.getConnectStatus();
+            if (res?.data) {
+                setConnectStatus(res.data);
+            }
+        } catch (err: any) {
+            console.warn("Notice: fetchConnectStatus:", err?.message);
+            setConnectError(err?.message || "Failed to load payout account status");
+        } finally {
+            setIsLoadingConnect(false);
         }
     }, []);
 
     useEffect(() => {
         fetchPaymentMethods();
-    }, [fetchPaymentMethods]);
+        fetchConnectStatus();
+    }, [fetchPaymentMethods, fetchConnectStatus]);
 
     const handleSetDefault = async (id: string) => {
-        // Optimistic update for instant UI feedback
         setPaymentMethods((prev) =>
             prev.map((pm) => ({
                 ...pm,
@@ -56,12 +98,17 @@ export default function FreelancerPaymentSettings() {
             }))
         );
 
+        if (selectedDetailsMethod && selectedDetailsMethod._id === id) {
+            setSelectedDetailsMethod((prev) =>
+                prev ? { ...prev, isDefault: true } : null
+            );
+        }
+
         try {
             setActionId(id);
             setActionType("default");
             const res = await paymentMethodService.setDefaultPaymentMethod(id);
             if (res?.data?.paymentMethod) {
-                // Confirm with server response
                 setPaymentMethods((prev) =>
                     prev.map((pm) => ({
                         ...pm,
@@ -78,7 +125,6 @@ export default function FreelancerPaymentSettings() {
             );
             await fetchPaymentMethods();
         } catch (err: any) {
-            // Roll back on error
             await fetchPaymentMethods();
             dispatch(
                 toastify({
@@ -93,11 +139,35 @@ export default function FreelancerPaymentSettings() {
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleConfirmDelete = async () => {
+        if (!methodToDelete) return;
+
+        if (methodToDelete.isDefault) {
+            dispatch(
+                toastify({
+                    type: "error",
+                    message: "You cannot delete your default payment method. Please set another payment method as default first.",
+                    duration: DURATION,
+                })
+            );
+            setMethodToDelete(null);
+            return;
+        }
+
+        const targetId = methodToDelete._id;
+
         try {
-            setActionId(id);
+            setActionId(targetId);
             setActionType("delete");
-            await paymentMethodService.deletePaymentMethod(id);
+
+            setPaymentMethods((prev) => prev.filter((pm) => pm._id !== targetId));
+
+            if (selectedDetailsMethod?._id === targetId) {
+                setSelectedDetailsMethod(null);
+            }
+
+            await paymentMethodService.deletePaymentMethod(targetId);
+
             dispatch(
                 toastify({
                     type: "success",
@@ -105,8 +175,11 @@ export default function FreelancerPaymentSettings() {
                     duration: DURATION,
                 })
             );
+
+            setMethodToDelete(null);
             await fetchPaymentMethods();
         } catch (err: any) {
+            await fetchPaymentMethods();
             dispatch(
                 toastify({
                     type: "error",
@@ -120,122 +193,122 @@ export default function FreelancerPaymentSettings() {
         }
     };
 
+    const handleStartConnectOnboarding = async () => {
+        try {
+            setIsStartingOnboarding(true);
+            const res = await paymentMethodService.createConnectOnboardingLink();
+            if (res?.url) {
+                window.location.href = res.url;
+            } else {
+                throw new Error("Did not receive a valid redirect URL from Stripe");
+            }
+        } catch (err: any) {
+            dispatch(
+                toastify({
+                    type: "error",
+                    message: err?.message || "Failed to initiate Stripe Connect onboarding.",
+                    duration: DURATION,
+                })
+            );
+            setIsStartingOnboarding(false);
+        }
+    };
+
+    const handleOpenConnectDashboard = async () => {
+        try {
+            setIsOpeningDashboard(true);
+            const res = await paymentMethodService.createConnectDashboardLink();
+            if (res?.url) {
+                window.open(res.url, "_blank", "noopener,noreferrer");
+            } else {
+                throw new Error("Unable to create Stripe dashboard link");
+            }
+        } catch (err: any) {
+            dispatch(
+                toastify({
+                    type: "error",
+                    message: err?.message || "Failed to open Stripe dashboard.",
+                    duration: DURATION,
+                })
+            );
+        } finally {
+            setIsOpeningDashboard(false);
+        }
+    };
+
     return (
         <div className="space-y-8">
             <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                     <h1 className="text-headline-lg text-on-surface">
-                        Payments &amp; Payment Methods
+                        Payments &amp; Payouts
                     </h1>
-                    <p className="text-body-md text-on-surface-variant mt-2 max-w-140">
-                        Manage your credit cards, bank accounts, and PayPal payment methods for
-                        secure billing and transactions.
+                    <p className="text-body-md text-on-surface-variant mt-2 max-w-160">
+                        Manage your saved payment methods for billing and configure your Stripe Connect
+                        account to receive direct payouts for your completed contracts and milestones.
                     </p>
                 </div>
             </div>
 
-            <div className="flex flex-col gap-6">
-                {/* Payment Methods Section */}
-                <section className="bg-surface-container border border-outline-variant p-6 rounded-2xl shadow-xs">
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-2.5">
-                            <CreditCard size={22} className="text-primary" />
-                            <h2 className="text-headline-sm font-semibold text-on-surface">
-                                Saved Payment Methods
-                            </h2>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="flex items-center gap-2 bg-primary text-on-primary text-label-md font-semibold px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-xs"
-                        >
-                            <Plus size={16} />
-                            Add Payment Method
-                        </button>
-                    </div>
+            <div className="flex flex-col gap-8">
+                {isFreelancer && <StripeConnectSection
+                    connectStatus={connectStatus}
+                    isLoadingConnect={isLoadingConnect}
+                    connectError={connectError}
+                    isStartingOnboarding={isStartingOnboarding}
+                    isOpeningDashboard={isOpeningDashboard}
+                    onRetry={fetchConnectStatus}
+                    onStartOnboarding={handleStartConnectOnboarding}
+                    onOpenDashboard={handleOpenConnectDashboard}
+                />}
 
-                    <div className="mt-5">
-                        {isLoading ? (
-                            <div className="py-12 flex flex-col items-center justify-center gap-3 text-on-surface-variant bg-surface-container rounded-xl">
-                                <Loader2 size={28} className="text-primary animate-spin" />
-                                <p className="text-body-sm font-medium">Loading payment methods...</p>
-                            </div>
-                        ) : error ? (
-                            <div className="p-4 bg-error/10 border border-error/20 rounded-xl flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2 text-error text-body-sm">
-                                    <AlertCircle size={18} className="shrink-0" />
-                                    <span>{error}</span>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={fetchPaymentMethods}
-                                    className="px-3 py-1.5 rounded-lg bg-error text-on-error text-label-sm font-medium hover:opacity-90 cursor-pointer shrink-0"
-                                >
-                                    Retry
-                                </button>
-                            </div>
-                        ) : paymentMethods.length === 0 ? (
-                            <div className="text-center py-10 px-4 border border-dashed border-outline-variant rounded-xl bg-surface-container">
-                                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
-                                    <CreditCard size={22} />
-                                </div>
-                                <h3 className="text-body-lg font-semibold text-on-surface">
-                                    No payment methods saved
-                                </h3>
-                                <p className="text-body-sm text-on-surface-variant max-w-md mx-auto mt-1 mb-4">
-                                    Add a credit/debit card, US bank account, or PayPal to seamlessly pay for contracts and milestones.
-                                </p>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAddModalOpen(true)}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-on-primary text-label-md font-medium hover:opacity-90 cursor-pointer shadow-xs"
-                                >
-                                    <Plus size={16} />
-                                    Add Payment Method
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-3">
-                                {paymentMethods.map((method) => (
-                                    <PaymentMethodCard
-                                        key={method._id}
-                                        method={method}
-                                        onSetDefault={handleSetDefault}
-                                        onDelete={handleDelete}
-                                        isSettingDefault={
-                                            actionId === method._id && actionType === "default"
-                                        }
-                                        isDeleting={
-                                            actionId === method._id && actionType === "delete"
-                                        }
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </section>
+                {isClient && <SavedPaymentMethodsSection
+                    paymentMethods={paymentMethods}
+                    isLoadingMethods={isLoadingMethods}
+                    methodsError={methodsError}
+                    actionId={actionId}
+                    actionType={actionType}
+                    onOpenAddModal={() => setIsAddModalOpen(true)}
+                    onRetry={fetchPaymentMethods}
+                    onSetDefault={handleSetDefault}
+                    onDeleteRequest={(m: SetStateAction<IPaymentMethodItem | null>) => setMethodToDelete(m)}
+                    onViewDetails={(m: SetStateAction<IPaymentMethodItem | null>) => setSelectedDetailsMethod(m)}
+                />}
 
-
-                {/* Security and Compliance */}
-                <section className="bg-surface-container border border-outline-variant p-6 rounded-2xl shadow-xs">
-                    <div className="flex items-center gap-2.5 text-on-surface">
-                        <ShieldCheck size={22} className="text-primary" />
-                        <h2 className="text-headline-sm font-semibold text-on-surface">
-                            Security &amp; Encryption
-                        </h2>
-                    </div>
-                    <p className="text-body-sm text-on-surface-variant mt-2">
-                        All transactions are encrypted with 256-bit AES encryption. GigFlow adheres to
-                        strict PCI-DSS Level 1 compliance standards through Stripe infrastructure.
-                    </p>
-                </section>
+                <SecurityComplianceSection />
             </div>
 
-            {/* Add Payment Method Modal */}
+            {/* Modals */}
             <AddPaymentMethodModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 onSuccess={fetchPaymentMethods}
+            />
+
+            <PaymentMethodDetailsModal
+                isOpen={!!selectedDetailsMethod}
+                onClose={() => setSelectedDetailsMethod(null)}
+                method={selectedDetailsMethod}
+                onSetDefault={handleSetDefault}
+                onDeleteRequest={(m) => {
+                    setSelectedDetailsMethod(null);
+                    setMethodToDelete(m);
+                }}
+                isSettingDefault={
+                    !!selectedDetailsMethod &&
+                    actionId === selectedDetailsMethod._id &&
+                    actionType === "default"
+                }
+            />
+
+            <DeletePaymentMethodModal
+                isOpen={!!methodToDelete}
+                onClose={() => {
+                    if (!actionType) setMethodToDelete(null);
+                }}
+                onConfirm={handleConfirmDelete}
+                method={methodToDelete}
+                isDeleting={actionType === "delete"}
             />
         </div>
     );

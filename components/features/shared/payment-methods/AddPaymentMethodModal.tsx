@@ -123,6 +123,11 @@ function StripeSetupForm({
                     options={{
                         layout: "tabs",
                         paymentMethodOrder: ["card", "us_bank_account", "paypal"],
+                        wallets: {
+                            link: "never",
+                            googlePay: "never",
+                            applePay: "never",
+                        },
                     }}
                 />
             </div>
