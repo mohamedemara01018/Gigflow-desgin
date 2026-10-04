@@ -1,9 +1,23 @@
 import Logo from '@/components/ui/Logo';
-import { ArrowRight, BoltIcon } from '../../../features/public/landing/Icons';
+import { ArrowRight } from '../../../features/public/landing/Icons';
 
-const connectLinks = ['About Us', 'Careers', 'Help Center'];
-const legalLinks = ['Privacy Policy', 'Terms of Service', 'Cookie Policy'];
-const bottomLinks = ['Privacy', 'Terms', 'Cookies'];
+const connectLinks = [
+    { label: 'About Us', href: '/about' },
+    { label: 'Careers', href: '/careers' },
+    { label: 'Help Center', href: '/contact-support' },
+];
+
+const legalLinks = [
+    { label: 'Privacy Policy', href: '/privacy-policy' },
+    { label: 'Terms of Service', href: '/terms-of-service' },
+    { label: 'Cookie Policy', href: '/cookies' },
+];
+
+const bottomLinks = [
+    { label: 'Privacy', href: '/privacy-policy' },
+    { label: 'Terms', href: '/terms-of-service' },
+    { label: 'Cookies', href: '/cookies' },
+];
 
 export default function Footer() {
     return (
@@ -20,42 +34,45 @@ export default function Footer() {
                 {/* Connect */}
                 <div className="flex flex-col gap-3">
                     <p className="text-xs font-bold uppercase tracking-widest text-inverse-on-surface/50">Connect</p>
-                    {connectLinks.map((l) => (
-                        <a key={l} href="#" className="text-sm text-inverse-on-surface/60 hover:text-inverse-on-surface transition-colors">{l}</a>
+                    {connectLinks.map((link) => (
+                        <a
+                            key={link.label}
+                            href={link.href}
+                            className="text-sm text-inverse-on-surface/60 hover:text-inverse-on-surface transition-colors"
+                        >
+                            {link.label}
+                        </a>
                     ))}
                 </div>
 
                 {/* Legal */}
                 <div className="flex flex-col gap-3">
                     <p className="text-xs font-bold uppercase tracking-widest text-inverse-on-surface/50">Legal</p>
-                    {legalLinks.map((l) => (
-                        <a key={l} href="#" className="text-sm text-inverse-on-surface/60 hover:text-inverse-on-surface transition-colors">{l}</a>
+                    {legalLinks.map((link) => (
+                        <a
+                            key={link.label}
+                            href={link.href}
+                            className="text-sm text-inverse-on-surface/60 hover:text-inverse-on-surface transition-colors"
+                        >
+                            {link.label}
+                        </a>
                     ))}
                 </div>
 
-                {/* Newsletter */}
-                <div className="flex flex-col gap-3 col-span-2 md:col-span-1">
-                    <p className="text-xs font-bold uppercase tracking-widest text-inverse-on-surface/50">Newsletter</p>
-                    <p className="text-sm text-inverse-on-surface/60">Get the latest gigs and talent trends.</p>
-                    <div className="flex gap-2">
-                        <input
-                            type="email"
-                            placeholder="you@company.com"
-                            className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-inverse-on-surface/10 border border-inverse-on-surface/20 text-sm text-inverse-on-surface placeholder:text-inverse-on-surface/40 focus:outline-none focus:border-inverse-primary transition-colors"
-                        />
-                        <button className="btn-primary p-2.5 rounded-xl text-on-primary flex-shrink-0">
-                            <ArrowRight />
-                        </button>
-                    </div>
-                </div>
             </div>
 
             {/* Bottom bar */}
             <div className="border-t border-inverse-on-surface/10 px-6 py-5 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
                 <p className="text-xs text-inverse-on-surface/50">© 2025 GigFlow. All rights reserved.</p>
                 <div className="flex gap-4">
-                    {bottomLinks.map((t) => (
-                        <a key={t} href="#" className="text-xs text-inverse-on-surface/50 hover:text-inverse-on-surface/80 transition-colors">{t}</a>
+                    {bottomLinks.map((link) => (
+                        <a
+                            key={link.label}
+                            href={link.href}
+                            className="text-xs text-inverse-on-surface/50 hover:text-inverse-on-surface/80 transition-colors"
+                        >
+                            {link.label}
+                        </a>
                     ))}
                 </div>
             </div>

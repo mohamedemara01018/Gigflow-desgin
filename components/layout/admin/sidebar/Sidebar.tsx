@@ -92,7 +92,7 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Platform Setup",
         items: [
             { href: "/admin/verifications", label: "Verifications", icon: IdCard },
-            { href: "/admin/reports", label: "Reports", icon: AlertTriangle },
+            { href: "/admin/contact-support", label: "Contacts suppport", icon: AlertTriangle },
             { href: "/admin/categories", label: "Categories", icon: LayoutGrid },
             { href: "/admin/skills", label: "Skills", icon: Wrench },
             { href: "/admin/regions", label: "Regions", icon: Building2 },
@@ -173,15 +173,15 @@ export default function Sidebar({
                                                 key={href}
                                                 href={href}
                                                 className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-body-md transition-all duration-150 ${isActive
-                                                        ? "bg-primary/10 text-primary font-semibold"
-                                                        : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                                                    ? "bg-primary/10 text-primary font-semibold"
+                                                    : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
                                                     }`}
                                             >
                                                 <Icon
                                                     size={19}
                                                     className={`shrink-0 transition-transform duration-150 group-hover:scale-110 ${isActive
-                                                            ? "text-primary"
-                                                            : "text-on-surface-variant group-hover:text-on-surface"
+                                                        ? "text-primary"
+                                                        : "text-on-surface-variant group-hover:text-on-surface"
                                                         }`}
                                                 />
                                                 <span className="truncate">{label}</span>
@@ -255,8 +255,8 @@ export default function Sidebar({
             {/* Mobile / Tablet Drawer */}
             <div
                 className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isOpenMobile
-                        ? "opacity-100 pointer-events-auto"
-                        : "opacity-0 pointer-events-none"
+                    ? "opacity-100 pointer-events-auto"
+                    : "opacity-0 pointer-events-none"
                     }`}
             >
                 <div

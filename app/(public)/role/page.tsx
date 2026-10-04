@@ -2,8 +2,9 @@
 import { useState } from "react";
 import { Briefcase, UserSearch, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { UserRole } from "@/utils/enums.utils";
 
-type Role = "client" | "freelancer";
+type Role = UserRole.CLIENT | UserRole.FREELANCER;
 
 const ROLES: {
     id: Role;
@@ -13,7 +14,7 @@ const ROLES: {
     points: string[];
 }[] = [
         {
-            id: "client",
+            id: UserRole.CLIENT,
             icon: Briefcase,
             title: "I want to hire talent",
             description:
@@ -24,7 +25,7 @@ const ROLES: {
             ],
         },
         {
-            id: "freelancer",
+            id: UserRole.FREELANCER,
             icon: UserSearch,
             title: "I want to work",
             description:
@@ -73,7 +74,7 @@ export default function JoinSelection() {
                                     {title}
                                 </h2>
 
-                                <p className="text-body-md text-(--color-on-surface-variant) mt-3">
+                                <p className="text-body-md text-on-surface-variant mt-3">
                                     {description}
                                 </p>
 
@@ -81,7 +82,7 @@ export default function JoinSelection() {
                                     {points.map((point) => (
                                         <li
                                             key={point}
-                                            className="text-body-sm text-(--color-on-surface) flex items-start gap-2"
+                                            className="text-body-sm text-on-surface flex items-start gap-2"
                                         >
                                             <CheckCircle2
                                                 size={18}

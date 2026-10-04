@@ -1,9 +1,11 @@
 
 "use client";
 
+import SelectField from "@/components/ui/SelectFeild";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
+import { formatDateTime } from "@/utils/functions.utils";
 import {
-   
+
     Contact,
     ShieldCheck,
     Globe,
@@ -35,57 +37,49 @@ export default function FreelancerAccountSettings() {
                         Manage your basic account details and regional preferences.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button className="text-label-md text-on-surface-variant hover:text-on-surface transition-colors">
-                        Cancel
-                    </button>
-                    <button className="flex items-center gap-2 bg-primary text-on-primary text-label-md rounded-md px-5 py-2.5 hover:opacity-90 transition-opacity">
-                        Save Changes
-                        <CheckCircle2 size={16} />
-                    </button>
-                </div>
             </div>
 
             <div className="flex flex-col gap-6">
-                <section className="card">
-                    <span className="flex items-center gap-2 text-headline-md text-on-surface">
-                        <Contact size={22} className="text-primary" />
-                        Contact Information
-                    </span>
 
-                    <div className="grid sm:grid-cols-2 gap-4 mt-5">
-                        <div className="bg-surface-container-low rounded-md p-4">
-                            <p className="text-label-sm uppercase tracking-wide text-on-surface-variant">
-                                Email Address
-                            </p>
-                            <div className="flex items-center gap-2.5 mt-1.5">
-                                <p className="text-body-md text-on-surface">
-                                    {me?.email}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <section className="card">
+                        <span className="flex items-center gap-2 text-headline-md text-on-surface">
+                            <Contact size={22} className="text-primary" />
+                            Contact Information
+                        </span>
+
+                        <div className="grid sm:grid-cols-1 gap-4 mt-5">
+                            <div className="bg-surface-container-low rounded-md p-4">
+                                <p className="text-label-sm uppercase tracking-wide text-on-surface-variant">
+                                    Email Address
                                 </p>
-                                <VerifiedBadge />
-                            </div>
-                        </div>
-                        {
-                            me?.phone && (
-                                <div className="bg-surface-container-low rounded-md p-4">
-                                    <p className="text-label-sm uppercase tracking-wide text-on-surface-variant">
-                                        Phone Number
+                                <div className="flex items-center gap-2.5 mt-1.5">
+                                    <p className="text-body-md text-on-surface">
+                                        {me?.email}
                                     </p>
-                                    <div className="flex items-center gap-2.5 mt-1.5">
-                                        <p className="text-body-md text-on-surface">{me.phone}</p>
-                                        {
-
-                                            me.isPhoneVerified ? <VerifiedBadge /> : ''
-                                        }
-                                    </div>
+                                    <VerifiedBadge />
                                 </div>
-                            )
-                        }
-                    </div>
+                            </div>
+                            {
+                                me?.phone && (
+                                    <div className="bg-surface-container-low rounded-md p-4">
+                                        <p className="text-label-sm uppercase tracking-wide text-on-surface-variant">
+                                            Phone Number
+                                        </p>
+                                        <div className="flex items-center gap-2.5 mt-1.5">
+                                            <p className="text-body-md text-on-surface">{me.phone}</p>
+                                            {
 
-                </section>
+                                                me.isPhoneVerified ? <VerifiedBadge /> : ''
+                                            }
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </div>
+                    </section>
 
-                <div className="grid sm:grid-cols-2 gap-6">
+
                     <section className="card">
                         <span className="flex items-center gap-2 text-headline-md text-on-surface">
                             <ShieldCheck size={22} className="text-on-surface" />
@@ -98,7 +92,7 @@ export default function FreelancerAccountSettings() {
                                     Account Type
                                 </span>
                                 <span className="text-label-md bg-surface-container-high text-on-surface px-3 py-1 rounded-full">
-                                    Freelancer
+                                    {me?.role}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between py-3">
@@ -106,7 +100,7 @@ export default function FreelancerAccountSettings() {
                                     Member Since
                                 </span>
                                 <span className="text-body-md font-medium text-on-surface">
-                                    October 2023
+                                    {formatDateTime(String(me?.createdAt)).date}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between py-3">
@@ -120,19 +114,8 @@ export default function FreelancerAccountSettings() {
                             </div>
                         </div>
                     </section>
-
-                    <section className="card">
-                        <span className="flex items-center gap-2 text-headline-md text-on-surface">
-                            <Globe size={22} className="text-tertiary" />
-                            Regional Settings
-                        </span>
-
-                        <div className="flex flex-col gap-4 mt-4">
-                            {/* <SelectField label="Primary Language" id="language" options={[]} />
-                            <SelectField label="Date Format" id="Date" options={[]} /> */}
-                        </div>
-                    </section>
                 </div>
+
 
                 <div className="flex justify-end">
                     <button className="flex items-center gap-1.5 text-label-md text-error hover:underline">

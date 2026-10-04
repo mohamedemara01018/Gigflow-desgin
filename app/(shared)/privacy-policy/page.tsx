@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function PrivacyPolicyPage() {
     return (
         <main className="bg-(--color-surface) min-h-screen px-6 md:px-10 py-10">
@@ -223,9 +225,9 @@ export default function PrivacyPolicyPage() {
                     <p className="text-body-md text-(--color-on-surface-variant)">
                         If you have questions about this policy, please contact us.
                     </p>
-                    <button className="bg-(--color-primary) text-(--color-on-primary) text-label-md rounded-(--radius-md) px-6 py-2.5 hover:opacity-90 transition-opacity shrink-0">
+                    <Link href={'/contact-support'} className="bg-(--color-primary) text-(--color-on-primary) text-label-md rounded-(--radius-md) px-6 py-2.5 hover:opacity-90 transition-opacity shrink-0">
                         Contact Support
-                    </button>
+                    </Link>
                 </div>
             </div>
         </main>

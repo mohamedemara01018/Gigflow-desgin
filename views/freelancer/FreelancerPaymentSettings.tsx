@@ -241,11 +241,12 @@ export default function FreelancerPaymentSettings() {
             <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                     <h1 className="text-headline-lg text-on-surface">
-                        Payments &amp; Payouts
+                        {isFreelancer ? 'Payouts' : 'Payments'}
                     </h1>
                     <p className="text-body-md text-on-surface-variant mt-2 max-w-160">
-                        Manage your saved payment methods for billing and configure your Stripe Connect
-                        account to receive direct payouts for your completed contracts and milestones.
+                        {isFreelancer ?
+                            'configure your Stripe Connect account to receive direct payouts for your completed contracts and milestones.'
+                            : 'Manage your saved payment methods for billing'}
                     </p>
                 </div>
             </div>

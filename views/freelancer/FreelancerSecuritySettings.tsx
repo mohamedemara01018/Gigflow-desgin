@@ -43,33 +43,30 @@ export default function FreelancerSecuritySettings() {
     const closeDialog = () => setConfirmAction(null);
 
 
-    
-
     return (
         <div>
             <SecurityHeader />
-
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 mt-6 items-start">
                 <div className="flex flex-col gap-6">
-                    <TwoFactorSection
+                    {/* <TwoFactorSection
                         enabled={twoFactorEnabled}
                         onEnable={() => setTwoFactorEnabled(true)}
                         onDisable={() => setConfirmAction("disable2fa")}
-                    />
+                    /> */}
                     <ChangePasswordSection />
-                    <ActiveSessionsSection
+                    {/* <ActiveSessionsSection
                         sessions={SESSIONS}
                         onLogoutAll={() => setConfirmAction("logoutAll")}
-                    />
+                    /> */}
                 </div>
 
                 <aside className="flex flex-col gap-6">
                     <IdentityVerificationCard />
-                    <RecentLoginsCard logins={RECENT_LOGINS} />
-                    <DangerZoneCard
+                    {/* <RecentLoginsCard logins={RECENT_LOGINS} /> */}
+                    {/* <DangerZoneCard
                         onDeactivate={() => setConfirmAction("deactivate")}
                         onDelete={() => setConfirmAction("delete")}
-                    />
+                    /> */}
                 </aside>
             </div>
 

@@ -1,4 +1,12 @@
 import Logo from '@/components/ui/Logo';
+import Link from 'next/link';
+
+const footerLinks = [
+    { label: 'Privacy Policy', href: '/privacy-policy' },
+    { label: 'Terms of Service', href: '/terms-of-service' },
+    { label: 'Cookie Policy', href: '/cookies' },
+    { label: 'Help Center', href: '/contact-support' },
+];
 
 export default function Footer() {
     return (
@@ -11,16 +19,16 @@ export default function Footer() {
                         © {new Date().getFullYear()} GigFlow Global Inc. All rights reserved.
                     </p>
                 </div>
-                
+
                 <div className="flex flex-wrap justify-center gap-6">
-                    {["Sitemap", "Privacy Policy", "Terms of Service", "Cookie Settings"].map((link) => (
-                        <a
-                            key={link}
+                    {footerLinks.map((link) => (
+                        <Link
+                            key={link.label}
+                            href={link.href}
                             className="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-semibold uppercase tracking-wider"
-                            href="#"
                         >
-                            {link}
-                        </a>
+                            {link.label}
+                        </Link>
                     ))}
                 </div>
             </div>

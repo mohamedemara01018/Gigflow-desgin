@@ -17,8 +17,8 @@ export default function Hero() {
         <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-surface">
             {/* Background decorations */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-primary/8 blur-3xl" />
-                <div className="absolute top-60 -left-32 w-[400px] h-[400px] rounded-full bg-primary-container/10 blur-3xl" />
+                <div className="absolute -top-40 -right-40 w-150 h-150 rounded-full bg-primary/8 blur-3xl" />
+                <div className="absolute top-60 -left-32 w-100 h-100 rounded-full bg-primary-container/10 blur-3xl" />
             </div>
 
             <div className="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
@@ -55,16 +55,10 @@ export default function Hero() {
                     {/* CTAs */}
                     <div className="flex flex-wrap items-center gap-4 mt-2">
                         <Link
-                            href="/signup"
+                            href="/role"
                             className=" inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-primary font-semibold text-base text-on-primary"
                         >
                             Get Started <ArrowRight />
-                        </Link>
-                        <Link
-                            href="#workflow"
-                            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-on-surface-variant font-semibold text-base border border-outline-variant hover:bg-surface-container-low transition-colors duration-200"
-                        >
-                            Browse Jobs
                         </Link>
                     </div>
                 </div>

@@ -9,7 +9,7 @@ import { selectMeSlice } from '@/store/slices/auth/authSlice';
 import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
 import { AppDispatch } from '@/store/store';
 import { DURATION } from '@/utils/constant.utils';
-import { Bell, Search, Settings, TextAlignJustify, X } from 'lucide-react'
+import { Search, TextAlignJustify, X } from 'lucide-react'
 import Link from 'next/link';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';

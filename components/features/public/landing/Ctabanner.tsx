@@ -22,7 +22,7 @@ export default function CtaBanner() {
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 mt-2">
                     <Link
-                        href="/signup"
+                        href="/role"
                         className="btn-primary inline-flex items-center gap-2 px-8 py-4 rounded-xl text-on-primary font-bold text-base"
                     >
                         Join Now <ArrowRight />

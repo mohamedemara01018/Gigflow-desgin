@@ -9,6 +9,7 @@ interface FilterSelectProps {
     onChange?: (value: string) => void;
     onSelect?: (value: string) => void;
     icon?: typeof ChevronDown;
+    renderOption?: (option: string) => string;
 }
 
 export default function FilterSelect({
@@ -18,6 +19,7 @@ export default function FilterSelect({
     onChange,
     onSelect,
     icon: Icon = ChevronDown,
+    renderOption,
 }: FilterSelectProps) {
     const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const val = e.target.value;
@@ -30,11 +32,11 @@ export default function FilterSelect({
             <select
                 value={value ?? label ?? options[0]}
                 onChange={handleChange}
-                className="appearance-none bg-surface-container-highest border border-outline-variant rounded-md pl-4 pr-9 py-2.5 text-body-md text-on-surface focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                className="appearance-none bg-surface-container west border border-outline-variant rounded-md pl-4 pr-9 py-2.5 text-body-md text-on-surface focus:outline-none focus:border-primary transition-colors cursor-pointer"
             >
                 {options.map((opt) => (
                     <option key={opt} value={opt}>
-                        {opt}
+                        {renderOption ? renderOption(opt) : opt}
                     </option>
                 ))}
             </select>
