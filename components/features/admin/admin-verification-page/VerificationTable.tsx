@@ -11,8 +11,8 @@ interface VerificationTableProps {
     requests: IVerificationRequest[];
     selectedVerificationId?: string;
     onSelectVerification: (req: IVerificationRequest) => void;
-    onDelete: (verificationId: string) => void
-    deleteLoading: boolean
+    onDelete: (verificationId: string) => void;
+    deleteLoading: boolean;
 }
 
 export default function VerificationTable({
@@ -20,7 +20,7 @@ export default function VerificationTable({
     selectedVerificationId,
     onSelectVerification,
     onDelete,
-    deleteLoading
+    deleteLoading,
 }: VerificationTableProps) {
     return (
         <div className="overflow-x-auto">
@@ -36,7 +36,7 @@ export default function VerificationTable({
                         <th className="text-label-sm uppercase tracking-wide text-on-surface-variant text-left px-5 py-3">
                             Status
                         </th>
-                        <th className="text-label-sm uppercase tracking-wide text-on-surface-variant text-left px-5 py-3">
+                        <th className="text-label-sm uppercase tracking-wide text-on-surface-variant text-left px-5 py-3 text-right">
                             Action
                         </th>
                     </tr>
@@ -44,35 +44,46 @@ export default function VerificationTable({
                 <tbody>
                     {requests.map((req) => {
                         const isSelected = req._id === selectedVerificationId;
-                        const isDeleted = !(req.status == VerificationStatus.PENDING || req.status == VerificationStatus.IN_REVIEW)
+                        const isDeleted = !(
+                            req.status === VerificationStatus.PENDING ||
+                            req.status === VerificationStatus.IN_REVIEW
+                        );
+
+                        // Safe fallback variables for optional user objects
+                        const user = req.user;
+                        const firstName = user?.firstName || "Unknown";
+                        const lastName = user?.lastName || "User";
+                        const email = user?.email || "No email available";
+                        const avatar = user?.avatar;
+
                         return (
                             <tr
                                 key={req._id}
                                 onClick={() => onSelectVerification(req)}
                                 className={`cursor-pointer border-t border-l-4 transition-colors ${isSelected
-                                    ? "border-t-outline-variant border-l-primary bg-primary/5"
-                                    : "border-t-outline-variant border-l-transparent hover:bg-surface-container-low"
+                                        ? "border-t-outline-variant border-l-primary bg-primary/5"
+                                        : "border-t-outline-variant border-l-transparent hover:bg-surface-container-low"
                                     }`}
                             >
                                 <td className="px-5 py-3">
                                     <div className="flex items-center gap-3">
-                                        {req.user.avatar ? (
+                                        {avatar ? (
                                             <img
-                                                src={req.user.avatar}
-                                                alt={req.user.firstName}
+                                                src={avatar}
+                                                alt={firstName}
                                                 className="w-9 h-9 rounded-full object-cover shrink-0"
                                             />
                                         ) : (
                                             <span className="w-9 h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-label-md font-semibold shrink-0">
-                                                {getInitials(req.user.firstName, req.user.lastName)}
+                                                {getInitials(firstName, lastName)}
                                             </span>
                                         )}
                                         <div>
                                             <p className="text-body-md font-medium text-on-surface">
-                                                {req.user.firstName + " " + req.user.lastName}
+                                                {`${firstName} ${lastName}`}
                                             </p>
                                             <p className="text-body-sm text-on-surface-variant">
-                                                {req.user.email}
+                                                {email}
                                             </p>
                                         </div>
                                     </div>
@@ -87,16 +98,21 @@ export default function VerificationTable({
                                 <td className="px-5 py-3 whitespace-nowrap text-right">
                                     <button
                                         type="button"
-                                        onClick={() => onDelete(req._id)}
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Prevents triggering row selection on delete
+                                            onDelete(req._id);
+                                        }}
                                         disabled={!isDeleted}
-                                        className={`inline-flex items-center justify-center gap-1.5 w-24 py-1.5 text-body-sm font-medium text-error bg-error/10 hover:bg-error hover:text-on-error rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-error/40 disabled:opacity-50 disabled:cursor-not-allowed`}
+                                        className="inline-flex items-center justify-center gap-1.5 w-24 py-1.5 text-body-sm font-medium text-error bg-error/10 hover:bg-error hover:text-on-error rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-error/40 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {deleteLoading ?
+                                        {deleteLoading ? (
                                             <Loader2 className="h-3 w-3 animate-spin" />
-                                            : <>
+                                        ) : (
+                                            <>
                                                 <Trash2 className="w-4 h-4" />
                                                 <span>Delete</span>
-                                            </>}
+                                            </>
+                                        )}
                                     </button>
                                 </td>
                             </tr>
@@ -104,6 +120,6 @@ export default function VerificationTable({
                     })}
                 </tbody>
             </table>
-        </div >
+        </div>
     );
 }

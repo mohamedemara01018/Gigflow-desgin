@@ -6,19 +6,22 @@ import SmallLoading from "@/components/ui/SmallLoading";
 import { IUserListItem } from "@/services/user.service";
 import { formatDateTime, getInitials } from "@/utils/functions.utils";
 import { CheckCircle2, XCircle } from "lucide-react";
+import Link from "next/link";
 
 import UserStatusBadge from "./AdminUserStatusBadge";
+import { UserRole, UserStatus } from "@/utils/enums.utils";
 
 interface UserTableProps {
     users: IUserListItem[];
     loading: boolean;
-    onViewUser?: (user: IUserListItem) => void;
+    onSelectUser?: (userId: string) => void;
+    onStatusChange?: (userId: string, status: UserStatus) => void;
 }
 
 export default function AdminUserTable({
     users,
     loading,
-    onViewUser,
+    onSelectUser,
 }: UserTableProps) {
     return (
         <div className="bg-surface-container rounded-xl border border-outline-variant overflow-hidden">
@@ -73,6 +76,10 @@ export default function AdminUserTable({
                                     ? formatDateTime(user.lastLoginAt)
                                     : null;
 
+                                const isFreelancer =
+                                    user.role?.toString().toLowerCase() === UserRole.FREELANCER;
+                                const profileHref = `/profile/${user._id}`;
+
                                 return (
                                     <tr
                                         key={user._id}
@@ -80,21 +87,51 @@ export default function AdminUserTable({
                                     >
                                         <td className="px-5 py-4">
                                             <div className="flex items-center gap-3">
-                                                {user.avatar ? (
-                                                    <img
-                                                        src={user.avatar}
-                                                        alt={`${user.firstName} ${user.lastName}`}
-                                                        className="w-10 h-10 rounded-full object-cover shrink-0"
-                                                    />
+                                                {/* Profile Avatar */}
+                                                {isFreelancer ? (
+                                                    <Link href={profileHref} className="shrink-0 hover:opacity-80 transition-opacity">
+                                                        {user.avatar ? (
+                                                            <img
+                                                                src={user.avatar}
+                                                                alt={`${user.firstName} ${user.lastName}`}
+                                                                className="w-10 h-10 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-10 h-10 rounded-full bg-secondary/15 text-secondary flex items-center justify-center font-semibold">
+                                                                {getInitials(user.firstName, user.lastName)}
+                                                            </div>
+                                                        )}
+                                                    </Link>
                                                 ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-secondary/15 text-secondary flex items-center justify-center font-semibold shrink-0">
-                                                        {getInitials(user.firstName, user.lastName)}
+                                                    <div className="shrink-0">
+                                                        {user.avatar ? (
+                                                            <img
+                                                                src={user.avatar}
+                                                                alt={`${user.firstName} ${user.lastName}`}
+                                                                className="w-10 h-10 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-10 h-10 rounded-full bg-secondary/15 text-secondary flex items-center justify-center font-semibold">
+                                                                {getInitials(user.firstName, user.lastName)}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
+
+                                                {/* Profile Info */}
                                                 <div className="flex flex-col">
-                                                    <span className="text-body-md font-medium text-on-surface">
-                                                        {user.firstName} {user.lastName}
-                                                    </span>
+                                                    {isFreelancer ? (
+                                                        <Link
+                                                            href={profileHref}
+                                                            className="text-body-md font-medium text-on-surface hover:text-primary transition-colors hover:underline"
+                                                        >
+                                                            {user.firstName} {user.lastName}
+                                                        </Link>
+                                                    ) : (
+                                                        <span className="text-body-md font-medium text-on-surface">
+                                                            {user.firstName} {user.lastName}
+                                                        </span>
+                                                    )}
                                                     <span className="text-body-sm text-on-surface-variant">
                                                         {user.email}
                                                     </span>
@@ -146,7 +183,7 @@ export default function AdminUserTable({
                                         <td className="px-5 py-4 text-right">
                                             <button
                                                 type="button"
-                                                onClick={() => onViewUser?.(user)}
+                                                onClick={() => onSelectUser?.(user._id)}
                                                 className="px-3 py-2 rounded-md text-label-md font-medium text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors cursor-pointer"
                                             >
                                                 View

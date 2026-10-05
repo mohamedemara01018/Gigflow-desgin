@@ -13,7 +13,7 @@ import PublicFooter from "@/components/layout/public/footer/Footer";
 
 function LandingPage() {
     return (
-        <div className="min-h-screen flex flex-col bg-surface transition-colors duration-200">
+        <div className="flex flex-col bg-surface transition-colors duration-200">
             <PublicNavbar />
             <Hero />
             <PartnersBar />

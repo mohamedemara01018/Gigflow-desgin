@@ -1,17 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import AdminUserFilters, { UserFilterState } from "@/components/features/admin/admin-user-page/AdminUserFilters";
+import AdminUserFilters, {
+    UserFilterState,
+} from "@/components/features/admin/admin-user-page/AdminUserFilters";
 import AdminUserTable from "@/components/features/admin/admin-user-page/AdminUserTable";
+import AdminUserDetailsModal from "@/components/modals/AdminUserDetailsModal";
+import {
+    clientStatsService,
+    IClientLocation,
+    IClientStats,
+} from "@/services/clientStats.service";
 import { IUserListItem, userService } from "@/services/user.service";
 import { IToastificationType, toastify } from "@/store/slices/toastificationSlice";
 import { AppDispatch } from "@/store/store";
 import { DURATION } from "@/utils/constant.utils";
-import { Download, UserRoundPlus } from "lucide-react";
+import { UserRole, UserStatus } from "@/utils/enums.utils";
 import { ChangeEvent, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
-
+export interface ISelectedUserDetails {
+    user: IUserListItem;
+    clientStats?: IClientStats | null;
+    clientLocation?: IClientLocation | null;
+}
 
 export default function AdminUserPage() {
     const [users, setUsers] = useState<IUserListItem[]>([]);
@@ -23,6 +35,12 @@ export default function AdminUserPage() {
         status: "",
         isIdentityVerified: "",
     });
+
+    // Single User & Client Stats state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedUserDetail, setSelectedUserDetail] =
+        useState<ISelectedUserDetails | null>(null);
+    const [userDetailLoading, setUserDetailLoading] = useState(false);
 
     const dispatch: AppDispatch = useDispatch();
 
@@ -73,6 +91,107 @@ export default function AdminUserPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters]);
 
+    /**
+     * Fetch user details by ID and load Client Stats if user role is client
+     */
+    const handleFetchUserById = async (userId: string) => {
+        try {
+            setIsModalOpen(true);
+            setUserDetailLoading(true);
+
+            // 1. Fetch user data by ID
+            const userResponse = await userService.getUserById(userId);
+            const user = userResponse.data.user;
+
+            let clientStats: IClientStats | null = null;
+            let clientLocation: IClientLocation | null = null;
+
+            // 2. If user is a client, fetch client stats
+            const isClientRole =
+                user.role === UserRole.CLIENT ||
+                user.role?.toString().toLowerCase() === "client";
+
+            if (isClientRole) {
+                try {
+                    const statsResponse = await clientStatsService.getClientStats(
+                        user._id,
+                        { populate: true }
+                    );
+                    clientStats = statsResponse.data.stats;
+                    clientLocation = statsResponse.data.location || null;
+                } catch (statsError: any) {
+                    // Graceful fallback if stats record does not exist yet
+                    console.error("Client stats fetch error:", statsError);
+                }
+            }
+
+            setSelectedUserDetail({
+                user,
+                clientStats,
+                clientLocation,
+            });
+        } catch (error: any) {
+            handleAddToastification(
+                error.message || "Failed to fetch user details",
+                "error",
+                DURATION
+            );
+            setIsModalOpen(false);
+        } finally {
+            setUserDetailLoading(false);
+        }
+    };
+
+    /**
+     * Close modal and reset selection
+     */
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedUserDetail(null);
+    };
+
+    /**
+     * Update user status and optimistically update state
+     */
+    const handleUpdateUserStatus = async (
+        userId: string,
+        newStatus: UserStatus
+    ) => {
+        // Backup previous state for rollback
+        const previousUsers = [...users];
+
+        // Optimistic UI update
+        setUsers((prevUsers) =>
+            prevUsers.map((user) =>
+                user._id === userId ? { ...user, status: newStatus } : user
+            )
+        );
+
+        try {
+            const response = await userService.updateUserStatus(userId, newStatus);
+            handleAddToastification(
+                response.message || "Status updated successfully",
+                "success",
+                DURATION
+            );
+
+            // Synchronize selected detail state if currently viewed
+            if (selectedUserDetail?.user._id === userId) {
+                setSelectedUserDetail((prev) =>
+                    prev ? { ...prev, user: { ...prev.user, status: newStatus } } : null
+                );
+            }
+        } catch (error: any) {
+            // Revert state on failure
+            setUsers(previousUsers);
+            handleAddToastification(
+                error.message || "Failed to update user status",
+                "error",
+                DURATION
+            );
+        }
+    };
+
     const handleFilter = (
         e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
@@ -100,16 +219,6 @@ export default function AdminUserPage() {
                             Manage all registered accounts across the platform.
                         </p>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <button className="flex items-center justify-center gap-2 bg-surface-container text-on-surface py-3 px-4 cursor-pointer hover:bg-surface-container-high duration-150 rounded-md text-label-md font-medium">
-                            <Download size={16} />
-                            Export CSV
-                        </button>
-                        <button className="flex items-center justify-center gap-2 bg-primary-container text-on-primary-container py-3 px-4 cursor-pointer hover:bg-primary hover:text-on-primary duration-150 rounded-md text-label-md font-medium">
-                            <UserRoundPlus size={16} />
-                            Invite User
-                        </button>
-                    </div>
                 </div>
 
                 {/* Filter Toolbar */}
@@ -120,7 +229,22 @@ export default function AdminUserPage() {
                 />
 
                 {/* User Table */}
-                <AdminUserTable users={users} loading={loading} />
+                <AdminUserTable
+                    users={users}
+                    loading={loading}
+                    onSelectUser={handleFetchUserById}
+                    onStatusChange={handleUpdateUserStatus}
+                />
+
+                {/* User Details Modal */}
+                {isModalOpen && (
+                    <AdminUserDetailsModal
+                        details={selectedUserDetail}
+                        loading={userDetailLoading}
+                        onClose={handleCloseModal}
+                        onStatusChange={handleUpdateUserStatus}
+                    />
+                )}
             </div>
         </div>
     );

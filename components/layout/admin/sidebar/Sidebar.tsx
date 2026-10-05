@@ -56,9 +56,6 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Users Management",
         items: [
             { href: "/admin/users", label: "All Users", icon: Users },
-            { href: "/admin/users/freelancers", label: "Freelancers", icon: UserCheck },
-            { href: "/admin/users/clients", label: "Clients", icon: Building2 },
-            { href: "/admin/users/suspended", label: "Suspended", icon: UserX },
         ],
     },
     {
@@ -66,8 +63,6 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Jobs & Marketplace",
         items: [
             { href: "/admin/jobs", label: "All Jobs", icon: Briefcase },
-            { href: "/admin/jobs/open", label: "Open Jobs", icon: FolderOpen },
-            { href: "/admin/jobs/completed", label: "Completed", icon: CheckCircle2 },
             { href: "/admin/jobs/reported", label: "Reported", icon: Flag },
         ],
     },

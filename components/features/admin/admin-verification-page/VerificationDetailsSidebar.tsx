@@ -4,7 +4,7 @@
 import BlurredDocumentCard from "@/components/features/admin/admin-verification-page/BlurredDocumentCard";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SmallLoading from "@/components/ui/SmallLoading";
-import { IGetAttachmentsApiResponse, IGetEntityAttachmentsApiResponse } from "@/services/attachment.service";
+import { IGetEntityAttachmentsApiResponse } from "@/services/attachment.service";
 import { IVerificationRequest } from "@/services/verification.service";
 import { VerificationStatus } from "@/utils/enums.utils";
 import { formatDateTime, getInitials } from "@/utils/functions.utils";
@@ -94,14 +94,17 @@ export default function VerificationDetailsSidebar({
     reviewLoading,
 }: VerificationDetailsSidebarProps) {
     const { user, createdAt, status, rejectionReason: RS } = selectedVerification;
-    const fullName = `${user.firstName} ${user.lastName}`.trim();
+
+    // Safe fallback values when user reference is null or missing
+    const firstName = user?.firstName || "Unknown";
+    const lastName = user?.lastName || "User";
+    const fullName = `${firstName} ${lastName}`.trim();
+    const avatar = user?.avatar;
+    const role = user?.role || "N/A";
 
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
     const [reasonError, setReasonError] = useState(false);
 
-    // Reject appears for every status except REJECTED (see renderActionButtons
-    // below) — the reason picker's visibility must match that, not the
-    // opposite of it.
     const canReject = status !== VerificationStatus.REJECTED;
 
     const isReasonValid =
@@ -179,20 +182,20 @@ export default function VerificationDetailsSidebar({
             <section className="card space-y-4">
                 {/* User Info */}
                 <div className="flex items-center gap-3">
-                    {user.avatar ? (
+                    {avatar ? (
                         <img
-                            src={user.avatar}
+                            src={avatar}
                             alt={fullName}
                             className="w-12 h-12 rounded-full object-cover"
                         />
                     ) : (
                         <span className="w-12 h-12 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-label-md font-semibold">
-                            {getInitials(user.firstName, user.lastName)}
+                            {getInitials(firstName, lastName)}
                         </span>
                     )}
                     <div>
                         <p className="text-body-lg font-semibold text-on-surface">{fullName}</p>
-                        <p className="text-body-sm text-on-surface-variant capitalize">{user.role}</p>
+                        <p className="text-body-sm text-on-surface-variant capitalize">{role}</p>
                     </div>
                 </div>
 
@@ -233,10 +236,8 @@ export default function VerificationDetailsSidebar({
                 </div>
             </section>
 
-            {/* Rejection Reason Selector — shown whenever Reject is a valid
-                action for the current status (i.e. everything except
-                REJECTED), not the inverse. */}
-            <section className={`card ${canReject ? 'block' : 'hidden'}`}>
+            {/* Rejection Reason Selector */}
+            <section className={`card ${canReject ? "block" : "hidden"}`}>
                 <div className="flex items-center gap-2 mb-3">
                     <AlertTriangle size={16} className="text-error" />
                     <span className="text-label-sm uppercase tracking-wide text-on-surface-variant">
@@ -312,6 +313,6 @@ export default function VerificationDetailsSidebar({
                 onConfirm={handleConfirmReject}
                 onCancel={() => setRejectDialogOpen(false)}
             />
-        </aside >
+        </aside>
     );
 }

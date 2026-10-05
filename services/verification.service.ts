@@ -11,12 +11,11 @@ export interface IVerificationUser {
     avatar: string | null;
 }
 
-// 2. Individual Verification Request
 export interface IVerificationRequest {
     _id: string;
     user: IVerificationUser;
     documentType: DocumentType | string;
-    status: VerificationStatus
+    status: VerificationStatus;
     submittedAt: string;
     reviewedBy: string | IVerificationUser | null;
     reviewedAt: string | null;
@@ -26,7 +25,6 @@ export interface IVerificationRequest {
     updatedAt: string;
 }
 
-// 3. Paginated Data Payload
 export interface IVerificationRequestsData {
     totalRequests: number;
     currentPage: number;
@@ -34,13 +32,11 @@ export interface IVerificationRequestsData {
     requests: IVerificationRequest[];
 }
 
-// 4. Complete API Response Wrapper
 export interface IVerificationRequestsApiResponse {
     status: string;
     message: string;
     data: IVerificationRequestsData;
 }
-
 
 export interface GetAllVerificationParams {
     status: string;
@@ -49,19 +45,16 @@ export interface GetAllVerificationParams {
     limit: number;
 }
 
-
 export interface IReviewVerificationRequestParams {
-    verificationId: string,
-    status: VerificationStatus,
-    reviewedBy: string,
-    rejectionReason: string,
-    notes: string
+    verificationId: string;
+    status: VerificationStatus;
+    reviewedBy: string;
+    rejectionReason: string;
+    notes: string;
 }
 
 export const verificationService = {
-
     getAllVerification: async ({ status, search, page, limit }: GetAllVerificationParams) => {
-
         const searchParams = new URLSearchParams();
         if (status.trim()) {
             searchParams.set("status", status.trim());
@@ -72,62 +65,67 @@ export const verificationService = {
         }
 
         if (String(page).trim()) {
-            searchParams.set("page", String(page))
+            searchParams.set("page", String(page));
         }
 
         if (String(limit).trim()) {
-            searchParams.set("limit", String(limit))
+            searchParams.set("limit", String(limit));
         }
 
-        const response = await fetch(`${BASE_URL}/api/verifiction?${searchParams}`, {
+        // Fixed typo: /api/verification
+        const response = await fetch(`${BASE_URL}/api/verification?${searchParams}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-        })
+        });
         const data: IVerificationRequestsApiResponse = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong ')
+            throw new Error(data.message || 'Something went wrong');
         }
         return data;
     },
+
     createVerification: async (formData: any) => {
-        const response = await fetch(`${BASE_URL}/api/verifiction`, {
+        // Fixed typo: /api/verification
+        const response = await fetch(`${BASE_URL}/api/verification`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
             body: JSON.stringify(formData)
-        })
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when verification process')
+            throw new Error(data.message || 'Something went wrong during verification process');
         }
-        return data
+        return data;
     },
 
     getVerificationByUserId: async (userId: string) => {
-        const response = await fetch(`${BASE_URL}/api/verifiction/user/${userId}`, {
+        // Fixed typo: /api/verification
+        const response = await fetch(`${BASE_URL}/api/verification/user/${userId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-        })
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong ')
+            throw new Error(data.message || 'Something went wrong');
         }
-        return data.data.verification
+        return data.data.verification;
     },
 
-    reviewVerificationRequest: async ({ verificationId, status, reviewedBy, rejectionReason, notes, }: IReviewVerificationRequestParams) => {
-        const response = await fetch(`${BASE_URL}/api/verifiction/${verificationId}/review`, {
+    reviewVerificationRequest: async ({ verificationId, status, reviewedBy, rejectionReason, notes }: IReviewVerificationRequestParams) => {
+        // Fixed typo: /api/verification
+        const response = await fetch(`${BASE_URL}/api/verification/${verificationId}/review`, {
             method: "PATCH",
             headers: {
                 'Content-Type': 'application/json'
@@ -136,27 +134,29 @@ export const verificationService = {
             body: JSON.stringify({
                 status, reviewedBy, rejectionReason, notes
             })
-        })
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong ')
+            throw new Error(data.message || 'Something went wrong');
         }
-        return data
+        return data;
     },
+
     deleteVerificationRequest: async (verificationId: string) => {
-        const response = await fetch(`${BASE_URL}/api/verifiction/${verificationId}`, {
+        // Fixed typo: /api/verification
+        const response = await fetch(`${BASE_URL}/api/verification/${verificationId}`, {
             method: "DELETE",
             headers: {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-        })
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong ')
+            throw new Error(data.message || 'Something went wrong');
         }
-        return data
+        return data;
     }
-}
+};

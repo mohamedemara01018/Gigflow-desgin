@@ -48,17 +48,24 @@ export interface IUsersListData {
     pagination: IPagination;
 }
 
-// 4. API Response Wrapper
+// 4. API Response Wrappers
 export interface IGetUsersApiResponse {
     message: string;
     data: IUsersListData;
 }
 
-
 export interface IGetUserByIdApiResponse {
     message: string;
     data: {
-        user: IUserListItem
+        user: IUserListItem;
+    };
+}
+
+export interface IUpdateUserStatusApiResponse {
+    status: string;
+    message: string;
+    data: {
+        user: IUserListItem;
     };
 }
 
@@ -69,22 +76,26 @@ export interface GetAllUserParams {
     isIdentityVerified: string;
 }
 
-
 export const userService = {
     me: async () => {
-        const response = await fetch(`${BASE_URL}/api/user/user/me`, {
+        const response = await fetch(`${BASE_URL}/api/user/me`, {
             credentials: 'include',
-        })
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when register')
+            throw new Error(data.message || 'Something went wrong while fetching user');
         }
 
-        return data
+        return data;
     },
 
-    getAllUser: async ({ search = "", role = "", status = "", isIdentityVerified = "", }: {
+    getAllUser: async ({
+        search = "",
+        role = "",
+        status = "",
+        isIdentityVerified = "",
+    }: {
         search?: string;
         role?: string;
         status?: string;
@@ -104,10 +115,7 @@ export const userService = {
         }
 
         if (isIdentityVerified !== "") {
-            searchParams.set(
-                "isIdentityVerified",
-                isIdentityVerified
-            );
+            searchParams.set("isIdentityVerified", isIdentityVerified);
         }
 
         const response = await fetch(
@@ -127,18 +135,20 @@ export const userService = {
 
         return data;
     },
+
     getUserById: async (id: string) => {
         const response = await fetch(`${BASE_URL}/api/user/${id}`, {
             credentials: 'include',
-        })
+        });
         const data: IGetUserByIdApiResponse = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when get user')
+            throw new Error(data.message || 'Something went wrong when fetching user');
         }
 
-        return data
+        return data;
     },
+
     updateUser: async (formData: any) => {
         const response = await fetch(`${BASE_URL}/api/user/update`, {
             method: "PUT",
@@ -155,6 +165,26 @@ export const userService = {
 
         return data;
     },
+
+    updateUserStatus: async (id: string, status: UserStatus | string) => {
+        const response = await fetch(`${BASE_URL}/api/user/${id}/status`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({ status }),
+        });
+
+        const data: IUpdateUserStatusApiResponse = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to update user status");
+        }
+
+        return data;
+    },
+
     changePassword: async (formData: any) => {
         const response = await fetch(`${BASE_URL}/api/user/change-password`, {
             method: "PUT",
@@ -171,12 +201,13 @@ export const userService = {
 
         return data;
     },
+
     changeAvatar: async (file: File) => {
         const formData = new FormData();
         formData.append("avatar", file);
 
         const response = await fetch(`${BASE_URL}/api/user/image/change`, {
-            method: "PUT", // or "PATCH" depending on your route design
+            method: "PUT",
             credentials: "include",
             body: formData,
         });
@@ -189,10 +220,11 @@ export const userService = {
 
         return data;
     },
+
     removeAvatar: async () => {
         const response = await fetch(`${BASE_URL}/api/user/image/remove`, {
             method: "DELETE",
-            credentials: "include", // Ensures auth token cookies are sent
+            credentials: "include",
         });
 
         const data = await response.json();
@@ -202,6 +234,5 @@ export const userService = {
         }
 
         return data;
-    }
-
-}
+    },
+};
