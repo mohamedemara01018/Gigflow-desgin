@@ -117,12 +117,12 @@ export default function FreelancerAccountSettings() {
                 </div>
 
 
-                <div className="flex justify-end">
+                {/* <div className="flex justify-end">
                     <button className="flex items-center gap-1.5 text-label-md text-error hover:underline">
                         <AlertTriangle size={16} />
                         Deactivate Account
                     </button>
-                </div>
+                </div> */}
             </div>
         </div>
     );

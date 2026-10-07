@@ -14,24 +14,31 @@ export interface IUserListItem {
     avatar: string | null;
     public_id: string | null;
     phone: string | null;
-    country: ICountry | null;
-    city: ICity | null;
+    country: ICountry | string | null;
+    city: ICity | string | null;
+    isOnline: boolean;
+    lastSeen: string | Date;
     verifiedEmailCode: string | null;
-    emailCodeExpiresAt?: string | null;
+    emailCodeExpiresAt: string | Date | null;
     verifiedPhoneCode: string | null;
-    resetTokenExpiresAt: string | null;
+    phoneCodeExpiresAt: string | Date | null;
+    resetToken: string | null;
+    resetTokenExpiresAt: string | Date | null;
     isEmailVerified: boolean;
     isPhoneVerified: boolean;
     isIdentityVerified: boolean;
     twoFactorEnabled: boolean;
     provider: "local" | "google" | string;
     providerId: string | null;
+    stripeCustomerId: string | null;
+    stripeConnectAccountId: string | null;
+    stripeConnectOnboardingComplete: boolean;
     status: UserStatus | string;
+    lastLoginAt: string | Date | null;
     refreshTokenVersion: number;
-    deletedAt: string | null;
+    deletedAt: string | Date | null;
     createdAt: string;
     updatedAt: string;
-    lastLoginAt?: string | null;
 }
 
 // 2. Pagination Metadata

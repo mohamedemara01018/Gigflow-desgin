@@ -1,5 +1,9 @@
 "use client";
 
+import UserImage from "@/components/ui/UserImage";
+import { IUserListItem } from "@/services/user.service";
+import { selectMeSlice } from "@/store/slices/auth/authSlice";
+import { formatDateTime } from "@/utils/functions.utils";
 import {
     Briefcase,
     Building2,
@@ -19,6 +23,7 @@ import {
     Info,
 } from "lucide-react";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 
 /* ---------------------------------------------------------
    Small shared pieces
@@ -61,48 +66,22 @@ function Badge({ children, className }: { children: React.ReactNode; className: 
    Welcome header + client profile summary
 --------------------------------------------------------- */
 
-function WelcomeHeader() {
-    return (
-        <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-                <p className="text-label-sm uppercase tracking-wide text-on-surface-variant">
-                    Workspace Overview · Live Client Operations
-                </p>
-                <h1 className="text-headline-lg text-on-surface mt-1">
-                    Welcome back, Marcus Vance
-                </h1>
-                <p className="text-body-md text-on-surface-variant mt-1">
-                    Aura Technologies Inc. · Lead Client Session · 4 active workstreams
-                    underway
-                </p>
-            </div>
 
-        </div>
-    );
-}
-
-function ClientProfileCard() {
+function ClientProfileCard({ me }: { me: IUserListItem }) {
     return (
         <section className="card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-                <img
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-jYpvrrKHWq6QH0bEtD4yMSO5a8vX04LmXrNWNHQLXqiFjY4bQpqBti1DQGRg6OCFZCgtDViQabvIiy-spv4XaT8x35xqJPgwXdTGmvZ1vUsKTM8Kv2FOC3Ip4JtN8yX-6Nm_eOvunzubqcns7VCDZR9FiOPRVLwqhMZDvQQMOAN2JRoRLa5v3OwNMwQ-hg9qP0Pf96pYto8xQ6rO1hlPnP6XY-YJgKAXdouE4FACRvBUOmK7s2moHdeSvRkFrWfCXBPzD0kRjKM"
-                    alt="Marcus Vance"
-                    className="w-14 h-14 rounded-full object-cover"
-                />
+                <UserImage className="w-14 h-14" avatarUrl={String(me.avatar)} firstName={me.firstName} lastName={me.lastName} />
                 <div>
                     <div className="flex items-center gap-2">
                         <p className="text-body-lg font-semibold text-on-surface">
-                            Marcus Vance
+                            {me.firstName + ' ' + me.lastName}
                         </p>
                         <Badge className="bg-primary/10 text-primary flex items-center gap-1">
                             <ShieldCheck size={11} />
-                            Payment Verified
+                            {!!me.stripeCustomerId ? 'Payment Verified' : 'not verified'}
                         </Badge>
                     </div>
-                    <Badge className="bg-tertiary/10 text-tertiary mt-1 inline-block">
-                        Enterprise Tier
-                    </Badge>
                     <div className="flex items-center gap-3 mt-2 text-body-sm text-on-surface-variant">
                         <span className="flex items-center gap-1">
                             <Building2 size={13} />
@@ -110,16 +89,16 @@ function ClientProfileCard() {
                         </span>
                         <span className="flex items-center gap-1">
                             <MapPin size={13} />
-                            San Francisco, CA
+                            {me.city + ', ' + me.country}
                         </span>
-                        <span>Member since 2022</span>
+                        <span>Member since {formatDateTime(String(me.createdAt)).date}</span>
                     </div>
                 </div>
             </div>
 
             <div className="flex items-center gap-6 flex-wrap">
                 <div className="text-center">
-                    <p className="text-headline-md !text-[20px] !leading-7 text-on-surface">18</p>
+                    <p className="text-headline-md text-[20px]! leading-7! text-on-surface">18</p>
                     <p className="text-label-sm text-on-surface-variant">Jobs Posted</p>
                 </div>
                 <div className="text-center">
@@ -971,10 +950,10 @@ function RecentMessagesPanel() {
 --------------------------------------------------------- */
 
 export default function ClientPage() {
+    const { me } = useSelector(selectMeSlice);
     return (
         <div className="wrapper py-6 flex flex-col gap-6">
-            <WelcomeHeader />
-            <ClientProfileCard />
+            <ClientProfileCard me={me as IUserListItem} />
 
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
                 <StatCard label="Active Jobs" value="6" sub="+2 this month" icon={Briefcase} />
