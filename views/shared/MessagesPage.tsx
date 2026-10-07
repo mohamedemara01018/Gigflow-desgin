@@ -44,12 +44,14 @@ import SidebarNavigation from "./SidebarNavigation";
 const DURATION = 3000;
 
 interface MessagesPageProps {
+    initialConversationId?: string;
     recipient?: string;
     job?: string;
     proposal?: string;
 }
 
 export default function MessagesPage({
+    initialConversationId,
     recipient,
     job,
     proposal,
@@ -99,11 +101,32 @@ export default function MessagesPage({
             const listRes = await conversationService.getUserConversations(String(currentUserId));
             let fetchedConversations = listRes.data.conversations || [];
 
-            if (recipient) {
+            if (initialConversationId) {
+                const found = fetchedConversations.find(
+                    (c) => String(c._id) === String(initialConversationId)
+                );
+                if (found) {
+                    setActiveId(found._id);
+                } else {
+                    try {
+                        const targetRes = await conversationService.getConversationById(initialConversationId);
+                        const targetConv = targetRes.data.conversation;
+                        if (targetConv) {
+                            fetchedConversations = [targetConv, ...fetchedConversations];
+                            setActiveId(targetConv._id);
+                        }
+                    } catch {
+                        if (fetchedConversations.length > 0) {
+                            setActiveId(fetchedConversations[0]._id);
+                        }
+                    }
+                }
+            } else if (recipient || proposal) {
                 const payload: ICreateOrGetConversationDto = {
                     client: currentUserRole === UserRole.CLIENT ? currentUserId : recipient,
                     freelancer: currentUserRole === UserRole.FREELANCER ? currentUserId : recipient,
                     job: job,
+                    proposalId: proposal,
                 };
 
                 const targetRes = await conversationService.createOrGetConversation(payload);
@@ -137,7 +160,7 @@ export default function MessagesPage({
         } finally {
             setIsLoading(false);
         }
-    }, [currentUserId, currentUserRole, recipient, job, handleToast]);
+    }, [currentUserId, currentUserRole, initialConversationId, recipient, proposal, job, handleToast]);
 
     useEffect(() => {
         initConversations();
@@ -495,6 +518,21 @@ export default function MessagesPage({
             throw error;
         } finally {
             setIsLoadingContract(false);
+        }
+    };
+
+    const handleDeleteConversation = async (conversationId: string) => {
+        try {
+            await conversationService.deleteConversation(conversationId);
+            setConversations((prev) => prev.filter((c) => c._id !== conversationId));
+            if (activeId === conversationId) {
+                setActiveId(null);
+                setActiveContract(null);
+                setMessages([]);
+            }
+            handleToast("Conversation deleted successfully", "success");
+        } catch (error: any) {
+            handleToast(error.message || "Failed to delete conversation", "error");
         }
     };
 
@@ -968,7 +1006,7 @@ export default function MessagesPage({
                                     </div>
                                 ) : (
                                     <ProjectDossier
-                                        proposal={proposal}
+                                        proposal={proposal || (typeof activeConversation.proposal === 'object' ? (activeConversation.proposal as any)?._id : activeConversation.proposal)}
                                         activeConversationId={activeId!}
                                         contract={activeContract}
                                         onCreateContract={handleCreateContract}
@@ -981,6 +1019,7 @@ export default function MessagesPage({
                                         onSubmitMilestone={handleSubmitMilestone}
                                         onApproveMilestone={handleApproveMilestone}
                                         onRejectMilestone={handleRejectMilestone}
+                                        onDeleteConversation={handleDeleteConversation}
                                     />
                                 )
                             )}
@@ -1033,7 +1072,7 @@ export default function MessagesPage({
                                 </div>
                             ) : (
                                 <ProjectDossier
-                                    proposal={proposal}
+                                    proposal={proposal || (typeof activeConversation.proposal === 'object' ? (activeConversation.proposal as any)?._id : activeConversation.proposal)}
                                     activeConversationId={activeId!}
                                     contract={activeContract}
                                     onCreateContract={handleCreateContract}
@@ -1046,6 +1085,7 @@ export default function MessagesPage({
                                     onSubmitMilestone={handleSubmitMilestone}
                                     onApproveMilestone={handleApproveMilestone}
                                     onRejectMilestone={handleRejectMilestone}
+                                    onDeleteConversation={handleDeleteConversation}
                                 />
                             )
                         )}

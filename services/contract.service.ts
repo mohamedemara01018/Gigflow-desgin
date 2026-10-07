@@ -34,6 +34,8 @@ export interface IContract {
     startDate?: string | null;
     endDate?: string | null;
     status: ContractStatus | string;
+    sentToFreelancer?: boolean;
+    sentAt?: string | null;
     clientAcceptedAt?: string | null;
     freelancerAcceptedAt?: string | null;
     rejectedAt?: string | null;

@@ -11,6 +11,7 @@ import {
     Loader2,
 } from "lucide-react";
 import { proposalService, IProposal } from "@/services/proposal.service";
+import { conversationService } from "@/services/conversation.service";
 import { ProposalStatus } from "@/utils/enums.utils";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
@@ -29,6 +30,7 @@ export default function ClientActionsCard({
     const router = useRouter();
     const dispatch: AppDispatch = useDispatch();
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isOpeningChat, setIsOpeningChat] = useState(false);
 
     const handleToast = useCallback(
         (message: string, type: IToastificationType) => {
@@ -60,16 +62,24 @@ export default function ClientActionsCard({
         }
     };
 
-    const handleMessageFreelancer = () => {
-        const freelancerId =
-            typeof proposal.freelancer === "object"
-                ? proposal.freelancer?._id
-                : proposal.freelancer;
+    const handleMessageFreelancer = async () => {
+        if (!proposal._id || isOpeningChat) return;
 
-        if (freelancerId) {
-            router.push(`/messages?recipient=${freelancerId}&job=${proposal.job._id}&proposal=${proposal._id}`);
-        } else {
-            handleToast("Freelancer details unavailable.", "error");
+        try {
+            setIsOpeningChat(true);
+            const res = await conversationService.createOrGetConversation({
+                proposalId: proposal._id,
+            });
+            const conv = res.data?.conversation;
+            if (conv?._id) {
+                router.push(`/messages?id=${conv._id}`);
+            } else {
+                throw new Error("Conversation ID not returned");
+            }
+        } catch (err: any) {
+            handleToast(err.message || "Failed to open conversation.", "error");
+        } finally {
+            setIsOpeningChat(false);
         }
     };
 
@@ -80,15 +90,24 @@ export default function ClientActionsCard({
     return (
         <section className="card p-4!">
             <div className="flex flex-col gap-2">
-                {/* Message Freelancer button appears ONLY when status is ACCEPTED */}
-                {isAccepted && (
+                {/* Message Freelancer Button */}
+                {!isWithdrawn && (
                     <button
                         onClick={handleMessageFreelancer}
-                        disabled={isUpdating}
-                        className="flex items-center justify-center gap-2 bg-primary text-on-primary text-label-md rounded-md px-4 py-2.5 hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
+                        disabled={isOpeningChat || isUpdating}
+                        className="flex items-center justify-center gap-2 bg-primary text-on-primary text-label-md font-semibold rounded-md px-4 py-2.5 hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 shadow-xs"
                     >
-                        <MessageSquare size={15} />
-                        Message Freelancer
+                        {isOpeningChat ? (
+                            <>
+                                <Loader2 size={15} className="animate-spin" />
+                                Opening chat...
+                            </>
+                        ) : (
+                            <>
+                                <MessageSquare size={15} />
+                                Message Freelancer
+                            </>
+                        )}
                     </button>
                 )}
 
@@ -96,7 +115,7 @@ export default function ClientActionsCard({
                 {!isAccepted && !isWithdrawn && (
                     <button
                         onClick={handleHireFreelancer}
-                        disabled={isUpdating}
+                        disabled={isUpdating || isOpeningChat}
                         className="flex items-center justify-center gap-2 bg-surface-variant text-on-surface-variant font-semibold text-label-md rounded-md px-4 py-2.5 hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
                     >
                         {isUpdating ? (
@@ -117,7 +136,7 @@ export default function ClientActionsCard({
                                 isShortlisted ? "Removed from shortlist." : "Proposal shortlisted!"
                             )
                         }
-                        disabled={isUpdating}
+                        disabled={isUpdating || isOpeningChat}
                         className={`flex items-center justify-center gap-2 text-label-md rounded-md px-4 py-2.5 hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 ${isShortlisted
                             ? "bg-primary-container text-on-primary-container"
                             : "bg-surface-variant text-on-surface-variant"
@@ -141,7 +160,7 @@ export default function ClientActionsCard({
                                 "Proposal has been declined."
                             )
                         }
-                        disabled={isUpdating}
+                        disabled={isUpdating || isOpeningChat}
                         className="flex items-center justify-center gap-2 bg-error-container/40 text-error text-label-md rounded-md px-4 py-2.5 hover:bg-error-container/60 transition-colors cursor-pointer disabled:opacity-50"
                     >
                         {isUpdating ? (

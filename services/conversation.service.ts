@@ -35,7 +35,8 @@ export interface IConversation {
     client: IUserRef;
     freelancer: IUserRef;
     job?: IJobRef;
-    contract?: string | null;
+    proposal?: any;
+    contract?: any;
     lastMessage?: IMessageRef | string | null;
     lastMessageAt?: string;
     clientUnreadCount: number;
@@ -46,6 +47,8 @@ export interface IConversation {
     freelancerMuted: boolean;
     clientArchived: boolean;
     freelancerArchived: boolean;
+    freelancerDeletedAt?: string | null;
+    clientDeletedAt?: string | null;
     status: ConversationStatus;
     createdAt?: string;
     updatedAt?: string;
@@ -60,8 +63,10 @@ export interface IGetUserConversationsParams {
 }
 
 export interface ICreateOrGetConversationDto {
-    client: string;
-    freelancer: string;
+    proposalId?: string;
+    proposal?: string;
+    client?: string;
+    freelancer?: string;
     job?: string;
     contract?: string;
 }
@@ -107,7 +112,7 @@ export interface IConversationListResponse {
 // ==========================================
 export const conversationService = {
     /**
-     * Create a new conversation or fetch an existing one between client and freelancer
+     * Create a new conversation or fetch an existing one between client and freelancer (or for a specific proposal)
      */
     createOrGetConversation: async (payload: ICreateOrGetConversationDto) => {
         const response = await fetch(`${BASE_URL}/api/conversation`, {
@@ -222,6 +227,26 @@ export const conversationService = {
         if (!response.ok) {
             throw new Error(
                 data.message || "Failed to reset unread message count"
+            );
+        }
+
+        return data;
+    },
+
+    /**
+     * Delete a conversation from inbox (Freelancer can delete only after contract is completed)
+     */
+    deleteConversation: async (id: string) => {
+        const response = await fetch(`${BASE_URL}/api/conversation/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || "Failed to delete conversation"
             );
         }
 

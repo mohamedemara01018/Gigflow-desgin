@@ -15,7 +15,8 @@ import {
     Check,
     RotateCcw,
     FileText,
-    Loader2
+    Loader2,
+    Star
 } from "lucide-react";
 
 import {
@@ -31,6 +32,7 @@ import {
     IRejectMilestoneDto,
 } from "@/services/milestone.service";
 import { IProposal, proposalService } from "@/services/proposal.service";
+import { IReview, reviewService } from "@/services/review.service";
 import { ContractStatus, ContractType, MilestoneStatus, UserRole } from "@/utils/enums.utils";
 
 import NoContractCard from "./project-dossier/NoContractCard";
@@ -61,6 +63,7 @@ interface ProjectDossierProps {
     onSubmitMilestone?: (id: string, payload?: ISubmitMilestoneDto) => Promise<void>;
     onApproveMilestone?: (id: string) => Promise<void>;
     onRejectMilestone?: (id: string, payload: IRejectMilestoneDto) => Promise<void>;
+    onDeleteConversation?: (id: string) => Promise<void>;
 }
 
 const formatDate = (dateStr?: string | null) => {
@@ -130,6 +133,7 @@ export default function ProjectDossier({
     onSubmitMilestone,
     onApproveMilestone,
     onRejectMilestone,
+    onDeleteConversation,
 }: ProjectDossierProps) {
     const [proposalData, setProposalData] = useState<IProposal | null>(null);
     const [isLoadingProposal, setIsLoadingProposal] = useState(false);
@@ -140,6 +144,18 @@ export default function ProjectDossier({
     const [selectedMilestoneForSubmit, setSelectedMilestoneForSubmit] = useState<IMilestone | null>(null);
     const [selectedMilestoneForReject, setSelectedMilestoneForReject] = useState<IMilestone | null>(null);
     const [approvingMilestoneId, setApprovingMilestoneId] = useState<string | null>(null);
+
+    // Reviews state
+    const [reviews, setReviews] = useState<IReview[]>([]);
+    const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+    const [userRating, setUserRating] = useState<number>(5);
+    const [userHoverRating, setUserHoverRating] = useState<number>(0);
+    const [userComment, setUserComment] = useState<string>("");
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [reviewError, setReviewError] = useState<string | null>(null);
+
+    // Deleting conversation state
+    const [isDeletingConversation, setIsDeletingConversation] = useState(false);
 
     const { me } = useSelector(selectMeSlice);
     const isFreelancer = me?.role === UserRole.FREELANCER;
@@ -161,6 +177,27 @@ export default function ProjectDossier({
     useEffect(() => {
         getProposalOfContract();
     }, [getProposalOfContract]);
+
+    const isCompleted = contract?.status === ContractStatus.COMPLETED || (contract?.status as string) === "completed";
+
+    const fetchReviews = useCallback(async () => {
+        if (!contract?._id || !isCompleted) return;
+        try {
+            setIsLoadingReviews(true);
+            const res = await reviewService.getContractReviews(contract._id);
+            setReviews(res.data?.reviews || []);
+        } catch (err) {
+            console.error("Failed to load reviews:", err);
+        } finally {
+            setIsLoadingReviews(false);
+        }
+    }, [contract?._id, isCompleted]);
+
+    useEffect(() => {
+        if (isCompleted && contract?._id) {
+            fetchReviews();
+        }
+    }, [isCompleted, contract?._id, fetchReviews]);
 
     if (!contract) {
         return (
@@ -188,7 +225,7 @@ export default function ProjectDossier({
 
     const progress = milestones.length > 0
         ? Math.round((completedMilestonesCount / milestones.length) * 100)
-        : contract.status === ContractStatus.COMPLETED || contract.status === "completed"
+        : isCompleted
             ? 100
             : 0;
 
@@ -212,6 +249,51 @@ export default function ProjectDossier({
         }
     };
 
+    const handleSubmitReview = async () => {
+        if (!contract._id) return;
+        if (!userRating || userRating < 1 || userRating > 5) {
+            setReviewError("Please select a rating between 1 and 5 stars.");
+            return;
+        }
+        if (!userComment.trim()) {
+            setReviewError("Please write a comment for your review.");
+            return;
+        }
+
+        try {
+            setIsSubmittingReview(true);
+            setReviewError(null);
+            await reviewService.createReview({
+                contractId: contract._id,
+                rating: userRating,
+                comment: userComment.trim(),
+            });
+            setUserComment("");
+            await fetchReviews();
+        } catch (err: any) {
+            setReviewError(err?.message || "Failed to submit review");
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
+
+    const handleDeleteConversationClick = async () => {
+        if (!onDeleteConversation || !activeConversationId) return;
+        if (!window.confirm("Are you sure you want to delete this conversation? This will remove it from your inbox.")) return;
+        try {
+            setIsDeletingConversation(true);
+            await onDeleteConversation(activeConversationId);
+        } finally {
+            setIsDeletingConversation(false);
+        }
+    };
+
+    // Determine current user's review and other reviews
+    const myReview = reviews.find((r) => {
+        const reviewerId = typeof r.reviewer === "object" ? r.reviewer?._id : r.reviewer;
+        return String(reviewerId) === String(me?._id);
+    });
+
     return (
         <div className="flex flex-col gap-4 h-full overflow-y-auto pr-0.5">
             {/* Main Contract Section */}
@@ -225,11 +307,18 @@ export default function ProjectDossier({
                 />
 
                 {/* Freelancer Review Actions */}
-                {isDraft && isFreelancer && onRespondContract ? (
-                    <ContractResponseAction
-                        contractId={contract._id}
-                        onRespondContract={onRespondContract}
-                    />
+                {isDraft && isFreelancer ? (
+                    contract.sentToFreelancer && onRespondContract ? (
+                        <ContractResponseAction
+                            contractId={contract._id}
+                            onRespondContract={onRespondContract}
+                        />
+                    ) : (
+                        <div className="p-3.5 border border-amber-200 bg-amber-50/60 rounded-xl flex items-center gap-2 text-body-xs text-amber-800">
+                            <Clock size={15} className="text-amber-600 shrink-0" />
+                            <span>Client is currently drafting contract terms and milestones.</span>
+                        </div>
+                    )
                 ) : null}
 
                 {/* Client Draft Actions & "Send to Freelancer" */}
@@ -244,13 +333,17 @@ export default function ProjectDossier({
                                     ? "Add milestones below"
                                     : remainingBudget > 0
                                         ? `$${remainingBudget.toLocaleString()} unallocated`
-                                        : "Ready for review"}
+                                        : contract.sentToFreelancer
+                                            ? "Sent to freelancer"
+                                            : "Ready for review"}
                             </span>
                         </div>
                         <p className="text-body-xs text-amber-800">
-                            Create deliverables/milestones below, then send the contract to the freelancer for review.
+                            {contract.sentToFreelancer
+                                ? "Contract has been sent to the freelancer for review and acceptance."
+                                : "Create deliverables/milestones below, then send the contract to the freelancer for review."}
                         </p>
-                        {onSendContract && (
+                        {!contract.sentToFreelancer && milestones.length > 0 && onSendContract && (
                             <button
                                 type="button"
                                 onClick={handleSendToFreelancer}
@@ -264,6 +357,35 @@ export default function ProjectDossier({
                                 )}
                                 Send to Freelancer
                             </button>
+                        )}
+                        {!contract.sentToFreelancer && milestones.length === 0 && (
+                            <span className="text-body-xs font-medium text-amber-800">
+                                ⚠️ Add at least one milestone below before sending the contract.
+                            </span>
+                        )}
+                        {contract.sentToFreelancer && (
+                            <div className="flex items-center gap-1.5 text-xs text-green-700 font-medium bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-200">
+                                <CheckCircle2 size={13} />
+                                <span>Sent to freelancer {contract.sentAt ? `on ${formatDate(contract.sentAt)}` : ""}. Waiting for response.</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Contract Completed Banner */}
+                {isCompleted && (
+                    <div className="p-3.5 border border-green-200 bg-green-50/80 rounded-xl flex items-center justify-between text-body-xs text-green-800">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 size={16} className="text-green-600 shrink-0" />
+                            <div>
+                                <p className="font-semibold text-green-900">Contract Completed</p>
+                                <p className="text-[11px] text-green-700">All milestones have been delivered and released.</p>
+                            </div>
+                        </div>
+                        {contract.completedAt && (
+                            <span className="text-green-700 text-xs font-medium">
+                                {formatDate(contract.completedAt)}
+                            </span>
                         )}
                     </div>
                 )}
@@ -304,6 +426,152 @@ export default function ProjectDossier({
 
                 <ContractFinancialSummary contract={contract} isHourly={isHourly} />
             </section>
+
+            {/* Reviews Section for Completed Contracts */}
+            {isCompleted && (
+                <section className="card p-5! flex flex-col gap-4 border border-border rounded-lg bg-white">
+                    <div className="flex items-center justify-between pb-3 border-b border-border">
+                        <h3 className="text-body-md font-semibold text-on-surface flex items-center gap-1.5">
+                            <Star size={16} className="text-amber-500 fill-amber-500" />
+                            Client &amp; Freelancer Reviews
+                        </h3>
+                    </div>
+
+                    {isLoadingReviews ? (
+                        <div className="flex py-4 justify-center">
+                            <Loader2 size={18} className="animate-spin text-gray-400" />
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-3">
+                            {/* User's Own Review */}
+                            {myReview ? (
+                                <div className="p-3.5 bg-amber-50/40 border border-amber-200/70 rounded-xl flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">
+                                            Your Review
+                                        </span>
+                                        <div className="flex items-center gap-1">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <Star
+                                                    key={star}
+                                                    size={13}
+                                                    className={star <= myReview.rating ? "text-amber-500 fill-amber-500" : "text-gray-300"}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <p className="text-body-xs text-on-surface whitespace-pre-line leading-relaxed">
+                                        {myReview.comment}
+                                    </p>
+                                    <span className="text-[11px] text-on-surface-variant">
+                                        Submitted on {formatDate(myReview.createdAt)}
+                                    </span>
+                                </div>
+                            ) : (
+                                /* Review Submission Form */
+                                <div className="p-3.5 border border-purple-200 bg-purple-50/30 rounded-xl flex flex-col gap-3">
+                                    <div>
+                                        <h4 className="text-body-sm font-semibold text-purple-950">
+                                            Rate your experience with the {isClient ? "Freelancer" : "Client"}
+                                        </h4>
+                                        <p className="text-body-xs text-on-surface-variant mt-0.5">
+                                            Share feedback about your collaboration on this project.
+                                        </p>
+                                    </div>
+
+                                    {reviewError && (
+                                        <div className="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-body-xs flex items-center gap-1.5">
+                                            <AlertCircle size={13} className="shrink-0" />
+                                            <span>{reviewError}</span>
+                                        </div>
+                                    )}
+
+                                    {/* Star Rating Picker */}
+                                    <div className="flex items-center gap-1.5">
+                                        {[1, 2, 3, 4, 5].map((star) => {
+                                            const activeStars = userHoverRating || userRating;
+                                            return (
+                                                <button
+                                                    key={star}
+                                                    type="button"
+                                                    onMouseEnter={() => setUserHoverRating(star)}
+                                                    onMouseLeave={() => setUserHoverRating(0)}
+                                                    onClick={() => setUserRating(star)}
+                                                    className="p-1 hover:scale-110 transition-transform cursor-pointer"
+                                                >
+                                                    <Star
+                                                        size={20}
+                                                        className={star <= activeStars ? "text-amber-500 fill-amber-500" : "text-gray-300"}
+                                                    />
+                                                </button>
+                                            );
+                                        })}
+                                        <span className="text-xs font-semibold text-on-surface ml-1.5">
+                                            {userHoverRating || userRating} / 5
+                                        </span>
+                                    </div>
+
+                                    <textarea
+                                        rows={3}
+                                        placeholder={`How was working with the ${isClient ? "freelancer" : "client"}? Mention communication, quality, timeliness...`}
+                                        value={userComment}
+                                        onChange={(e) => setUserComment(e.target.value)}
+                                        disabled={isSubmittingReview}
+                                        className="text-body-xs p-2.5 border border-border rounded-lg bg-white resize-none focus:outline-hidden focus:ring-1 focus:ring-primary"
+                                    />
+
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleSubmitReview}
+                                            disabled={isSubmittingReview || !userComment.trim()}
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50"
+                                        >
+                                            {isSubmittingReview ? (
+                                                <Loader2 size={13} className="animate-spin" />
+                                            ) : (
+                                                <Send size={13} />
+                                            )}
+                                            Submit Review
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Other Reviews on this Contract */}
+                            {reviews
+                                .filter((r) => {
+                                    const reviewerId = typeof r.reviewer === "object" ? r.reviewer?._id : r.reviewer;
+                                    return String(reviewerId) !== String(me?._id);
+                                })
+                                .map((rev) => (
+                                    <div key={rev._id} className="p-3 bg-white border border-border rounded-xl flex flex-col gap-1.5 shadow-2xs">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-body-xs font-semibold text-on-surface">
+                                                {rev.reviewer?.firstName} {rev.reviewer?.lastName} ({rev.reviewer?.role || "Review"})
+                                            </span>
+                                            <div className="flex items-center gap-0.5">
+                                                {[1, 2, 3, 4, 5].map((s) => (
+                                                    <Star
+                                                        key={s}
+                                                        size={11}
+                                                        className={s <= rev.rating ? "text-amber-500 fill-amber-500" : "text-gray-200"}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <p className="text-body-xs text-on-surface whitespace-pre-line leading-relaxed">
+                                            {rev.comment}
+                                        </p>
+                                        <span className="text-[10px] text-on-surface-variant">
+                                            {formatDate(rev.createdAt)}
+                                        </span>
+                                    </div>
+                                ))}
+                        </div>
+                    )}
+                </section>
+            )}
 
             {/* Milestones Section */}
             <section className="card p-5! flex flex-col gap-4 border border-border rounded-lg bg-white">
@@ -512,6 +780,29 @@ export default function ProjectDossier({
                     </div>
                 )}
             </section>
+
+            {/* Freelancer Conversation Deletion (Allowed ONLY when contract is completed) */}
+            {isFreelancer && isCompleted && onDeleteConversation && (
+                <section className="card p-4! border border-border rounded-lg bg-white flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-on-surface">Conversation Archival</span>
+                    <p className="text-body-xs text-on-surface-variant">
+                        This contract is completed. You can delete this conversation from your active messages inbox.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={handleDeleteConversationClick}
+                        disabled={isDeletingConversation}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-50 mt-1"
+                    >
+                        {isDeletingConversation ? (
+                            <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                            <Trash2 size={14} />
+                        )}
+                        Delete Conversation
+                    </button>
+                </section>
+            )}
 
             {/* Modal: Create Milestone */}
             {isClient && onCreateMilestone && (
