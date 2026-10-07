@@ -16,13 +16,16 @@ export interface IPaymentContract {
     title: string;
     status: string;
     totalAmount: number;
+    type?: string;
 }
 
 export interface IPaymentMilestone {
     _id: string;
     title: string;
     amount: number;
+    order?: number;
     status: string;
+    dueDate?: string | null;
 }
 
 export interface IPayment {
@@ -40,7 +43,10 @@ export interface IPayment {
     method: PaymentMethod | string;
     stripePaymentIntentId?: string | null;
     stripeChargeId?: string | null;
+    transactionId?: string | null;
     paidAt?: string | null;
+    failedAt?: string | null;
+    failureReason?: string | null;
     refundAmount?: number | null;
     refundedAt?: string | null;
     createdAt?: string;
@@ -48,119 +54,172 @@ export interface IPayment {
 }
 
 // ==========================================
-// 2. DTOs
+// 2. Query & DTO Interfaces
 // ==========================================
-export interface ICreatePaymentDto {
-    contractId: string;
-    type: PaymentType | string;
-    method: PaymentMethod | string;
-    milestoneId?: string;
+export interface IPaymentQueryParams {
+    page?: number;
+    limit?: number;
+    status?: PaymentStatus | string;
+    type?: PaymentType | string;
+    contract?: string;
+    milestone?: string;
+    startDate?: string;
+    endDate?: string;
+    clientId?: string;
+    freelancerId?: string;
 }
 
-export interface IProcessPaymentDto {
-    stripePaymentIntentId?: string;
-    stripeChargeId?: string;
+export interface IPayMilestoneDto {
+    paymentMethodId?: string;
+}
+
+export interface ICreateMilestonePaymentDto {
+    method?: PaymentMethod | string;
 }
 
 export interface IRefundPaymentDto {
-    refundAmount?: number;
+    amount?: number;
+    reason?: string;
 }
 
 // ==========================================
 // 3. API Response Interfaces
 // ==========================================
+export interface IPayMilestoneResult {
+    success: boolean;
+    message: string;
+    status: string;
+    clientSecret?: string;
+    paymentId: string;
+    requiresAction?: boolean;
+}
+
+export interface IPayMilestoneApiResponse {
+    status: string;
+    success: boolean;
+    message: string;
+    data: IPayMilestoneResult;
+}
+
 export interface IPaymentListApiResponse {
     status: string;
+    success: boolean;
     message: string;
     data: {
         payments: IPayment[];
+        total: number;
+        page: number;
+        totalPages: number;
+        limit: number;
     };
 }
 
 export interface IPaymentSingleApiResponse {
     status: string;
+    success: boolean;
     message: string;
     data: {
         payment: IPayment;
     };
 }
 
+export interface IRefundPaymentApiResponse {
+    status: string;
+    success: boolean;
+    message: string;
+    data: {
+        payment: IPayment;
+        transaction?: any;
+        stripeRefundId?: string;
+    };
+}
+
 // ==========================================
-// 4. Payment Service
+// 4. Payment Client Service
 // ==========================================
 export const paymentService = {
-    getAllPayments: async () => {
-        const response = await fetch(`${BASE_URL}/api/payment`, {
+    /**
+     * Get paginated payments with optional status, contract, milestone, date filters
+     */
+    getPayments: async (params?: IPaymentQueryParams): Promise<IPaymentListApiResponse> => {
+        const queryParams = new URLSearchParams();
+
+        if (params?.page) queryParams.append("page", String(params.page));
+        if (params?.limit) queryParams.append("limit", String(params.limit));
+        if (params?.status) queryParams.append("status", params.status);
+        if (params?.type) queryParams.append("type", params.type);
+        if (params?.contract) queryParams.append("contract", params.contract);
+        if (params?.milestone) queryParams.append("milestone", params.milestone);
+        if (params?.startDate) queryParams.append("startDate", params.startDate);
+        if (params?.endDate) queryParams.append("endDate", params.endDate);
+        if (params?.clientId) queryParams.append("clientId", params.clientId);
+        if (params?.freelancerId) queryParams.append("freelancerId", params.freelancerId);
+
+        const url = `${BASE_URL}/api/payments${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+        const response = await fetch(url, {
             credentials: "include",
         });
 
-        const data: IPaymentListApiResponse = await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(
-                data.message || "Something went wrong when fetching payments history"
-            );
+            throw new Error(data.message || "Failed to fetch payments");
         }
 
         return data;
     },
 
-    getPaymentById: async (id: string) => {
-        const response = await fetch(`${BASE_URL}/api/payment/${id}`, {
+    /**
+     * Get details of a single payment by ID
+     */
+    getPaymentById: async (paymentId: string): Promise<IPaymentSingleApiResponse> => {
+        const response = await fetch(`${BASE_URL}/api/payments/${paymentId}`, {
             credentials: "include",
         });
 
-        const data: IPaymentSingleApiResponse = await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(
-                data.message || "Something went wrong when fetching payment details"
-            );
+            throw new Error(data.message || "Failed to fetch payment details");
         }
 
         return data;
     },
 
-    getPaymentsByContract: async (contractId: string) => {
-        const response = await fetch(`${BASE_URL}/api/payment/contract/${contractId}`, {
-            credentials: "include",
-        });
-
-        const data: IPaymentListApiResponse = await response.json();
-
-        if (!response.ok) {
-            throw new Error(
-                data.message || "Something went wrong when fetching contract payments"
-            );
-        }
-
-        return data;
-    },
-
-    createPayment: async (payload: ICreatePaymentDto) => {
-        const response = await fetch(`${BASE_URL}/api/payment`, {
+    /**
+     * Initialize / Create a payment record for a milestone (Client only)
+     */
+    createMilestonePayment: async (
+        milestoneId: string,
+        payload?: ICreateMilestonePaymentDto
+    ): Promise<IPaymentSingleApiResponse> => {
+        const response = await fetch(`${BASE_URL}/api/payments/milestone/${milestoneId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             credentials: "include",
-            body: JSON.stringify(payload),
+            body: JSON.stringify(payload || {}),
         });
 
-        const data: IPaymentSingleApiResponse = await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(
-                data.message || "Something went wrong when initiating payment"
-            );
+            throw new Error(data.message || "Failed to initialize milestone payment");
         }
 
         return data;
     },
 
-    processPayment: async (id: string, payload?: IProcessPaymentDto) => {
-        const response = await fetch(`${BASE_URL}/api/payment/${id}/process`, {
-            method: "PATCH",
+    /**
+     * Pay for a milestone using a saved PaymentMethod (Client only)
+     */
+    payMilestone: async (
+        paymentId: string,
+        payload?: IPayMilestoneDto
+    ): Promise<IPayMilestoneApiResponse> => {
+        const response = await fetch(`${BASE_URL}/api/payments/${paymentId}/pay`, {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
@@ -168,20 +227,24 @@ export const paymentService = {
             body: JSON.stringify(payload || {}),
         });
 
-        const data: IPaymentSingleApiResponse = await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(
-                data.message || "Something went wrong when processing payment"
-            );
+            throw new Error(data.message || "Failed to process milestone payment");
         }
 
         return data;
     },
 
-    refundPayment: async (id: string, payload?: IRefundPaymentDto) => {
-        const response = await fetch(`${BASE_URL}/api/payment/${id}/refund`, {
-            method: "PATCH",
+    /**
+     * Refund a paid payment (Client or Admin)
+     */
+    refundPayment: async (
+        paymentId: string,
+        payload?: IRefundPaymentDto
+    ): Promise<IRefundPaymentApiResponse> => {
+        const response = await fetch(`${BASE_URL}/api/payments/${paymentId}/refund`, {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
@@ -189,12 +252,10 @@ export const paymentService = {
             body: JSON.stringify(payload || {}),
         });
 
-        const data: IPaymentSingleApiResponse = await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(
-                data.message || "Something went wrong when executing payment refund"
-            );
+            throw new Error(data.message || "Failed to execute refund");
         }
 
         return data;

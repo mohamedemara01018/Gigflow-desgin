@@ -74,9 +74,13 @@ export interface IMilestoneSingleApiResponse {
 
 export interface IApproveMilestoneApiResponse {
     status: string;
+    success: boolean;
     message: string;
     data: {
         milestone: IMilestone;
+        payment?: any;
+        transactions?: any[];
+        contractCompleted?: boolean;
         nextMilestoneActivated?: string | null;
     };
 }
@@ -146,7 +150,7 @@ export const milestoneService = {
 
     submitMilestone: async (id: string, payload?: ISubmitMilestoneDto) => {
         const response = await fetch(`${BASE_URL}/api/milestone/${id}/submit`, {
-            method: "PATCH",
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
@@ -167,7 +171,7 @@ export const milestoneService = {
 
     approveMilestone: async (id: string) => {
         const response = await fetch(`${BASE_URL}/api/milestone/${id}/approve`, {
-            method: "PATCH",
+            method: "POST",
             credentials: "include",
         });
 

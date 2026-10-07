@@ -176,9 +176,12 @@ export default function AdminUserDetailsModal({
                                 </span>
                                 <p className="text-body-md font-medium text-on-surface flex items-center gap-1.5">
                                     <MapPin size={15} className="text-on-surface-variant" />
-                                    {user.city?.name || user.country?.name
-                                        ? `${user.city?.name ? user.city.name + ", " : ""}${user.country?.name || ""}`
-                                        : "N/A"}
+                                    {(() => {
+                                        const cityName = typeof user.city === "object" && user.city ? user.city.name : typeof user.city === "string" ? user.city : "";
+                                        const countryName = typeof user.country === "object" && user.country ? user.country.name : typeof user.country === "string" ? user.country : "";
+                                        if (cityName && countryName) return `${cityName}, ${countryName}`;
+                                        return cityName || countryName || "N/A";
+                                    })()}
                                 </p>
                             </div>
                         </div>

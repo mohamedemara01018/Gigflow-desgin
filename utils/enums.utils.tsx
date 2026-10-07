@@ -268,6 +268,7 @@ export enum PaymentMethod {
 export enum PaymentStatus {
     PENDING = "pending",
     PROCESSING = "processing",
+    PAID = "paid",
     COMPLETED = "completed",
     FAILED = "failed",
     REFUNDED = "refunded",
@@ -278,6 +279,27 @@ export enum PaymentStatus {
 export enum PaymentType {
     MILESTONE = "milestone",
     CONTRACT = "contract",
+}
+
+export enum TransactionType {
+    CLIENT_PAYMENT = "client_payment",
+    PLATFORM_FEE = "platform_fee",
+    FREELANCER_PAYOUT = "freelancer_payout",
+    REFUND = "refund",
+    PARTIAL_REFUND = "partial_refund",
+}
+
+export enum TransactionStatus {
+    PENDING = "pending",
+    PROCESSING = "processing",
+    COMPLETED = "completed",
+    FAILED = "failed",
+    CANCELLED = "cancelled",
+}
+
+export enum TransactionDirection {
+    CREDIT = "credit",
+    DEBIT = "debit",
 }
 
 export enum ContactSupportCategory {
