@@ -11,8 +11,6 @@ import ProposalCard from "@/components/features/freelancer/freelancer-proposals/
 import { proposalService, IProposal } from "@/services/proposal.service";
 import EmptyState from "@/components/ui/Emptystate";
 
-
-
 export default function FreelancerProposalsPage() {
     const [proposals, setProposals] = useState<IProposal[]>([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +25,7 @@ export default function FreelancerProposalsPage() {
             try {
                 setLoading(true);
                 const response = await proposalService.getAllProposals();
-                setProposals(response.data.proposals);
+                setProposals(response.data.proposals || []);
             } catch (err: any) {
                 setError(err.message || "Failed to load proposals.");
             } finally {
@@ -38,24 +36,25 @@ export default function FreelancerProposalsPage() {
         fetchProposals();
     }, []);
 
-
     // Filtered and sorted proposals list
     const filteredProposals = useMemo(() => {
-
-        return proposals
+        return (proposals || [])
             .filter((proposal) => {
+                const jobObj = typeof proposal.job === "object" && proposal.job !== null ? proposal.job : null;
+                const jobTitle = jobObj?.title || "";
 
+                const clientObj = typeof jobObj?.client === "object" && jobObj.client !== null ? jobObj.client : null;
+                const clientName = clientObj ? `${clientObj.firstName || ""} ${clientObj.lastName || ""}`.trim() : "";
+
+                const coverLetter = proposal.coverLetter || "";
+                const searchQuery = query.trim().toLowerCase();
 
                 // Search query matching
-                const jobTitle = typeof proposal.job === "object" ? proposal.job.title : "";
-                const clientObj = typeof proposal.job === "object" ? proposal.job.client : null;
-                const clientName = typeof clientObj === "object" && clientObj ? `${clientObj.firstName} ${clientObj.lastName}` : "";
-
                 const matchesQuery =
-                    query.trim().length === 0 ||
-                    jobTitle.toLowerCase().includes(query.trim().toLowerCase()) ||
-                    clientName.toLowerCase().includes(query.trim().toLowerCase()) ||
-                    proposal.coverLetter.toLowerCase().includes(query.trim().toLowerCase());
+                    searchQuery.length === 0 ||
+                    jobTitle.toLowerCase().includes(searchQuery) ||
+                    clientName.toLowerCase().includes(searchQuery) ||
+                    coverLetter.toLowerCase().includes(searchQuery);
 
                 // Duration filter matching
                 const matchesDuration =
@@ -69,7 +68,7 @@ export default function FreelancerProposalsPage() {
                     return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
                 }
                 if (sortOrder === "highest") {
-                    return b.bidAmount - a.bidAmount;
+                    return (b.bidAmount || 0) - (a.bidAmount || 0);
                 }
                 // Default: Newest first
                 return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
@@ -91,8 +90,6 @@ export default function FreelancerProposalsPage() {
 
                 {/* Tabs + Search/Filters */}
                 <div className="card mt-6 p-5!">
-
-
                     <div className="flex flex-wrap items-center gap-3 mt-4">
                         <div className="relative flex-1 min-w-55">
                             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
@@ -161,7 +158,6 @@ export default function FreelancerProposalsPage() {
         </main>
     );
 }
-
 
 function FilterSelect({
     value,

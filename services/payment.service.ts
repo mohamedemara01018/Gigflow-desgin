@@ -1,5 +1,6 @@
 import { BASE_URL } from "@/utils/constant.utils";
 import { PaymentMethod, PaymentStatus, PaymentType } from "@/utils/enums.utils";
+import { ITransaction } from "./transaction.service";
 
 // ==========================================
 // 1. Core Data Interfaces
@@ -129,7 +130,7 @@ export interface IRefundPaymentApiResponse {
     message: string;
     data: {
         payment: IPayment;
-        transaction?: any;
+        transaction?: ITransaction;
         stripeRefundId?: string;
     };
 }

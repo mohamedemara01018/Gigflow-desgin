@@ -10,6 +10,41 @@ import { socket } from "@/utils/socket";
 import { BadgeCheck, Clock, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+export enum AvailabilityStatus {
+    AVAILABLE = "available",
+    BUSY = "busy",
+    NOT_AVAILABLE = "not_available",
+}
+
+const getAvailabilityBadgeConfig = (availability?: AvailabilityStatus | string) => {
+    switch (availability) {
+        case AvailabilityStatus.AVAILABLE:
+            return {
+                label: "Available",
+                className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400",
+                dotClass: "bg-emerald-500 shadow-xs shadow-emerald-500/50",
+            };
+        case AvailabilityStatus.BUSY:
+            return {
+                label: "Busy",
+                className: "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
+                dotClass: "bg-amber-500 shadow-xs shadow-amber-500/50",
+            };
+        case AvailabilityStatus.NOT_AVAILABLE:
+            return {
+                label: "Not Available",
+                className: "bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400",
+                dotClass: "bg-rose-500 shadow-xs shadow-rose-500/50",
+            };
+        default:
+            return {
+                label: availability || "Unknown",
+                className: "bg-surface-container text-on-surface-variant border-outline-variant",
+                dotClass: "bg-gray-400",
+            };
+    }
+};
+
 function HeroSection({ profile, freelancer, me }: { profile: IProfile; freelancer: IUserListItem; me: IUserListItem }) {
     const router = useRouter();
     const onlineUsers = useSelector(selectOnlineUsers);
@@ -35,10 +70,11 @@ function HeroSection({ profile, freelancer, me }: { profile: IProfile; freelance
     };
 
     const locationText = getLocationText();
+    const availabilityBadge = getAvailabilityBadgeConfig(profile?.availability);
 
     return (
-        <section className="relative">
-            <div className="px-6 md:px-12 pt-8 flex flex-col md:flex-row items-end md:items-center gap-4 relative z-10">
+        <section className="relative ">
+            <div className="card px-6 md:px-12 pt-8 flex flex-col md:flex-row items-end md:items-center gap-4 relative z-10">
                 <div className="relative shrink-0">
                     {freelancer?.avatar ? (
                         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-surface overflow-hidden bg-surface" style={{ boxShadow: 'var(--shadow-level-2)' }}>
@@ -52,9 +88,8 @@ function HeroSection({ profile, freelancer, me }: { profile: IProfile; freelance
 
                     {/* Live Presence indicator dot on avatar */}
                     <span
-                        className={`absolute bottom-2 right-2 md:bottom-3 md:right-3 w-5 h-5 md:w-6 md:h-6 rounded-full border-4 border-surface transition-colors duration-300 ${
-                            isOnline ? "bg-green-500 shadow-sm shadow-green-500/50" : "bg-gray-400"
-                        }`}
+                        className={`absolute bottom-2 right-2 md:bottom-3 md:right-3 w-5 h-5 md:w-6 md:h-6 rounded-full border-4 border-surface transition-colors duration-300 ${isOnline ? "bg-green-500 shadow-sm shadow-green-500/50" : "bg-gray-400"
+                            }`}
                         title={isOnline ? "Online" : "Offline"}
                     />
                 </div>
@@ -66,17 +101,15 @@ function HeroSection({ profile, freelancer, me }: { profile: IProfile; freelance
 
                         {/* Online / Offline Presence Badge */}
                         <span
-                            className={`px-3 py-1 rounded-full text-[12px] leading-4 font-['Geist'] font-semibold flex items-center gap-1.5 transition-colors duration-300 ${
-                                isOnline
-                                    ? "bg-green-500/10 text-green-600 border border-green-500/20"
-                                    : "bg-surface-container text-on-surface-variant border border-outline-variant"
-                            }`}
+                            className={`px-3 py-1 rounded-full text-[12px] leading-4 font-['Geist'] font-semibold flex items-center gap-1.5 transition-colors duration-300 ${isOnline
+                                ? "bg-green-500/10 text-green-600 border border-green-500/20"
+                                : "bg-surface-container text-on-surface-variant border border-outline-variant"
+                                }`}
                             title={isOnline ? "User is currently online" : "User is currently offline"}
                         >
                             <span
-                                className={`w-2 h-2 rounded-full shrink-0 ${
-                                    isOnline ? "bg-green-500 shadow-xs shadow-green-500/50" : "bg-gray-400"
-                                }`}
+                                className={`w-2 h-2 rounded-full shrink-0 ${isOnline ? "bg-green-500 shadow-xs shadow-green-500/50" : "bg-gray-400"
+                                    }`}
                             />
                             {isOnline ? "Online" : "Offline"}
                         </span>
@@ -86,8 +119,13 @@ function HeroSection({ profile, freelancer, me }: { profile: IProfile; freelance
                                 <BadgeCheck size={14} /> Verified
                             </span>
                         )}
-                        <span className="bg-primary text-on-primary px-3 py-1 rounded-full text-[12px] leading-4 font-['Geist'] font-bold">
-                            Available Now
+
+                        {/* Dynamic Availability Status Badge */}
+                        <span
+                            className={`px-3 py-1 rounded-full text-[12px] leading-4 font-['Geist'] font-semibold border flex items-center gap-1.5 transition-colors duration-300 ${availabilityBadge.className}`}
+                        >
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${availabilityBadge.dotClass}`} />
+                            {availabilityBadge.label}
                         </span>
                     </div>
                     <p className="font-['Geist'] font-semibold text-[24px] leading-8 text-on-surface-variant mt-1">

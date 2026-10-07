@@ -1,5 +1,7 @@
 import { BASE_URL } from "@/utils/constant.utils";
 import { MilestoneStatus } from "@/utils/enums.utils";
+import { IPayment } from "./payment.service";
+import { ITransaction } from "./transaction.service";
 
 // ==========================================
 // 1. Core Data Interfaces
@@ -78,8 +80,8 @@ export interface IApproveMilestoneApiResponse {
     message: string;
     data: {
         milestone: IMilestone;
-        payment?: any;
-        transactions?: any[];
+        payment?: IPayment;
+        transactions?: ITransaction[];
         contractCompleted?: boolean;
         nextMilestoneActivated?: string | null;
     };
