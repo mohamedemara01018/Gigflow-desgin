@@ -16,6 +16,9 @@ import {
     Briefcase,
     TrendingUp,
     CalendarDays,
+    UserPlus,
+    UserCheck,
+    MessagesSquare,
 } from "lucide-react";
 import { IJobSkill, jobSkillService } from "@/services/jobSkill.service";
 import { attachmentService, IAttachmentItem } from "@/services/attachment.service";
@@ -186,6 +189,21 @@ export default function JobDetailPage({ jobId }: JobDetailPageProps) {
             icon: CalendarDays,
             label: "Duration",
             value: job.duration || "N/A",
+        },
+        {
+            icon: UserPlus,
+            label: "Invites Sent",
+            value: job.invitesCount ?? 0,
+        },
+        {
+            icon: MessagesSquare,
+            label: "Interviews",
+            value: job.interviewCount ?? 0,
+        },
+        {
+            icon: UserCheck,
+            label: "Hires",
+            value: job.hiresCount ?? 0,
         },
     ];
 

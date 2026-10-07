@@ -54,7 +54,7 @@ export default function JobDescription({
                     <div className="  flex justify-between items-center text-body-sm text-on-surface-variant">
                         <span>Proposals Submitted: </span>
                         <span className="font-semibold text-on-surface">
-                            {job.proposalsCount}
+                            {job.proposalsCount} / {job.maxProposals}
                         </span>
                     </div>
                 )}

@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, TextAlignJustify, X } from 'lucide-react';
+import { TextAlignJustify, X } from 'lucide-react';
 
 import Logo from '@/components/ui/Logo';
 import NotificationBell from '@/components/ui/NotificationBell';
@@ -42,11 +42,9 @@ const DEFAULT_NAV_LINKS: NavLink[] = [
 
 function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
 
     const pathname = usePathname();
-    const router = useRouter();
     const dispatch: AppDispatch = useDispatch();
     const { me } = useSelector(selectMeSlice);
 
@@ -59,7 +57,7 @@ function Navbar() {
             setLoading(true);
             await authService.logout();
             window.location.reload();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             handleToast(error?.message || 'Failed to logout. Please try again.', 'error');
         } finally {
@@ -67,11 +65,6 @@ function Navbar() {
         }
     };
 
-    const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) return;
-        router.push(`/jobs?q=${encodeURIComponent(searchQuery.trim())}`);
-    };
 
     // Determine navigation links dynamically based on user role
     const navLinks = me?.role === UserRole.CLIENT
@@ -107,8 +100,8 @@ function Navbar() {
                                         key={label}
                                         href={href}
                                         className={`text-body-md font-medium transition-colors duration-200 ${isActive
-                                                ? 'text-primary font-semibold'
-                                                : 'text-on-surface-variant hover:text-primary'
+                                            ? 'text-primary font-semibold'
+                                            : 'text-on-surface-variant hover:text-primary'
                                             }`}
                                     >
                                         {label}
@@ -120,19 +113,6 @@ function Navbar() {
 
                     {/* Right: Actions & Profile */}
                     <div className="flex items-center gap-3 md:gap-4">
-                        <form onSubmit={handleSearchSubmit} className="relative hidden sm:block">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
-                                <Search size={18} />
-                            </span>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search jobs..."
-                                className="pl-9 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-[14px] leading-5 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/20 w-56 md:w-64 transition-all"
-                            />
-                        </form>
-
                         <ToggleTheme />
 
                         <NotificationBell />

@@ -171,7 +171,9 @@ export default function ClientMyJobsPage() {
                             <JobPostingCard key={job._id} job={job} onRefresh={fetchClientJobs} />
                         ))}
                         {jobs.length === 0 && (
-                            <EmptyState title="No job postings match your filters." size="compact" />
+                            <div className="card">
+                                <EmptyState title="No job postings match your filters." size="compact" />
+                            </div>
                         )}
                     </div>
                 )}

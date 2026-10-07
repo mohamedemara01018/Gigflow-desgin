@@ -3,9 +3,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, TextAlignJustify, X, Plus } from 'lucide-react';
+import { TextAlignJustify, X, Plus } from 'lucide-react';
 
 import Logo from '@/components/ui/Logo';
 import NotificationBell from '@/components/ui/NotificationBell';
@@ -44,11 +44,9 @@ const DEFAULT_NAV_LINKS: NavLink[] = [
 
 export default function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
 
     const pathname = usePathname();
-    const router = useRouter();
     const dispatch: AppDispatch = useDispatch();
     const { me } = useSelector(selectMeSlice);
 
@@ -66,14 +64,6 @@ export default function Navbar() {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) return;
-
-        const targetPath = me?.role === UserRole.CLIENT ? '/client/talent' : '/jobs';
-        router.push(`${targetPath}?q=${encodeURIComponent(searchQuery.trim())}`);
     };
 
     // Determine navigation links dynamically based on user role
@@ -112,8 +102,8 @@ export default function Navbar() {
                                         key={label}
                                         href={href}
                                         className={`text-body-md font-medium transition-colors duration-200 ${isActive
-                                                ? 'text-primary font-semibold'
-                                                : 'text-on-surface hover:text-primary'
+                                            ? 'text-primary font-semibold'
+                                            : 'text-on-surface hover:text-primary'
                                             }`}
                                     >
                                         {label}
@@ -125,18 +115,6 @@ export default function Navbar() {
 
                     {/* Right Section: Actions & Profile */}
                     <div className="flex items-center gap-3 sm:gap-4">
-                        <form onSubmit={handleSearchSubmit} className="relative hidden sm:block">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
-                                <Search size={18} />
-                            </span>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={isClient ? "Search talent..." : "Search jobs..."}
-                                className="pl-9 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-[14px] leading-5 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/20 w-56 md:w-64 transition-all"
-                            />
-                        </form>
 
                         {/* Post Job Action for Clients */}
                         {isClient && (

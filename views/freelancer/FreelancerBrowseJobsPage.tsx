@@ -1,8 +1,10 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable react-hooks/preserve-manual-memoization */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { ChevronDown, ArrowRight, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2, Search, X } from "lucide-react";
 import { jobService, IJob, IGetJobsQueryParams } from "@/services/jobs.service";
 import { savedJobService } from "@/services/savedJob.service";
 import { useSelector } from "react-redux";
@@ -10,6 +12,7 @@ import { selectMeSlice } from "@/store/slices/auth/authSlice";
 import JobCard from "@/components/features/shared/jobs/JobCard";
 import FilterSidebar from "@/components/features/shared/jobs/FilterSidebar";
 import ToggleSidbar from "@/components/features/shared/jobs/ToggleSidbar";
+import Pagination from "@/components/ui/Pagination";
 
 export default function FreelancerBrowseJobsPage() {
     const { me } = useSelector(selectMeSlice);
@@ -17,82 +20,101 @@ export default function FreelancerBrowseJobsPage() {
     const [jobs, setJobs] = useState<IJob[]>([]);
     const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState<boolean>(true);
-    const [loadingMore, setLoadingMore] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Pagination state
+    // Search State
+    const [searchQuery, setSearchQuery] = useState<string>("");
+
+    // Pagination & Filter States
     const [page, setPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
+    const [totalJobs, setTotalJobs] = useState<number>(0);
+    const pageSize = 10;
 
-    // Filter parameters state
     const [filters, setFilters] = useState<IGetJobsQueryParams>({
         page: 1,
-        limit: 10,
+        limit: pageSize,
     });
 
-    // Fetch user's saved job IDs
-    // eslint-disable-next-line react-hooks/preserve-manual-memoization
+    // Debounce search query updates to avoid frequent API calls
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setPage(1); // Reset to first page on search
+            setFilters((prev) => ({
+                ...prev,
+                search: searchQuery.trim() || undefined,
+            }));
+        }, 300);
+
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
+
+    // Fetch saved job IDs once user info is available
     const fetchUserSavedJobs = useCallback(async () => {
         if (!me?._id) return;
         try {
-            const response = await savedJobService.getUserSavedJobs({ user: me._id, limit: 100 });
-            const savedIds = new Set(response.data.savedJobs.map((item) => item.job._id));
+            const response = await savedJobService.getUserSavedJobs({
+                user: me._id,
+                limit: 100,
+            });
+            const savedIds = new Set(
+                response.data.savedJobs.map((item) => item.job._id)
+            );
             setSavedJobIds(savedIds);
         } catch {
-            // Non-blocking error if saved jobs fail to fetch
+            // Non-blocking error
         }
     }, [me?._id]);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchUserSavedJobs();
     }, [fetchUserSavedJobs]);
 
-    const fetchJobs = useCallback(async (isLoadMore: boolean = false) => {
-        try {
-            if (isLoadMore) {
-                setLoadingMore(true);
-            } else {
+    // Fetch jobs when page or filters change
+    const fetchJobs = useCallback(
+        async (targetPage: number, currentFilters: IGetJobsQueryParams) => {
+            try {
                 setLoading(true);
-            }
-            setError(null);
+                setError(null);
 
-            const currentPage = isLoadMore ? page + 1 : 1;
-            const response = await jobService.getAllJobs({
-                ...filters,
-                page: currentPage,
-            });
+                const response = await jobService.getAllJobs({
+                    ...currentFilters,
+                    page: targetPage,
+                    limit: pageSize,
+                });
 
-            if (isLoadMore) {
-                setJobs((prev) => [...prev, ...response.data.jobs]);
-                setPage(currentPage);
-            } else {
                 setJobs(response.data.jobs);
-                setPage(1);
+                setPage(response.data.currentPage);
+                setTotalPages(response.data.totalPages);
+                setTotalJobs(response.data.totalJobs);
+            } catch (err: any) {
+                setError(err.message || "Failed to fetch jobs");
+            } finally {
+                setLoading(false);
             }
-
-            setTotalPages(response.data.totalPages);
-        } catch (err: any) {
-            setError(err.message || "Failed to fetch jobs");
-        } finally {
-            setLoading(false);
-            setLoadingMore(false);
-        }
-    }, [filters, page]);
+        },
+        []
+    );
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        fetchJobs(false);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters]);
+        fetchJobs(page, filters);
+    }, [page, filters, fetchJobs]);
 
-    const handleLoadMore = () => {
-        if (page < totalPages && !loadingMore) {
-            fetchJobs(true);
-        }
+    // Handler for filter changes from FilterSidebar
+    const handleFilterChange = (newFilters: IGetJobsQueryParams) => {
+        setPage(1);
+        setFilters((prev) => ({
+            ...newFilters,
+            search: prev.search, // Preserve active search query when changing sidebar filters
+        }));
     };
 
-    // Callback to synchronize saved job IDs across components
+    // Handler for Pagination navigation
+    const handlePageChange = (newPage: number) => {
+        setPage(newPage);
+    };
+
+    // Sync saved job state across cards
     const handleToggleSaveJob = useCallback((jobId: string, isSaved: boolean) => {
         setSavedJobIds((prev) => {
             const updated = new Set(prev);
@@ -105,37 +127,65 @@ export default function FreelancerBrowseJobsPage() {
         });
     }, []);
 
+    const handleClearSearch = () => {
+        setSearchQuery("");
+    };
+
     return (
         <main className="bg-surface min-h-screen py-8">
             <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start wrapper">
-                <FilterSidebar
-                    onFilterChange={(newFilters: IGetJobsQueryParams) =>
-                        setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }))
-                    }
-                />
+                <FilterSidebar onFilterChange={handleFilterChange} />
 
                 <section className="flex flex-col gap-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <ToggleSidbar />
-                            <h1 className="text-headline-md lg:text-headline-lg text-on-surface font-semibold">
-                                Top Jobs for You
-                            </h1>
+                    {/* Header & Controls */}
+                    <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <ToggleSidbar />
+                                <h1 className="text-headline-md lg:text-headline-lg text-on-surface font-semibold">
+                                    Top Jobs for You
+                                </h1>
+                            </div>
+                            <div className="flex items-center gap-2 text-body-md text-on-surface-variant">
+                                <span>Sort by:</span>
+                                <button className="flex items-center gap-1 text-primary font-medium">
+                                    Newest First
+                                    <ChevronDown size={16} />
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 text-body-md text-on-surface-variant">
-                            <span>Sort by:</span>
-                            <button className="flex items-center gap-1 text-primary font-medium">
-                                Newest First
-                                <ChevronDown size={16} />
-                            </button>
+
+                        {/* Search Input Bar */}
+                        <div className="relative w-full">
+                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-on-surface-variant/60">
+                                <Search size={18} />
+                            </div>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search jobs by title, skills, or keywords..."
+                                className="w-full pl-10 pr-10 py-2.5 bg-surface-container text-on-surface border border-outline-variant/60 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-body-md placeholder:text-on-surface-variant/50 transition-all"
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearSearch}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-on-surface-variant/60 hover:text-on-surface transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* Initial Loading State */}
+                    {/* Loading State */}
                     {loading && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3">
                             <Loader2 size={36} className="animate-spin text-primary" />
-                            <p className="text-body-md text-on-surface-variant">Loading available jobs...</p>
+                            <p className="text-body-md text-on-surface-variant">
+                                Loading available jobs...
+                            </p>
                         </div>
                     )}
 
@@ -144,8 +194,8 @@ export default function FreelancerBrowseJobsPage() {
                         <div className="bg-error/10 text-error p-4 rounded-xl text-center">
                             <p>{error}</p>
                             <button
-                                onClick={() => fetchJobs(false)}
-                                className="mt-2 text-label-md underline font-semibold"
+                                onClick={() => fetchJobs(page, filters)}
+                                className="mt-2 text-label-md underline font-semibold cursor-pointer"
                             >
                                 Try Again
                             </button>
@@ -155,43 +205,39 @@ export default function FreelancerBrowseJobsPage() {
                     {/* Empty State */}
                     {!loading && !error && jobs.length === 0 && (
                         <div className="text-center py-16 bg-surface-variant/20 rounded-2xl">
-                            <p className="text-headline-sm text-on-surface font-medium">No jobs found</p>
+                            <p className="text-headline-sm text-on-surface font-medium">
+                                No jobs found
+                            </p>
                             <p className="text-body-md text-on-surface-variant mt-1">
-                                Try adjusting your filters or search terms.
+                                Try adjusting your search terms or clearing active filters.
                             </p>
                         </div>
                     )}
 
                     {/* Jobs List */}
-                    {!loading && !error && jobs.map((job) => (
-                        <JobCard
-                            key={job._id}
-                            job={job}
-                            isJobSaved={savedJobIds.has(job._id)}
-                            onToggleSave={handleToggleSaveJob}
-                        />
-                    ))}
+                    {!loading &&
+                        !error &&
+                        jobs.map((job) => (
+                            <JobCard
+                                key={job._id}
+                                job={job}
+                                isJobSaved={savedJobIds.has(job._id)}
+                                onToggleSave={handleToggleSaveJob}
+                            />
+                        ))}
 
-                    {/* Load More Button */}
-                    {!loading && !error && page < totalPages && (
-                        <div className="flex justify-center py-4">
-                            <button
-                                onClick={handleLoadMore}
-                                disabled={loadingMore}
-                                className="flex items-center gap-2 text-primary text-label-md font-medium hover:underline disabled:opacity-50"
-                            >
-                                {loadingMore ? (
-                                    <>
-                                        <Loader2 size={18} className="animate-spin" />
-                                        Loading...
-                                    </>
-                                ) : (
-                                    <>
-                                        Load More Jobs
-                                        <ArrowRight size={18} />
-                                    </>
-                                )}
-                            </button>
+                    {/* Pagination Controls */}
+                    {!loading && !error && jobs.length > 0 && (
+                        <div className="-mt-8">
+                        <Pagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            pageSize={pageSize}
+                            totalItems={totalJobs}
+                            onPageChange={handlePageChange}
+                            isLoading={loading}
+                            itemLabel="jobs"
+                            />
                         </div>
                     )}
                 </section>

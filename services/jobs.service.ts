@@ -33,6 +33,7 @@ export interface IJob {
     location: string;
     proposalsCount: number;
     invitesCount: number;
+    interviewCount: number
     hiresCount: number;
     maxProposals?: number | null;
     status: JobStatus | string;
