@@ -1,7 +1,6 @@
 "use client";
 
 import JobFunnel from "@/components/features/admin/admin-page/Jobfunnel";
-import RecentActivity from "@/components/features/admin/admin-page/Recentactivity";
 import RevenueChart from "@/components/features/admin/admin-page/Revenuechart";
 import StatCard from "@/components/features/admin/admin-page/Statcard";
 import {
@@ -124,10 +123,6 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                 <RevenueChart />
                 <JobFunnel />
-            </div>
-
-            <div className="mt-6">
-                <RecentActivity />
             </div>
         </div>
     );
