@@ -48,6 +48,7 @@ const authRoutes = [
 export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const token = request.cookies.get("token")?.value;
+    console.log('token', token)
 
     const isAuthRoute = authRoutes.some((route) =>
         pathname.startsWith(route)
