@@ -55,6 +55,7 @@ export interface IProposal {
 export interface IGetProposalsQueryParams {
     job?: string;
     freelancer?: string;
+    client?: string;
     status?: string;
     page?: number;
     limit?: number;
@@ -115,6 +116,7 @@ export const proposalService = {
 
         if (params?.job) queryParams.append("job", params.job);
         if (params?.freelancer) queryParams.append("freelancer", params.freelancer);
+        if (params?.client) queryParams.append("client", params.client);
         if (params?.status) queryParams.append("status", params.status);
         if (params?.page) queryParams.append("page", params.page.toString());
         if (params?.limit) queryParams.append("limit", params.limit.toString());

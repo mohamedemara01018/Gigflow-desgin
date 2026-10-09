@@ -5,7 +5,7 @@ import { getInitials } from '@/utils/functions.utils';
 import React, { useState, useEffect } from 'react';
 
 interface UserImageProps {
-    avatarUrl?: string;
+    avatarUrl?: string | null;
     firstName: string;
     lastName: string;
     className?: string;

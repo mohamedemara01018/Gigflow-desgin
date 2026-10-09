@@ -53,20 +53,7 @@ export default function JobHeaderCard({ job, loading }: JobHeaderCardProps) {
                     <span>Job ID: {job._id}</span>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                    <button className="flex items-center gap-1.5 bg-surface-variant text-on-surface-variant text-label-sm rounded-md px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer">
-                        <FileEdit size={15} />
-                        Edit Job Brief
-                    </button>
-                    <button className="flex items-center gap-1.5 bg-surface-variant text-on-surface-variant text-label-sm rounded-md px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer">
-                        <Lock size={15} />
-                        Close Job
-                    </button>
-                    <button className="flex items-center gap-1.5 bg-primary text-on-primary text-label-sm rounded-md px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer">
-                        <UserPlus size={15} />
-                        Invite Talent
-                    </button>
-                </div>
+                
             </div>
 
             <h1 className="text-headline-lg text-on-surface mt-3">{job.title}</h1>

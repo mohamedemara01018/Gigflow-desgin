@@ -37,8 +37,8 @@ export interface IConversation {
     client: IUserRef;
     freelancer: IUserRef;
     job?: IJobRef;
-    proposal?: IProposal;
-    contract?: IContract;
+    proposal?: IProposal | string;
+    contract?: IContract | string;
     lastMessage?: IMessageRef | string | null;
     lastMessageAt?: string;
     clientUnreadCount: number;

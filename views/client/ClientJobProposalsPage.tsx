@@ -9,8 +9,6 @@ import { IToastificationType, toastify } from "@/store/slices/toastificationSlic
 import {
     Search,
     ArrowUpDown,
-    List,
-    LayoutGrid,
 } from "lucide-react";
 import FilterSelect from "@/components/ui/FilterSelect";
 import JobProposalCard from "@/components/features/client/client-job-proposals/JobProposalCard";
@@ -39,7 +37,6 @@ export default function ClientJobProposalsPage({ jobId }: { jobId: string }) {
     const [activeTab, setActiveTab] = useState<string>("all");
     const [query, setQuery] = useState("");
     const [selectedSort, setSelectedSort] = useState("Sort: Best Match");
-    const [view, setView] = useState<"list" | "grid">("list");
     const [page, setPage] = useState(1);
 
     // Dynamic Data State
@@ -190,29 +187,13 @@ export default function ClientJobProposalsPage({ jobId }: { jobId: string }) {
                         onSelect={(val) => setSelectedSort(val)}
                     />
 
-                    <div className="flex items-center gap-1 bg-surface-container border border-outline-variant rounded-md p-1 shrink-0">
-                        <button
-                            onClick={() => setView("list")}
-                            className={`w-8 h-8 flex items-center justify-center rounded transition-colors cursor-pointer ${view === "list" ? "bg-surface-container-high text-on-surface" : "text-on-surface-variant"
-                                }`}
-                        >
-                            <List size={15} />
-                        </button>
-                        <button
-                            onClick={() => setView("grid")}
-                            className={`w-8 h-8 flex items-center justify-center rounded transition-colors cursor-pointer ${view === "grid" ? "bg-surface-container-high text-on-surface" : "text-on-surface-variant"
-                                }`}
-                        >
-                            <LayoutGrid size={15} />
-                        </button>
-                    </div>
                 </div>
 
                 {/* Candidate Proposals List / Loading State */}
                 {isLoading ? (
                     <SmallLoading />
                 ) : (
-                    <div className={`gap-5 ${view === "grid" ? "grid grid-cols-1 xl:grid-cols-2" : "flex flex-col"}`}>
+                    <div className={`gap-5 flex flex-col`}>
                         {filteredProposals.map((proposal) => (
                             <JobProposalCard
                                 key={proposal._id}

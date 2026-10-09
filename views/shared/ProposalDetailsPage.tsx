@@ -7,8 +7,6 @@ import { useRouter } from "next/navigation";
 import ActionsCard from "@/components/features/shared/proposal-details/Actionscard";
 import AttachmentsCard from "@/components/ui/Attachmentscard";
 import BidEconomicsCard from "@/components/features/shared/proposal-details/Bideconomicscard";
-import ClientBriefCard from "@/components/features/shared/proposal-details/Clientbriefcard";
-import ClientSidebarCard from "@/components/features/shared/proposal-details/Clientsidebarcard";
 import CoverLetterPitchCard from "@/components/features/shared/proposal-details/Coverletterpitchcard";
 import LifecycleCard from "@/components/features/shared/proposal-details/Lifecyclecard";
 import Loading from "@/components/ui/Loading";
@@ -33,6 +31,7 @@ export default function ProposalDetailsPage({ proposalId }: { proposalId: string
     const [error, setError] = useState<string | null>(null);
     const { me } = useSelector(selectMeSlice);
     const isFreelancer = me?.role === UserRole.FREELANCER;
+    const isAdmin = me?.role == UserRole.ADMIN;
 
     const handleToast = useCallback(
         (message: string, type: IToastificationType) => {
@@ -150,7 +149,7 @@ export default function ProposalDetailsPage({ proposalId }: { proposalId: string
                     ID: {proposal._id}
                 </p>
 
-                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 mt-6 items-start">
+                <div className={`grid grid-cols-1 lg:${!isAdmin ? 'grid-cols-[minmax(0,1fr)_320px]' : 'grid-cols-1'} gap-6 mt-6 items-start`}>
                     <div className="flex flex-col gap-6 min-w-0">
                         {/* <ClientBriefCard job={proposal.job} /> */}
                         <BidEconomicsCard proposal={proposal} />
@@ -158,7 +157,7 @@ export default function ProposalDetailsPage({ proposalId }: { proposalId: string
                         <AttachmentsCard attachments={attachments} />
                     </div>
 
-                    <aside className="flex flex-col gap-4 lg:sticky lg:top-6">
+                    {!isAdmin && <aside className="flex flex-col gap-4 lg:sticky lg:top-6">
                         {isFreelancer ? (
                             <ActionsCard proposal={proposal} refetchProposal={fetchProposalData} />
                         ) : (
@@ -166,7 +165,7 @@ export default function ProposalDetailsPage({ proposalId }: { proposalId: string
                         )}
                         {isFreelancer && <LifecycleCard proposal={proposal} />}
                         {/* <ClientSidebarCard client={proposal.job?.client} /> */}
-                    </aside>
+                    </aside>}
                 </div>
             </div>
         </main>

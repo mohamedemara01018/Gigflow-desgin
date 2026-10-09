@@ -13,7 +13,7 @@ import Ghost from "./Ghost";
 interface ContractCardItemProps {
     contract: IContract;
     currentUserId?: string;
-    isFreelancer: string
+    isFreelancer?: boolean;
 }
 
 export default function ContractCardItem({ contract, currentUserId, isFreelancer }: ContractCardItemProps) {
