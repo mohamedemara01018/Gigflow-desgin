@@ -25,11 +25,10 @@ interface NavLink {
 
 const CLIENT_NAV_LINKS: NavLink[] = [
     { label: 'My Jobs', href: '/client/jobs' },
-    { label: 'Find Talent', href: '/client/talent' },
+    // { label: 'Find Talent', href: '/client/talent' },
     { label: 'Messages', href: '/messages' },
     { label: 'Contracts', href: '/contracts' },
-
-    { label: 'Reports', href: '/client/reports' },
+    // { label: 'Reports', href: '/client/reports' },
 
 ];
 

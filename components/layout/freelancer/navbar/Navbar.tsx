@@ -33,9 +33,11 @@ const FREELANCER_NAV_LINKS: NavLink[] = [
 
 const CLIENT_NAV_LINKS: NavLink[] = [
     { label: 'My Jobs', href: '/client/jobs' },
-    { label: 'Post a Job', href: '/client/jobs/create' },
+    // { label: 'Find Talent', href: '/client/talent' },
     { label: 'Messages', href: '/messages' },
     { label: 'Contracts', href: '/contracts' },
+    // { label: 'Reports', href: '/client/reports' },
+
 ];
 
 const DEFAULT_NAV_LINKS: NavLink[] = [
@@ -116,8 +118,8 @@ function Navbar() {
                                         key={label}
                                         href={href}
                                         className={`text-body-md font-medium transition-colors duration-200 ${isActive
-                                                ? 'text-primary font-semibold'
-                                                : 'text-on-surface-variant hover:text-primary'
+                                            ? 'text-primary font-semibold'
+                                            : 'text-on-surface-variant hover:text-primary'
                                             }`}
                                     >
                                         {label}
