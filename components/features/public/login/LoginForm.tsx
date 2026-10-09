@@ -62,10 +62,9 @@ function LoginForm() {
     };
 
     const handleGoogleLogin = () => {
-
         try {
-            setGoogleLoading(true)
-            window.location.href = BASE_URL + `/api/auth/google/login?sign=${Sign.LOGIN}`
+            setGoogleLoading(true);
+            window.location.href = `/api/auth/google/login?sign=${Sign.LOGIN}`;
         } catch (error: any) {
             handleAddToastification(error.message, "error", DURATION);
         }

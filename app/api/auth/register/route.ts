@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBackendUrl } from "@/lib/authProxy";
+import { getBackendUrl, getAuthCookieOptions, extractTokenFromSetCookie } from "@/lib/authProxy";
 
 export async function POST(request: NextRequest) {
     try {
@@ -15,7 +15,21 @@ export async function POST(request: NextRequest) {
         });
 
         const data = await backendResponse.json();
-        return NextResponse.json(data, { status: backendResponse.status });
+
+        if (!backendResponse.ok) {
+            return NextResponse.json(data, { status: backendResponse.status });
+        }
+
+        const setCookieHeader = backendResponse.headers.get("set-cookie");
+        const token = extractTokenFromSetCookie(setCookieHeader) || data?.data?.token;
+
+        const response = NextResponse.json(data, { status: backendResponse.status });
+
+        if (token) {
+            response.cookies.set("token", token, getAuthCookieOptions());
+        }
+
+        return response;
     } catch (error: any) {
         console.error("Register route handler error:", error);
         return NextResponse.json(

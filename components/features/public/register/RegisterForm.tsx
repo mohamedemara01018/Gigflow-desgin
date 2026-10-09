@@ -115,8 +115,8 @@ function RegisterForm() {
 
     const handleGoogleRegister = () => {
         try {
-            setGoogleLoading(true)
-            window.location.href = BASE_URL + `/api/auth/google/login?sign=${Sign.REGISTER}&role=${role}`
+            setGoogleLoading(true);
+            window.location.href = `/api/auth/google/login?sign=${Sign.REGISTER}&role=${role}`;
         } catch (error: any) {
             handleAddToastification(String(error.message), "error", DURATION);
         }

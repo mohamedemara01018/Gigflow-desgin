@@ -3,6 +3,17 @@ import { getBackendUrl, getAuthCookieOptions, extractTokenFromSetCookie } from "
 
 export async function GET(request: NextRequest) {
     try {
+        const token = request.nextUrl.searchParams.get("token");
+        const isIdentityVerified = request.nextUrl.searchParams.get("isIdentityVerified");
+
+        if (token) {
+            const destination = isIdentityVerified === "false" ? "/verify-identity" : "/";
+            const response = NextResponse.redirect(new URL(destination, request.url));
+            response.cookies.set("token", token, getAuthCookieOptions());
+            return response;
+        }
+
+        // Fallback: proxy directly to backend if invoked without pre-set token
         const backendUrl = getBackendUrl();
         const searchParams = request.nextUrl.searchParams.toString();
         const url = `${backendUrl}/api/auth/google/callback${searchParams ? `?${searchParams}` : ""}`;
@@ -16,13 +27,13 @@ export async function GET(request: NextRequest) {
         });
 
         const setCookieHeader = backendResponse.headers.get("set-cookie");
-        const token = extractTokenFromSetCookie(setCookieHeader);
+        const extractedToken = extractTokenFromSetCookie(setCookieHeader);
         const redirectLocation = backendResponse.headers.get("location") || "/";
 
         const response = NextResponse.redirect(new URL(redirectLocation, request.url));
 
-        if (token) {
-            response.cookies.set("token", token, getAuthCookieOptions());
+        if (extractedToken) {
+            response.cookies.set("token", extractedToken, getAuthCookieOptions());
         }
 
         return response;
