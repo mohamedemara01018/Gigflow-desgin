@@ -85,7 +85,7 @@ export interface GetAllUserParams {
 
 export const userService = {
     me: async () => {
-        const response = await fetch(`${BASE_URL}/api/user/me`, {
+        const response = await fetch(`/api/user/me`, {
             credentials: 'include',
         });
         const data = await response.json();

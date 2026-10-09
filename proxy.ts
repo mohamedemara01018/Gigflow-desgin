@@ -2,75 +2,63 @@ import { jwtVerify, JWTPayload } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 import { UserRole } from "./utils/enums.utils";
 
-const secret = new TextEncoder().encode(
-    process.env.JWT_TOKEN_SECRET_KEY
-);
-
 interface TokenPayload extends JWTPayload {
     email: string;
-    role: "client" | "freelancer";
+    role: "client" | "freelancer" | "admin" | string;
     isEmailVerified: boolean;
     isIdentityVerified: boolean;
 }
 
-const clientRoutes = [
-    "/client",
-];
-
-const freelancerRoutes = [
-    "/freelancer",
-];
-
-const adminRoutes = [
-    "/admin",
-];
+const clientRoutes = ["/client"];
+const freelancerRoutes = ["/freelancer"];
+const adminRoutes = ["/admin"];
 
 const sharedProtectedRoutes = [
     "/profile",
     "/settings",
-    "/jobs",
-    '/proposals',
-    '/upload-attachment',
+    "/proposals",
+    "/upload-attachment",
     "/notification",
-    '/messages',
-    '/contracts'
+    "/messages",
+    "/contracts",
+    "/payments",
 ];
 
 const authRoutes = [
     "/login",
     "/register",
-    "/verify-email",
-    "/verify-identity",
+    "/role",
     "/forgot-password",
     "/reset-password",
 ];
 
+function isRouteMatch(pathname: string, routes: string[]): boolean {
+    return routes.some((route) => pathname === route || pathname.startsWith(route + "/"));
+}
+
+function getDashboardUrlForRole(role?: string): string {
+    const normalizedRole = (role || "").toLowerCase();
+    if (normalizedRole === UserRole.ADMIN || normalizedRole === "admin") {
+        return "/admin/users";
+    }
+    if (normalizedRole === UserRole.CLIENT || normalizedRole === "client") {
+        return "/client/jobs";
+    }
+    if (normalizedRole === UserRole.FREELANCER || normalizedRole === "freelancer") {
+        return "/freelancer/proposals";
+    }
+    return "/";
+}
+
 export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const token = request.cookies.get("token")?.value;
-    console.log('token', token)
 
-    const isAuthRoute = authRoutes.some((route) =>
-        pathname.startsWith(route)
-    );
-
-    const isClientRoute = clientRoutes.some((route) =>
-        pathname.startsWith(route)
-    );
-
-    const isFreelancerRoute = freelancerRoutes.some((route) =>
-        pathname.startsWith(route)
-    );
-
-    const isAdminRoute = adminRoutes.some((route) =>
-        pathname.startsWith(route)
-    );
-
-
-
-    const isSharedProtectedRoute = sharedProtectedRoutes.some((route) =>
-        pathname.startsWith(route)
-    );
+    const isAuthRoute = isRouteMatch(pathname, authRoutes);
+    const isClientRoute = isRouteMatch(pathname, clientRoutes);
+    const isFreelancerRoute = isRouteMatch(pathname, freelancerRoutes);
+    const isAdminRoute = isRouteMatch(pathname, adminRoutes);
+    const isSharedProtectedRoute = isRouteMatch(pathname, sharedProtectedRoutes);
 
     const isProtectedRoute =
         isClientRoute ||
@@ -78,132 +66,118 @@ export async function proxy(request: NextRequest) {
         isAdminRoute ||
         isSharedProtectedRoute;
 
-    // --------------------------------
-    // No token
-    // --------------------------------
-
+    // ----------------------------------------------------
+    // 1. UNCOOKIED / UNAUTHENTICATED REQUESTS
+    // ----------------------------------------------------
     if (!token) {
-        // Verification pages require authentication
-        if (
-            pathname === "/verify-email" ||
-            pathname === "/verify-identity"
-        ) {
-            return NextResponse.redirect(
-                new URL("/login", request.url)
-            );
+        // Verification pages require active session
+        if (pathname === "/verify-email" || pathname === "/verify-identity") {
+            const loginUrl = new URL("/login", request.url);
+            loginUrl.searchParams.set("callbackUrl", pathname);
+            return NextResponse.redirect(loginUrl);
         }
 
         // Protected routes require authentication
         if (isProtectedRoute) {
-            return NextResponse.redirect(
-                new URL("/login", request.url)
-            );
+            const loginUrl = new URL("/login", request.url);
+            loginUrl.searchParams.set("callbackUrl", pathname);
+            return NextResponse.redirect(loginUrl);
         }
 
         return NextResponse.next();
     }
 
-    // --------------------------------
-    // Verify JWT
-    // --------------------------------
+    // ----------------------------------------------------
+    // 2. JWT VERIFICATION
+    // ----------------------------------------------------
+    const jwtSecretKey = process.env.JWT_TOKEN_SECRET_KEY;
+    if (!jwtSecretKey) {
+        console.error(
+            "❌ [Proxy] JWT_TOKEN_SECRET_KEY is not defined in environment variables."
+        );
+        // If server configuration error, allow fail-safe redirect to login without crashing
+        return NextResponse.redirect(new URL("/login", request.url));
+    }
 
     try {
-        const { payload } = await jwtVerify(
-            token,
-            secret
-        );
-
+        const encodedSecret = new TextEncoder().encode(jwtSecretKey);
+        const { payload } = await jwtVerify(token, encodedSecret);
         const user = payload as TokenPayload;
 
-        // --------------------------------
-        // 1. EMAIL VERIFICATION
-        // --------------------------------
+        const role = (user.role || "").toLowerCase();
+        const defaultDashboard = getDashboardUrlForRole(role);
 
+        // ----------------------------------------------------
+        // 3. EMAIL VERIFICATION CHECKS
+        // ----------------------------------------------------
         if (!user.isEmailVerified) {
             if (pathname !== "/verify-email") {
-                return NextResponse.redirect(
-                    new URL("/verify-email", request.url)
-                );
+                return NextResponse.redirect(new URL("/verify-email", request.url));
             }
-
-            // Allow verify-email page
             return NextResponse.next();
         }
 
-        // --------------------------------
-        // 2. IDENTITY VERIFICATION
-        // --------------------------------
-
+        // ----------------------------------------------------
+        // 4. IDENTITY VERIFICATION CHECKS
+        // ----------------------------------------------------
         if (!user.isIdentityVerified) {
             if (pathname !== "/verify-identity") {
-                return NextResponse.redirect(
-                    new URL("/verify-identity", request.url)
-                );
+                return NextResponse.redirect(new URL("/verify-identity", request.url));
             }
-
-            // Allow verify-identity page
             return NextResponse.next();
         }
 
-        // --------------------------------
-        // 3. BOTH VERIFIED
-        // --------------------------------
-
-        // Verified users cannot access
-        // verification pages anymore.
-        if (
-            pathname === "/verify-email" ||
-            pathname === "/verify-identity"
-        ) {
-            return NextResponse.redirect(
-                new URL("/", request.url)
-            );
+        // ----------------------------------------------------
+        // 5. PREVENT VERIFIED USERS FROM ACCESSING VERIFICATION PAGES
+        // ----------------------------------------------------
+        if (pathname === "/verify-email" || pathname === "/verify-identity") {
+            return NextResponse.redirect(new URL(defaultDashboard, request.url));
         }
 
-        // --------------------------------
-        // 4. AUTH PAGES
-        // --------------------------------
-
+        // ----------------------------------------------------
+        // 6. PREVENT AUTHENTICATED USERS FROM ACCESSING AUTH PAGES
+        // ----------------------------------------------------
         if (isAuthRoute) {
-            return NextResponse.redirect(
-                new URL("/", request.url)
-            );
+            const callbackUrl = request.nextUrl.searchParams.get("callbackUrl");
+            const destination = callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : defaultDashboard;
+            return NextResponse.redirect(new URL(destination, request.url));
         }
 
-        // --------------------------------
-        // 5. ROLE PROTECTION
-        // --------------------------------
-
-        // Client cannot access freelancer routes
-        if (
-            user.role == UserRole.CLIENT &&
-            isFreelancerRoute
-        ) {
-            return NextResponse.redirect(
-                new URL("/", request.url)
-            );
+        // ----------------------------------------------------
+        // 7. ROLE-BASED ACCESS CONTROL
+        // ----------------------------------------------------
+        // Admin protection: Only ADMIN role can access /admin routes
+        if (isAdminRoute && role !== UserRole.ADMIN && role !== "admin") {
+            return NextResponse.redirect(new URL(defaultDashboard, request.url));
         }
 
-        // Freelancer cannot access client routes
-        if (
-            user.role == UserRole.FREELANCER &&
-            isClientRoute
-        ) {
-            return NextResponse.redirect(
-                new URL("/", request.url)
-            );
+        // Client route protection: FREELANCER cannot access /client
+        if (isClientRoute && (role === UserRole.FREELANCER || role === "freelancer")) {
+            return NextResponse.redirect(new URL(defaultDashboard, request.url));
+        }
+
+        // Freelancer route protection: CLIENT cannot access /freelancer
+        if (isFreelancerRoute && (role === UserRole.CLIENT || role === "client")) {
+            return NextResponse.redirect(new URL(defaultDashboard, request.url));
         }
 
         return NextResponse.next();
-
     } catch (error) {
-        console.error("JWT verification failed:", error);
+        // Invalid or expired token: clear cookie and redirect to login
+        const loginUrl = new URL("/login", request.url);
+        if (isProtectedRoute) {
+            loginUrl.searchParams.set("callbackUrl", pathname);
+        }
 
-        const response = NextResponse.redirect(
-            new URL("/login", request.url)
-        );
-
+        const response = NextResponse.redirect(loginUrl);
         response.cookies.delete("token");
+        response.cookies.set("token", "", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 0,
+        });
 
         return response;
     }

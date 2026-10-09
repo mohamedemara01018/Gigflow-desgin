@@ -1,120 +1,125 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BASE_URL } from "@/utils/constant.utils"
 
 export const authService = {
     register: async (formData: any) => {
-        const response = await fetch(`${BASE_URL}/api/auth/register`, {
+        const response = await fetch(`/api/auth/register`, {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        })
+            credentials: "include",
+            body: JSON.stringify(formData),
+        });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when register')
+            throw new Error(data.message || "Failed to register account");
         }
 
-        return data
+        return data;
     },
+
     verfiyEmail: async (formData: any) => {
-        const response = await fetch(`${BASE_URL}/api/auth/verify-email`, {
+        const response = await fetch(`/api/auth/verify-email`, {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        })
+            credentials: "include",
+            body: JSON.stringify(formData),
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when verify email')
+            throw new Error(data.message || "Failed to verify email");
         }
 
-        return data
+        return data;
     },
+
     resendEmailCode: async (formData: any) => {
-        const response = await fetch(`${BASE_URL}/api/auth/resend-email-code`, {
+        const response = await fetch(`/api/auth/resend-email-code`, {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        })
+            credentials: "include",
+            body: JSON.stringify(formData),
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when resend code')
+            throw new Error(data.message || "Failed to resend verification code");
         }
 
-        return data
+        return data;
     },
+
     login: async (formData: any) => {
-        const response = await fetch(`${BASE_URL}/api/auth/login`, {
+        const response = await fetch(`/api/auth/login`, {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        })
+            credentials: "include",
+            body: JSON.stringify(formData),
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when login')
+            throw new Error(data.message || "Failed to log in");
         }
-        return data
+        return data;
     },
+
     logout: async () => {
-        const response = await fetch(`${BASE_URL}/api/auth/logout`, {
+        const response = await fetch(`/api/auth/logout`, {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            credentials: 'include',
-        })
+            credentials: "include",
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when logout')
+            throw new Error(data.message || "Failed to log out");
         }
-        return data
+        return data;
     },
+
     forgetPassword: async (formData: any) => {
-        const response = await fetch(`${BASE_URL}/api/auth/forget-password`, {
+        const response = await fetch(`/api/auth/forget-password`, {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        })
+            credentials: "include",
+            body: JSON.stringify(formData),
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when login')
+            throw new Error(data.message || "Failed to process forgot password request");
         }
-        return data
+        return data;
     },
+
     resetPassword: async (formData: any) => {
-        const response = await fetch(`${BASE_URL}/api/auth/reset-password`, {
+        const response = await fetch(`/api/auth/reset-password`, {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        })
+            credentials: "include",
+            body: JSON.stringify(formData),
+        });
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'something went wrong when login')
+            throw new Error(data.message || "Failed to reset password");
         }
-        return data
+        return data;
     },
-}
+};
