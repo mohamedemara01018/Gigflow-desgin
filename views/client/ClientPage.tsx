@@ -22,7 +22,6 @@ function QuickActions() {
     const actions = [
         { label: "Post a New Job", icon: Plus, primary: true, href: "/client/jobs/create" },
         { label: "Manage My Jobs", icon: Briefcase, href: "/client/jobs" },
-        { label: "Search Top Talent", icon: Users, href: "/client/talent" },
         { label: "Contracts & Escrow", icon: ShieldCheck, href: "/contracts" },
     ];
 
