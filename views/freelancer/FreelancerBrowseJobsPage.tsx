@@ -146,13 +146,6 @@ export default function FreelancerBrowseJobsPage() {
                                     Top Jobs for You
                                 </h1>
                             </div>
-                            <div className="flex items-center gap-2 text-body-md text-on-surface-variant">
-                                <span>Sort by:</span>
-                                <button className="flex items-center gap-1 text-primary font-medium">
-                                    Newest First
-                                    <ChevronDown size={16} />
-                                </button>
-                            </div>
                         </div>
 
                         {/* Search Input Bar */}
@@ -229,14 +222,14 @@ export default function FreelancerBrowseJobsPage() {
                     {/* Pagination Controls */}
                     {!loading && !error && jobs.length > 0 && (
                         <div className="-mt-8">
-                        <Pagination
-                            currentPage={page}
-                            totalPages={totalPages}
-                            pageSize={pageSize}
-                            totalItems={totalJobs}
-                            onPageChange={handlePageChange}
-                            isLoading={loading}
-                            itemLabel="jobs"
+                            <Pagination
+                                currentPage={page}
+                                totalPages={totalPages}
+                                pageSize={pageSize}
+                                totalItems={totalJobs}
+                                onPageChange={handlePageChange}
+                                isLoading={loading}
+                                itemLabel="jobs"
                             />
                         </div>
                     )}

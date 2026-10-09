@@ -32,7 +32,8 @@ const sharedProtectedRoutes = [
     '/proposals',
     '/upload-attachment',
     "/notification",
-    '/messages'
+    '/messages',
+    '/contracts'
 ];
 
 const authRoutes = [

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ExternalLink, Trash2 } from "lucide-react";
 import UserImage from "@/components/ui/UserImage";
 import { formatDistanceToNow } from "@/utils/functions.utils";
@@ -25,18 +26,40 @@ export default function NotificationCard({
     onMarkRead,
     onDelete,
 }: NotificationCardProps) {
+    const router = useRouter();
     const firstName = item.sender?.firstName || "";
     const lastName = item.sender?.lastName || "";
-    console.log(item )
     const senderName =
         firstName || lastName ? `${firstName} ${lastName}`.trim() : "System";
 
+    const getDestinationUrl = () => {
+        if (item.link) return item.link;
+        if (item.entityType === "contract" && item.entityId) {
+            return `/contracts/${item.entityId}`;
+        }
+        return null;
+    };
+
+    const handleClick = () => {
+        if (!item.isRead) {
+            onMarkRead(item._id);
+        }
+        const targetUrl = getDestinationUrl();
+        if (targetUrl) {
+            if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
+                window.open(targetUrl, "_blank");
+            } else {
+                router.push(targetUrl);
+            }
+        }
+    };
+
     return (
         <div
-            onClick={() => !item.isRead && onMarkRead(item._id)}
+            onClick={handleClick}
             className={`group relative flex gap-4 p-4 rounded-lg transition-all cursor-pointer ${item.isRead
-                ? "bg-surface-container-low border border-outline-variant"
-                : "bg-primary/10 border-l-4 border-primary"
+                ? "bg-surface-container-low border border-outline-variant hover:border-outline"
+                : "bg-primary/10 border-l-4 border-primary hover:bg-primary/15"
                 }`}
         >
             {/* Avatar Section using UserImage */}
@@ -102,17 +125,13 @@ export default function NotificationCard({
                 </p>
 
                 {/* Optional Action Link */}
-                {item.link && (
+                {getDestinationUrl() && (
                     <div className="flex items-center gap-2 mt-3">
-                        <a
-                            href={item.link}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1.5 text-label-md text-primary hover:underline"
+                        <span
+                            className="flex items-center gap-1.5 text-label-md text-primary group-hover:underline"
                         >
                             <ExternalLink size={13} /> View Details
-                        </a>
+                        </span>
                     </div>
                 )}
             </div>

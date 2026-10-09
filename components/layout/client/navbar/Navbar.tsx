@@ -27,7 +27,10 @@ const CLIENT_NAV_LINKS: NavLink[] = [
     { label: 'My Jobs', href: '/client/jobs' },
     { label: 'Find Talent', href: '/client/talent' },
     { label: 'Messages', href: '/messages' },
+    { label: 'Contracts', href: '/contracts' },
+
     { label: 'Reports', href: '/client/reports' },
+
 ];
 
 const FREELANCER_NAV_LINKS: NavLink[] = [
@@ -35,11 +38,14 @@ const FREELANCER_NAV_LINKS: NavLink[] = [
     { label: 'Proposals', href: '/freelancer/proposals' },
     { label: 'Saved Jobs', href: '/freelancer/saved-jobs' },
     { label: 'Messages', href: '/messages' },
+    { label: 'Contracts', href: '/contracts' },
+
 ];
 
 const DEFAULT_NAV_LINKS: NavLink[] = [
     { label: 'Browse', href: '/' },
     { label: 'Messages', href: '/messages' },
+    { label: 'Contracts', href: '/contracts' },
 ];
 
 export default function Navbar() {

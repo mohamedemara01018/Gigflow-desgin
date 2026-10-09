@@ -10,6 +10,8 @@ export interface IUserRef {
     lastName: string;
     email: string;
     avatar?: string | null;
+    country?: string | null;
+    city?: string | null;
 }
 
 export interface IJobRef {
@@ -21,10 +23,13 @@ export interface IJobRef {
     type?: string;
 }
 
+import { IMilestone } from "./milestone.service";
+import { IProposal } from "./proposal.service";
+
 export interface IContract {
     _id: string;
     job: IJobRef | string;
-    proposal: string;
+    proposal: string | IProposal;
     client: IUserRef | string;
     freelancer: IUserRef | string;
     type: ContractType | string;
@@ -44,6 +49,7 @@ export interface IContract {
     completedAt?: string | null;
     cancelledAt?: string | null;
     cancellationReason?: string | null;
+    milestones?: IMilestone[];
     createdAt?: string;
     updatedAt?: string;
 }
@@ -159,6 +165,13 @@ export const contractService = {
         }
 
         return data;
+    },
+
+    /**
+     * Alias for getAllContracts
+     */
+    getContracts: async (params?: IGetContractsQueryParams): Promise<IContractListApiResponse> => {
+        return contractService.getAllContracts(params);
     },
 
     /**

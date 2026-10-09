@@ -1,5 +1,7 @@
 import { BASE_URL } from "@/utils/constant.utils";
 import { ConversationStatus, UserRole } from "@/utils/enums.utils";
+import { IProposal } from "./proposal.service";
+import { IContract } from "./contract.service";
 
 // ==========================================
 // 1. Core Data Interfaces
@@ -35,8 +37,8 @@ export interface IConversation {
     client: IUserRef;
     freelancer: IUserRef;
     job?: IJobRef;
-    proposal?: any;
-    contract?: any;
+    proposal?: IProposal;
+    contract?: IContract;
     lastMessage?: IMessageRef | string | null;
     lastMessageAt?: string;
     clientUnreadCount: number;

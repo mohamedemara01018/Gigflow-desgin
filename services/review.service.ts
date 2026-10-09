@@ -1,4 +1,5 @@
 import { BASE_URL } from "@/utils/constant.utils";
+import { IJob } from "./jobs.service";
 
 export interface IReviewUserRef {
     _id: string;
@@ -12,7 +13,7 @@ export interface IReviewUserRef {
 export interface IReview {
     _id: string;
     contract: string;
-    job: any;
+    job: IJob;
     reviewer: IReviewUserRef;
     reviewee: IReviewUserRef;
     rating: number;

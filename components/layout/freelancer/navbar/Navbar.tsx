@@ -8,6 +8,7 @@ import { TextAlignJustify, X } from 'lucide-react';
 
 import Logo from '@/components/ui/Logo';
 import NotificationBell from '@/components/ui/NotificationBell';
+import MessagesNavLink from '@/components/ui/MessagesNavLink';
 import ToggleTheme from '@/components/ui/ToggleTheme';
 import UserMenu from '@/components/ui/UserMenu';
 import { authService } from '@/services/auth.service';
@@ -27,17 +28,20 @@ const FREELANCER_NAV_LINKS: NavLink[] = [
     { label: 'Proposals', href: '/freelancer/proposals' },
     { label: 'Saved Jobs', href: '/freelancer/saved-jobs' },
     { label: 'Messages', href: '/messages' },
+    { label: 'Contracts', href: '/contracts' },
 ];
 
 const CLIENT_NAV_LINKS: NavLink[] = [
     { label: 'My Jobs', href: '/client/jobs' },
     { label: 'Post a Job', href: '/client/jobs/create' },
     { label: 'Messages', href: '/messages' },
+    { label: 'Contracts', href: '/contracts' },
 ];
 
 const DEFAULT_NAV_LINKS: NavLink[] = [
     { label: 'Browse', href: '/' },
     { label: 'Messages', href: '/messages' },
+    { label: 'Contracts', href: '/contracts' },
 ];
 
 function Navbar() {
@@ -64,7 +68,6 @@ function Navbar() {
             setLoading(false);
         }
     };
-
 
     // Determine navigation links dynamically based on user role
     const navLinks = me?.role === UserRole.CLIENT
@@ -95,13 +98,26 @@ function Navbar() {
                         <div className="hidden md:flex gap-6 items-center">
                             {navLinks.map(({ label, href }) => {
                                 const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
+
+                                if (href === '/messages') {
+                                    return (
+                                        <MessagesNavLink
+                                            key={label}
+                                            userId={me?._id}
+                                            href={href}
+                                            label={label}
+                                            isActive={isActive}
+                                        />
+                                    );
+                                }
+
                                 return (
                                     <Link
                                         key={label}
                                         href={href}
                                         className={`text-body-md font-medium transition-colors duration-200 ${isActive
-                                            ? 'text-primary font-semibold'
-                                            : 'text-on-surface-variant hover:text-primary'
+                                                ? 'text-primary font-semibold'
+                                                : 'text-on-surface-variant hover:text-primary'
                                             }`}
                                     >
                                         {label}
@@ -138,6 +154,20 @@ function Navbar() {
                 >
                     {navLinks.map(({ label, href }) => {
                         const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
+
+                        if (href === '/messages') {
+                            return (
+                                <MessagesNavLink
+                                    key={label}
+                                    userId={me?._id}
+                                    href={href}
+                                    label={label}
+                                    isActive={isActive}
+                                    onClick={() => setMenuOpen(false)}
+                                />
+                            );
+                        }
+
                         return (
                             <Link
                                 key={label}
