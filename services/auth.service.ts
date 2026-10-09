@@ -55,14 +55,15 @@ export const authService = {
         return data
     },
     login: async (formData: any) => {
-        const response = await fetch(`${BASE_URL}/api/auth/login`, {
+        const response = await fetch("/api/auth/login", {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        })
+            credentials: "same-origin",
+            body: JSON.stringify(formData),
+        });
+
         const data = await response.json();
 
         if (!response.ok) {
