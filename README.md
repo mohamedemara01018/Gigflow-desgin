@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GigFlow (Frontend)
 
-## Getting Started
+GigFlow is a full-stack freelance marketplace platform designed to bridge the gap between clients and freelancers. This repository contains the frontend client application built with **Next.js 15 (App Router)**, providing responsive dashboards, real-time communication via Socket.io, and interactive milestone-based contract management.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Key Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* **Dual-Role Architecture**: Dedicated, role-aware navigation and dashboards for both **Clients** and **Freelancers**.
+* **Milestone Contract Lifecycle**: Interactive workflows for submitting work, requesting revisions, and monitoring escrow/release stages.
+* **Real-Time Messaging & Notifications**: Integrated Socket.io client for live chat updates, unread message badges, and instant notification alerts.
+* **Job Discovery & Search**: Client-side debounced search filtering and custom pagination for browsing available postings.
+* **Secure Authentication**: Integrated JWT-based authentication flows alongside Google OAuth support.
+* **Modern UI/UX**: Clean, responsive styling engineered with Tailwind CSS and enhanced with Lucide React icons and centralized toast feedback systems.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Tech Stack
 
-## Learn More
+* **Framework**: Next.js 15 (App Router), React 19
+* **Language**: TypeScript
+* **Styling**: Tailwind CSS
+* **State Management**: Redux Toolkit
+* **Real-Time**: Socket.io Client
+* **Icons**: Lucide React
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ⚙️ Getting Started
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Prerequisites
+Make sure you have Node.js (v18+) and npm/yarn installed.
 
-## Deploy on Vercel
+### Installation & Running Locally
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Clone the repository**:
+   ```bash
+   git clone [https://github.com/your-username/gigflow.git](https://github.com/your-username/gigflow.git)
+   cd gigflow
