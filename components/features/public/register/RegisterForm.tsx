@@ -11,12 +11,11 @@ import { authService } from '@/services/auth.service';
 import { useRouter, useSearchParams } from 'next/navigation';
 import FormError from '@/components/ui/FormError';
 import { GoogleIcon } from '@/utils/icons.utils';
-import { BASE_URL, DURATION } from '@/utils/constant.utils';
+import { DURATION } from '@/utils/constant.utils';
 import { Sign, UserRole } from '@/utils/enums.utils';
 import { AppDispatch } from '@/store/store';
 import { useDispatch } from 'react-redux';
 import { IToastificationType, toastify } from '@/store/slices/toastificationSlice';
-
 
 function RegisterForm() {
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
@@ -26,56 +25,62 @@ function RegisterForm() {
         lastName: "",
         email: "",
         password: "",
-        // role: "freelancer"
-    })
-    const [confirmPassword, setConfirmPassword] = useState('')
-    const [googleLoading, setGoogleLoading] = useState(false)
-    const [confirmPasswordError, setConfirmPasswordError] = useState('')
+    });
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [agreed, setAgreed] = useState(false); // حالة الـ Checkbox للشروط والأحكام
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [confirmPasswordError, setConfirmPasswordError] = useState('');
     const router = useRouter();
     const role = searchParams.get('role');
 
     const dispatch: AppDispatch = useDispatch();
     const handleAddToastification = (message: string, type: IToastificationType, duration?: number) => {
-        dispatch(toastify({ message, type, duration }))
-    }
+        dispatch(toastify({ message, type, duration }));
+    };
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
-        const { name, value } = e.target
-        setFormData((prev) => {
-            return {
-                ...prev,
-                [name]: value
-            }
-        })
-    }
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
 
     const handleChangeConfirmPassword = (e: ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setConfirmPassword(val);
         if (!formData.password) {
-            setConfirmPasswordError('must provide your password then confirm it')
-            return
+            setConfirmPasswordError('must provide your password then confirm it');
+            return;
         }
-        setConfirmPassword(e.target.value)
-        if (!formData.password.includes(e.target.value)) {
-            setConfirmPasswordError('confirm password not match your password')
+        if (formData.password !== val) {
+            setConfirmPasswordError('confirm password not match your password');
         } else {
-            setConfirmPasswordError('')
+            setConfirmPasswordError('');
         }
-    }
-
-    useEffect(() => {
-        console.log(formData)
-    }, [formData])
+    };
 
     const validate = () => {
         if (!formData.firstName.trim()) return "First name is required";
         if (!formData.lastName.trim()) return "Last name is required";
         if (!formData.email.trim()) return "Email is required";
         if (!formData.password.trim()) return "Password is required";
-        if (formData.password.length < 8)
-            return "Password must be at least 8 characters";
+        if (formData.password.length < 8) return "Password must be at least 8 characters";
+        if (!confirmPassword.trim()) return "Confirm password is required";
+        if (formData.password !== confirmPassword) return "Passwords do not match";
+        if (!agreed) return "You must accept the terms and conditions";
         return "";
     };
 
+    // التحقق من امتلاء جميع الحقول وتطابق كلمة المرور وتفعيل الـ Checkbox
+    const isFormValid =
+        formData.firstName.trim() !== "" &&
+        formData.lastName.trim() !== "" &&
+        formData.email.trim() !== "" &&
+        formData.password.length >= 8 &&
+        confirmPassword.trim() !== "" &&
+        formData.password === confirmPassword &&
+        agreed;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,33 +88,31 @@ function RegisterForm() {
         const vaildateError = validate();
         if (vaildateError) {
             handleAddToastification(String(vaildateError), "error", DURATION);
-            return
+            return;
         }
         setStatus('loading');
 
         try {
-
-            if (role == UserRole.ADMIN) {
-
+            if (role === UserRole.ADMIN) {
+                // منطق خاص بالـ Admin إذا لزم الأمر
             }
 
-
-            const data = await authService.register({ ...formData, role })
+            const data = await authService.register({ ...formData, role });
             handleAddToastification(String(data.message), "success", DURATION);
 
-            router.push('/verify-email')
+            router.push('/verify-email');
             setFormData({
                 firstName: "",
                 lastName: "",
                 email: "",
                 password: "",
-            })
-            setConfirmPassword('')
-
+            });
+            setConfirmPassword('');
+            setAgreed(false);
         } catch (error: any) {
             handleAddToastification(String(error.message), "error", DURATION);
         } finally {
-            setStatus('idle')
+            setStatus('idle');
         }
     };
 
@@ -120,7 +123,7 @@ function RegisterForm() {
         } catch (error: any) {
             handleAddToastification(String(error.message), "error", DURATION);
         }
-    }
+    };
 
     return (
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -143,6 +146,7 @@ function RegisterForm() {
             </div>
 
             <FormError error={confirmPasswordError} />
+
             {/* Passwords Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col items-start gap-1.5 w-full">
@@ -161,21 +165,23 @@ function RegisterForm() {
                     <input
                         id="terms"
                         type="checkbox"
+                        checked={agreed}
+                        onChange={(e) => setAgreed(e.target.checked)}
                         required
                         className="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary-fixed-dim"
                     />
                 </div>
                 <label htmlFor="terms" className="text-[14px] leading-5 text-on-surface-variant">
-                    I accept the <a href="#" className="text-primary font-medium hover:underline">Terms of Service</a> and <a href="#" className="text-primary font-medium hover:underline">Privacy Policy</a>.
+                    I accept the <a href="/terms-of-service" className="text-primary font-medium hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-primary font-medium hover:underline">Privacy Policy</a>.
                 </label>
             </div>
 
             {/* Actions */}
             <button
                 type="submit"
-                disabled={status !== 'idle' || !role || (formData.password != confirmPassword)}
-                className={`w-full text-on-primary text-[14px] leading-5 font-medium tracking-[0.01em] py-4 rounded-lg shadow-lg hover:shadow-xl active:scale-[0.98] transition-all flex justify-center items-center gap-2
-                    ${status === 'loading' ? 'opacity-80' : 'opacity-100'}
+                disabled={status !== 'idle' || !isFormValid}
+                className={`w-full text-on-primary text-[14px] leading-5 font-medium tracking-[0.01em] py-4 rounded-lg shadow-lg transition-all flex justify-center items-center gap-2
+                    ${status !== 'idle' || !isFormValid ? 'opacity-50 cursor-not-allowed shadow-none' : 'hover:shadow-xl active:scale-[0.98] opacity-100'}
                 `}
                 style={{
                     background: status === 'success'
@@ -197,6 +203,7 @@ function RegisterForm() {
                     </>
                 )}
             </button>
+
             <div className="relative flex items-center py-4">
                 <div className="grow border-t border-outline-variant"></div>
                 <span className="shrink mx-4 text-on-surface-variant text-[12px] leading-4 font-semibold">OR CONTINUE WITH</span>
@@ -206,12 +213,12 @@ function RegisterForm() {
             {/* Social Logins */}
             <div className="grid grid-cols-1 gap-4">
                 <button
+                    type="button"
                     onClick={handleGoogleRegister}
                     className="flex items-center justify-center gap-2 px-4 py-3 border border-outline-variant rounded-xl hover:bg-surface-container hover:border-outline transition-all focus:ring-2 focus:ring-outline-variant/30 outline-none">
                     <GoogleIcon className="w-5 h-5" />
                     <span className="text-sm font-medium text-on-surface">{googleLoading ? 'Redirecting...' : 'Google'}</span>
                 </button>
-
             </div>
         </form>
     );

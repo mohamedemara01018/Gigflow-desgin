@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
       console.log(res)
       router.replace('/login')
       setIsSuccess(true);
-      handleAddToastification(String(res.message), "error", DURATION);
+      handleAddToastification(String(res.message), "success", DURATION);
 
     } catch (error: any) {
       handleAddToastification(String(error.message), "error", DURATION);
