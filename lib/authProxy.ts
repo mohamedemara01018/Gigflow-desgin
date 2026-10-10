@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextResponse } from "next/server";
 
 export function getBackendUrl(): string {
     // Priority: API_URL (server-only) > NEXT_PUBLIC_BASE_URL > fallback
     return (
         process.env.API_URL ||
         process.env.NEXT_PUBLIC_BASE_URL ||
-        "http://localhost:5000"
+        "http://localhost:4000"
     ).replace(/\/$/, "");
 }
 
