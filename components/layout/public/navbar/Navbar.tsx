@@ -124,17 +124,20 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Hamburger Button */}
-        <button
-          type="button"
-          className="md:hidden p-2 rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
-          onClick={() => setMenuOpen((prev) => !prev)}
-          aria-expanded={menuOpen}
-          aria-controls="mobile-menu"
-          aria-label="Toggle navigation menu"
-        >
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        {/* Mobile Right Controls (Notification Bell + Hamburger Button) */}
+        <div className="flex md:hidden items-center gap-2">
+          {me && <NotificationBell />}
+          <button
+            type="button"
+            className="p-2 rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            aria-label="Toggle navigation menu"
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile Drawer */}
@@ -157,10 +160,6 @@ export default function Navbar() {
           <div className="flex flex-col gap-2 pt-3 border-t border-outline-variant mt-1">
             {me ? (
               <>
-                <div className="flex items-center justify-between py-1">
-                  <span className="text-sm font-medium text-on-surface-variant">Notifications</span>
-                  <NotificationBell />
-                </div>
                 <Link
                   href={dashboardHref}
                   className="w-full text-center py-2 text-sm font-semibold text-primary border border-primary/30 rounded-xl"
