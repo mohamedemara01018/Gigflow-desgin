@@ -9,6 +9,8 @@ import {
     PenLine,
     Settings2,
     LucideIcon,
+    ChevronDown,
+    ChevronUp,
 } from "lucide-react";
 import { Editor } from "@tiptap/core";
 import { Field } from "@/components/modals/CountryModal";
@@ -62,6 +64,9 @@ export default function JobBasicsStep({
     const [categories, setCategories] = useState<CategoryDisplayItem[]>([]);
     const [isCategoriesLoading, setIsCategoriesLoading] = useState<boolean>(true);
     const [categoryError, setCategoryError] = useState<string | null>(null);
+
+    // Toggle state for showing all categories
+    const [showAllCategories, setShowAllCategories] = useState<boolean>(false);
 
     // Skill state management
     const [skillOptions, setSkillOptions] = useState<Option[]>([]);
@@ -174,7 +179,6 @@ export default function JobBasicsStep({
 
     const handleEditorReady = (editor: Editor) => {
         setEditorInstance(editor);
-
         updateForm({ description: editor.getHTML() });
 
         editor.on("update", () => {
@@ -189,6 +193,9 @@ export default function JobBasicsStep({
 
     const rawText = editorInstance?.getText() ?? (formData.description || "").replace(/<[^>]*>/g, "");
     const descriptionLength = rawText.length;
+
+    // Slice categories to 3 if not expanded
+    const displayedCategories = showAllCategories ? categories : categories.slice(0, 3);
 
     return (
         <section className="card">
@@ -224,7 +231,7 @@ export default function JobBasicsStep({
 
                 {isCategoriesLoading && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                        {[1, 2, 3].map((i) => (
                             <div
                                 key={i}
                                 className="h-28 rounded-md bg-surface-container-low animate-pulse border border-outline-variant/30"
@@ -240,32 +247,54 @@ export default function JobBasicsStep({
                 )}
 
                 {!isCategoriesLoading && !categoryError && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
-                        {categories.map(({ id, label, sub, icon: Icon, tone }) => {
-                            const active = formData.category === id;
-                            return (
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+                            {displayedCategories.map(({ id, label, sub, icon: Icon, tone }) => {
+                                const active = formData.category === id;
+                                return (
+                                    <button
+                                        key={id}
+                                        type="button"
+                                        onClick={() => handleCategorySelect(id)}
+                                        className={`text-left rounded-md border p-3 transition-all cursor-pointer ${active
+                                                ? "border-primary bg-primary-container/10 ring-1 ring-primary"
+                                                : "border-outline-variant bg-surface-container hover:border-outline"
+                                            }`}
+                                    >
+                                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${toneClasses[tone]}`}>
+                                            <Icon size={16} />
+                                        </span>
+                                        <p className="text-label-md text-on-surface mt-2 font-medium">{label}</p>
+                                        {sub && (
+                                            <p className="text-body-sm text-on-surface-variant mt-0.5 line-clamp-2">
+                                                {sub}
+                                            </p>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {categories.length > 3 && (
+                            <div className="mt-3 flex justify-end">
                                 <button
-                                    key={id}
                                     type="button"
-                                    onClick={() => handleCategorySelect(id)}
-                                    className={`text-left rounded-md border p-3 transition-all cursor-pointer ${active
-                                            ? "border-primary bg-primary-container/10 ring-1 ring-primary"
-                                            : "border-outline-variant bg-surface-container hover:border-outline"
-                                        }`}
+                                    onClick={() => setShowAllCategories((prev) => !prev)}
+                                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline cursor-pointer"
                                 >
-                                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${toneClasses[tone]}`}>
-                                        <Icon size={16} />
-                                    </span>
-                                    <p className="text-label-md text-on-surface mt-2 font-medium">{label}</p>
-                                    {sub && (
-                                        <p className="text-body-sm text-on-surface-variant mt-0.5 line-clamp-2">
-                                            {sub}
-                                        </p>
+                                    {showAllCategories ? (
+                                        <>
+                                            See Less <ChevronUp size={16} />
+                                        </>
+                                    ) : (
+                                        <>
+                                            See More ({categories.length - 3} more) <ChevronDown size={16} />
+                                        </>
                                     )}
                                 </button>
-                            );
-                        })}
-                    </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
