@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
-import { Plus, Briefcase, ShieldCheck, Users } from "lucide-react";
+import { Plus, Briefcase, ShieldCheck } from "lucide-react";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
 import { clientStatsService, IClientStats, IClientLocation } from "@/services/clientStats.service";
 import { jobService, IJob } from "@/services/jobs.service";

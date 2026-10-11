@@ -2,7 +2,7 @@ import SmallLoading from "@/components/ui/SmallLoading";
 import { IVerificationRequest, verificationService } from "@/services/verification.service";
 import { selectMeSlice } from "@/store/slices/auth/authSlice";
 import { formatDateTime } from "@/utils/functions.utils";
-import { Briefcase, RefreshCw } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -40,7 +40,7 @@ export function IdentityVerificationCard() {
     }
     return (
         <section className="card">
-            <h2 className="text-headline-md !text-[18px] !leading-6 text-on-surface">
+            <h2 className="text-headline-md text-[18px]! leading-6! text-on-surface">
                 Identity Verification
             </h2>
             <p className="text-body-sm text-on-surface-variant mt-1">

@@ -2,7 +2,6 @@
 import Loading from '@/components/ui/Loading';
 import { fetchMe, selectMeSlice } from '@/store/slices/auth/authSlice';
 import { AppDispatch } from '@/store/store';
-import { Loader2 } from 'lucide-react';
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 
