@@ -28,7 +28,7 @@ export default function LoginPage() {
 
           <LoginForm />
 
-          
+
 
           {/* Footer Link */}
           <Link href={'/role'} className="text-center text-sm text-on-surface-variant">
@@ -44,9 +44,9 @@ export default function LoginPage() {
 
       {/* Support Links */}
       <footer className="mt-8 flex gap-8">
-        <a className="text-xs font-medium text-outline hover:text-on-surface transition-colors" href="#">Privacy Policy</a>
-        <a className="text-xs font-medium text-outline hover:text-on-surface transition-colors" href="#">Terms of Service</a>
-        <a className="text-xs font-medium text-outline hover:text-on-surface transition-colors" href="#">Contact Support</a>
+        <a className="text-xs font-medium text-outline hover:text-on-surface transition-colors" href="/privacy-policy">Privacy Policy</a>
+        <a className="text-xs font-medium text-outline hover:text-on-surface transition-colors" href="/terms-of-service">Terms of Service</a>
+        <a className="text-xs font-medium text-outline hover:text-on-surface transition-colors" href="/contact-support">Contact Support</a>
       </footer>
     </div>
   );

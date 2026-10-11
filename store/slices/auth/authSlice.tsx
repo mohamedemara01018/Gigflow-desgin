@@ -27,7 +27,6 @@ export const fetchMe = createAsyncThunk<
     "auth/fetchMe",
     async (_, { rejectWithValue }) => {
         try {
-            console.log("fetchMe called");
             const data = await userService.me();
 
             // If your service returns { data: user }

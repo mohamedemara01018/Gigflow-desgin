@@ -3,7 +3,6 @@
 import { IProfile } from "@/services/profile.service";
 
 function StatsSection({ profile }: { profile: IProfile }) {
-    console.log(profile)
     return (
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[

@@ -20,7 +20,6 @@ export function IdentityVerificationCard() {
                 return;
             }
             const verification = await verificationService.getVerificationByUserId(me?._id as string);
-            console.log('verification', verification)
             setVerification(verification)
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {

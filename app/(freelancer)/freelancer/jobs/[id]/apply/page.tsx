@@ -2,7 +2,6 @@ import FreelancerSubmitProposalPage from "@/views/freelancer/FreelancerSubmitPro
 
 async function page({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    console.log('apply i d', id)
     return (
         <FreelancerSubmitProposalPage jobId={id} />
     )

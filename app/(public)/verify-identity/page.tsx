@@ -27,7 +27,6 @@ function page() {
                 return;
             }
             const verification = await verificationService.getVerificationByUserId(me?._id as string);
-            console.log('verification', verification)
             setVerification(verification)
             router.replace('/')
         } catch (error: any) {

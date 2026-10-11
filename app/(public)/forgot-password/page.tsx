@@ -131,7 +131,7 @@ export default function ForgotPassword() {
           {/* Contextual Helper */}
           <p className="text-center mt-4 font-['Inter'] text-[14px] leading-5 font-normal text-on-surface-variant">
             Having trouble?{" "}
-            <Link href="/contact" className="text-primary font-medium hover:underline">
+            <Link href="/contact-support" className="text-primary font-medium hover:underline">
               Contact our support team
             </Link>.
           </p>

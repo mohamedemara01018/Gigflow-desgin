@@ -66,7 +66,6 @@ export default function ResetPasswordPage() {
         token,
         password: newPassword.trim()
       })
-      console.log(res)
       router.replace('/login')
       setIsSuccess(true);
       handleAddToastification(String(res.message), "success", DURATION);

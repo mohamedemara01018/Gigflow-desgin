@@ -24,7 +24,6 @@ function MeProvider({
         );
     }
 
-    console.log('me', me)
     return children
 }
 

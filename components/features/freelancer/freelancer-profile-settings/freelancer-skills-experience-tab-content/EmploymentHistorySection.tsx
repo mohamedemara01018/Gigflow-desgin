@@ -59,7 +59,6 @@ export default function EmploymentHistorySection({ profileId }: EmploymentHistor
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profileId]);
 
-    console.log('employmentHistories', employmentHistories)
 
     const handleOpenAddModal = () => {
         setIsEdit(false);

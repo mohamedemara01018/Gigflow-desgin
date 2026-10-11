@@ -110,11 +110,11 @@ export default function JoinSelection() {
                     </Link>
                 </div>
 
-                <p className="text-body-sm text-(--color-on-surface-variant) mt-4">
+                <p className="text-body-sm text-on-surface-variant mt-4">
                     Already have an account?{" "}
                     <a
-                        href="#"
-                        className="text-(--color-primary) font-medium hover:underline"
+                        href="/login"
+                        className="text-primary font-medium hover:underline"
                     >
                         Log in
                     </a>

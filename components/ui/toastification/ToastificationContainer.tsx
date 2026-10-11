@@ -7,7 +7,6 @@ import { AppDispatch } from '@/store/store';
 function ToastificationContainer() {
     const dispatch: AppDispatch = useDispatch();
     const toastifications = useSelector(selectToastificationSlice);
-    console.log(toastifications)
 
     const handleRemoveToastify = (id: string) => {
         dispatch(removeToastify({ id }))

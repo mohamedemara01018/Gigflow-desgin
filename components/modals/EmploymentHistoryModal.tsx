@@ -31,7 +31,6 @@ export default function EmploymentHistoryModal({
     onEdit,
 }: EmploymentModalProps) {
 
-    console.log('profileId', profileId)
     const [position, setPosition] = useState("");
     const [company, setCompany] = useState("");
     const [employmentType, setEmploymentType] = useState<string>(
