@@ -22,6 +22,11 @@ const sharedProtectedRoutes = [
     "/messages",
     "/contracts",
     "/payments",
+    "/jobs",
+    "/contact-support",
+    "/cookies",
+    "/privacy-policy",
+    "/terms-of-service",
 ];
 
 const authRoutes = [
